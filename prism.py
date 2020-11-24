@@ -94,7 +94,7 @@ def grav(coordinates, prisms, density, field):
     # Convert from m/s^2 to mGal
     if field in ["g_x", "g_y", "g_z"]:
         result *= 1e5
-    # Convert from 1/s^2 to Eotvos
+    # Convert from 1/s^2 to Eötvös
     if field in ["g_xx", "g_xy", "g_xz", "g_yy", "g_yz", "g_zz"]:
         result *= 1e9
     return result
@@ -169,7 +169,10 @@ def mag(coordinates, prisms, magnetization, field):
     my, mx, mz = magnetization_components(magnetization)
 
     # Compute magnetic field
-    jit_mag(coordinates, prisms, my, mx, mz, fields[field], result)
+    fieldx = fields[field]["x"]
+    fieldy = fields[field]["y"]
+    fieldz = fields[field]["z"]
+    jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, result)
     result *= MAGNETIC_CONST
     if field == "b_potential":
         result *= -1
@@ -206,7 +209,7 @@ def jit_grav(coordinates, prisms, density, field, out):
 
 
 @njit
-def jit_mag(coordinates, prisms, my, mx, mz, field, out):
+def jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, out):
     """
     Compute the magnetic field at the points in 'coordinates'
     """
@@ -223,36 +226,36 @@ def jit_mag(coordinates, prisms, my, mx, mz, field, out):
             Z2 = prisms[p,5] - coordinates[2,l]
             # Compute the field component y
             out[l] += my[p] * (
-                  field["y"](Y2, X2, Z2)
-                - field["y"](Y2, X2, Z1)
-                - field["y"](Y2, X1, Z2)
-                + field["y"](Y2, X1, Z1)
-                - field["y"](Y1, X2, Z2)
-                + field["y"](Y1, X2, Z1)
-                + field["y"](Y1, X1, Z2)
-                - field["y"](Y1, X1, Z1)
+                  fieldy(Y2, X2, Z2)
+                - fieldy(Y2, X2, Z1)
+                - fieldy(Y2, X1, Z2)
+                + fieldy(Y2, X1, Z1)
+                - fieldy(Y1, X2, Z2)
+                + fieldy(Y1, X2, Z1)
+                + fieldy(Y1, X1, Z2)
+                - fieldy(Y1, X1, Z1)
             )
             # Compute the field component x
             out[l] += mx[p] * (
-                  field["x"](Y2, X2, Z2)
-                - field["x"](Y2, X2, Z1)
-                - field["x"](Y2, X1, Z2)
-                + field["x"](Y2, X1, Z1)
-                - field["x"](Y1, X2, Z2)
-                + field["x"](Y1, X2, Z1)
-                + field["x"](Y1, X1, Z2)
-                - field["x"](Y1, X1, Z1)
+                  fieldx(Y2, X2, Z2)
+                - fieldx(Y2, X2, Z1)
+                - fieldx(Y2, X1, Z2)
+                + fieldx(Y2, X1, Z1)
+                - fieldx(Y1, X2, Z2)
+                + fieldx(Y1, X2, Z1)
+                + fieldx(Y1, X1, Z2)
+                - fieldx(Y1, X1, Z1)
             )
             # Compute the field component z
             out[l] += mz[p] * (
-                  field["z"](Y2, X2, Z2)
-                - field["z"](Y2, X2, Z1)
-                - field["z"](Y2, X1, Z2)
-                + field["z"](Y2, X1, Z1)
-                - field["z"](Y1, X2, Z2)
-                + field["z"](Y1, X2, Z1)
-                + field["z"](Y1, X1, Z2)
-                - field["z"](Y1, X1, Z1)
+                  fieldz(Y2, X2, Z2)
+                - fieldz(Y2, X2, Z1)
+                - fieldz(Y2, X1, Z2)
+                + fieldz(Y2, X1, Z1)
+                - fieldz(Y1, X2, Z2)
+                + fieldz(Y1, X2, Z1)
+                + fieldz(Y1, X1, Z2)
+                - fieldz(Y1, X1, Z1)
             )
 
 # kernels
