@@ -17,8 +17,14 @@ from numba import njit
 #: The gravitational constant in m^3 kg^{-1} s^{-1}
 GRAVITATIONAL_CONST = 0.00000000006673
 
-#: The magnetic constant in H/m
+#: The magnetic constant in u0/4pi x 10^9
 MAGNETIC_CONST = 100
+CM = 1e-7
+
+#: Transforming constants
+SI2MGAL = 1e5
+SI2EOTVOS = 1e9
+T2NT = 1e9
 
 
 def grav(coordinates, prisms, density, field):
@@ -93,10 +99,10 @@ def grav(coordinates, prisms, density, field):
     result *= GRAVITATIONAL_CONST
     # Convert from m/s^2 to mGal
     if field in ["g_x", "g_y", "g_z"]:
-        result *= 1e5
+        result *= SI2MGAL
     # Convert from 1/s^2 to Eötvös
     if field in ["g_xx", "g_xy", "g_xz", "g_yy", "g_yz", "g_zz"]:
-        result *= 1e9
+        result *= SI2EOTVOS
     return result
 
 
@@ -173,6 +179,7 @@ def mag(coordinates, prisms, magnetization, field):
     fieldy = fields[field]["y"]
     fieldz = fields[field]["z"]
     jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, result)
+    #result *= CM*T2NT
     result *= MAGNETIC_CONST
     if field == "b_potential":
         result *= -1
