@@ -37,12 +37,12 @@ def grav(coordinates, prisms, density, field):
     Parameters
     ----------
     coordinates : 2d-array
-        2d-array containing y (first line), x (second line), and z (third line) of
+        2d-array containing x (first line), y (second line), and z (third line) of
         the computation points. All coordinates should be in meters.
     prisms : 2d-array
         2d-array containing the coordinates of the prisms. Each line must contain
         the coordinates of a single prism in the following order:
-        west (y1), east (y2), south (x1), north (x2), top (z1) and bottom (z2).
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
         All coordinates should be in meters.
     density : 1d-array
         1d-array containing the density of each prism in kg/m^3.
@@ -116,12 +116,12 @@ def mag(coordinates, prisms, magnetization, field):
     Parameters
     ----------
     coordinates : 2d-array
-        2d-array containing y (first line), x (second line), and z (third line) of
+        2d-array containing x (first line), y (second line), and z (third line) of
         the computation points. All coordinates should be in meters.
     prisms : 2d-array
         2d-array containing the coordinates of the prisms. Each line must contain
         the coordinates of a single prism in the following order:
-        west (y1), east (y2), south (x1), north (x2), top (z1) and bottom (z2).
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
         All coordinates should be in meters.
     magnetization : 2d-array
         2d-array containing the total-magnetization components of the prisms.
@@ -172,13 +172,13 @@ def mag(coordinates, prisms, magnetization, field):
     result = np.zeros(coordinates[0].size, dtype="float64")
 
     # Compute the Cartesian components of total-magnetization
-    my, mx, mz = magnetization_components(magnetization)
+    mx, my, mz = magnetization_components(magnetization)
 
     # Compute magnetic field
     fieldx = fields[field]["x"]
     fieldy = fields[field]["y"]
     fieldz = fields[field]["z"]
-    jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, result)
+    jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, result)
     #result *= CM*T2NT
     result *= MAGNETIC_CONST
     if field == "b_potential":
@@ -196,27 +196,27 @@ def jit_grav(coordinates, prisms, density, field, out):
         # Iterate over prisms
         for p in range(prisms.shape[0]):
             # Change coordinates
-            Y1 = prisms[p,0] - coordinates[0,l]
-            Y2 = prisms[p,1] - coordinates[0,l]
-            X1 = prisms[p,2] - coordinates[1,l]
-            X2 = prisms[p,3] - coordinates[1,l]
+            X1 = prisms[p,0] - coordinates[0,l]
+            X2 = prisms[p,1] - coordinates[0,l]
+            Y1 = prisms[p,2] - coordinates[1,l]
+            Y2 = prisms[p,3] - coordinates[1,l]
             Z1 = prisms[p,4] - coordinates[2,l]
             Z2 = prisms[p,5] - coordinates[2,l]
             # Compute the field
             out[l] += density[p] * (
-                  field(Y2, X2, Z2)
-                - field(Y2, X2, Z1)
-                - field(Y2, X1, Z2)
-                + field(Y2, X1, Z1)
-                - field(Y1, X2, Z2)
-                + field(Y1, X2, Z1)
-                + field(Y1, X1, Z2)
-                - field(Y1, X1, Z1)
+                  field(X2, Y2, Z2)
+                - field(X2, Y2, Z1)
+                - field(X1, Y2, Z2)
+                + field(X1, Y2, Z1)
+                - field(X2, Y1, Z2)
+                + field(X2, Y1, Z1)
+                + field(X1, Y1, Z2)
+                - field(X1, Y1, Z1)
             )
 
 
 @njit
-def jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, out):
+def jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, out):
     """
     Compute the magnetic field at the points in 'coordinates'
     """
@@ -225,50 +225,50 @@ def jit_mag(coordinates, prisms, my, mx, mz, fieldx, fieldy, fieldz, out):
         # Iterate over prisms
         for p in range(prisms.shape[0]):
             # Change coordinates
-            Y1 = prisms[p,0] - coordinates[0,l]
-            Y2 = prisms[p,1] - coordinates[0,l]
-            X1 = prisms[p,2] - coordinates[1,l]
-            X2 = prisms[p,3] - coordinates[1,l]
+            X1 = prisms[p,0] - coordinates[0,l]
+            X2 = prisms[p,1] - coordinates[0,l]
+            Y1 = prisms[p,2] - coordinates[1,l]
+            Y2 = prisms[p,3] - coordinates[1,l]
             Z1 = prisms[p,4] - coordinates[2,l]
             Z2 = prisms[p,5] - coordinates[2,l]
-            # Compute the field component y
-            out[l] += my[p] * (
-                  fieldy(Y2, X2, Z2)
-                - fieldy(Y2, X2, Z1)
-                - fieldy(Y2, X1, Z2)
-                + fieldy(Y2, X1, Z1)
-                - fieldy(Y1, X2, Z2)
-                + fieldy(Y1, X2, Z1)
-                + fieldy(Y1, X1, Z2)
-                - fieldy(Y1, X1, Z1)
-            )
             # Compute the field component x
             out[l] += mx[p] * (
-                  fieldx(Y2, X2, Z2)
-                - fieldx(Y2, X2, Z1)
-                - fieldx(Y2, X1, Z2)
-                + fieldx(Y2, X1, Z1)
-                - fieldx(Y1, X2, Z2)
-                + fieldx(Y1, X2, Z1)
-                + fieldx(Y1, X1, Z2)
-                - fieldx(Y1, X1, Z1)
+                  fieldx(X2, Y2, Z2)
+                - fieldx(X2, Y2, Z1)
+                - fieldx(X1, Y2, Z2)
+                + fieldx(X1, Y2, Z1)
+                - fieldx(X2, Y1, Z2)
+                + fieldx(X2, Y1, Z1)
+                + fieldx(X1, Y1, Z2)
+                - fieldx(X1, Y1, Z1)
+            )
+            # Compute the field component y
+            out[l] += my[p] * (
+                  fieldy(X2, Y2, Z2)
+                - fieldy(X2, Y2, Z1)
+                - fieldy(X1, Y2, Z2)
+                + fieldy(X1, Y2, Z1)
+                - fieldy(X2, Y1, Z2)
+                + fieldy(X2, Y1, Z1)
+                + fieldy(X1, Y1, Z2)
+                - fieldy(X1, Y1, Z1)
             )
             # Compute the field component z
             out[l] += mz[p] * (
-                  fieldz(Y2, X2, Z2)
-                - fieldz(Y2, X2, Z1)
-                - fieldz(Y2, X1, Z2)
-                + fieldz(Y2, X1, Z1)
-                - fieldz(Y1, X2, Z2)
-                + fieldz(Y1, X2, Z1)
-                + fieldz(Y1, X1, Z2)
-                - fieldz(Y1, X1, Z1)
+                  fieldz(X2, Y2, Z2)
+                - fieldz(X2, Y2, Z1)
+                - fieldz(X1, Y2, Z2)
+                + fieldz(X1, Y2, Z1)
+                - fieldz(X2, Y1, Z2)
+                + fieldz(X2, Y1, Z1)
+                + fieldz(X1, Y1, Z2)
+                - fieldz(X1, Y1, Z1)
             )
 
 # kernels
 
 @njit
-def kernel_inverse_r(Y, X, Z):
+def kernel_inverse_r(X, Y, Z):
     """
     Function for computing the inverse distance kernel
     """
@@ -285,7 +285,7 @@ def kernel_inverse_r(Y, X, Z):
 
 
 @njit
-def kernel_dz(Y, X, Z):
+def kernel_dz(X, Y, Z):
     """
     Function for computing the z-derivative of inverse distance kernel
     """
@@ -299,7 +299,7 @@ def kernel_dz(Y, X, Z):
 
 
 @njit
-def kernel_dy(Y, X, Z):
+def kernel_dy(X, Y, Z):
     """
     Function for computing the y-derivative of inverse distance kernel
     """
@@ -313,7 +313,7 @@ def kernel_dy(Y, X, Z):
 
 
 @njit
-def kernel_dx(Y, X, Z):
+def kernel_dx(X, Y, Z):
     """
     Function for computing the x-derivative of inverse distance kernel
     """
@@ -327,7 +327,7 @@ def kernel_dx(Y, X, Z):
 
 
 @njit
-def kernel_dzz(Y, X, Z):
+def kernel_dzz(X, Y, Z):
     """
     Function for computing the zz-derivative of inverse distance kernel
     """
@@ -337,7 +337,7 @@ def kernel_dzz(Y, X, Z):
 
 
 @njit
-def kernel_dyz(Y, X, Z):
+def kernel_dyz(X, Y, Z):
     """
     Function for computing the yz-derivative of inverse distance kernel
     """
@@ -347,7 +347,7 @@ def kernel_dyz(Y, X, Z):
 
 
 @njit
-def kernel_dxz(Y, X, Z):
+def kernel_dxz(X, Y, Z):
     """
     Function for computing the xz-derivative of inverse distance kernel
     """
@@ -357,7 +357,7 @@ def kernel_dxz(Y, X, Z):
 
 
 @njit
-def kernel_dyy(Y, X, Z):
+def kernel_dyy(X, Y, Z):
     """
     Function for computing the yy-derivative of inverse distance kernel
     """
@@ -367,7 +367,7 @@ def kernel_dyy(Y, X, Z):
 
 
 @njit
-def kernel_dxy(Y, X, Z):
+def kernel_dxy(X, Y, Z):
     """
     Function for computing the xy-derivative of inverse distance kernel
     """
@@ -377,7 +377,7 @@ def kernel_dxy(Y, X, Z):
 
 
 @njit
-def kernel_dxx(Y, X, Z):
+def kernel_dxx(X, Y, Z):
     """
     Function for computing the xx-derivative of inverse distance kernel
     """
@@ -396,7 +396,7 @@ def _check_prisms(prisms):
     ----------
     prisms : 2d-array
         Array containing the boundaries of the prisms in the following order:
-        ``w``, ``e``, ``s``, ``n``, ``top``, ``bottom``.
+        ``s``, ``n``, ``w``, ``e``, ``top``, ``bottom``.
         The array must have the following shape: (``n_prisms``, 6), where
         ``n_prisms`` is the total number of prisms.
         This array of prisms must have valid boundaries.
@@ -413,19 +413,19 @@ def _check_prisms(prisms):
             "Number of columns in prisms ({}) ".format(prisms.shape[1])
             + "not equal to 6"
         )
-    west, east, south, north, top, bottom = tuple(prisms[:, i] for i in range(6))
+    south, north, west, east, top, bottom = tuple(prisms[:, i] for i in range(6))
     err_msg = "Invalid prism or prisms. "
-    bad_we = west > east
     bad_sn = south > north
+    bad_we = west > east
     bad_bt = top > bottom
-    if bad_we.any():
-        err_msg += "The west boundary can't be greater than the east one.\n"
-        for prism in prisms[bad_we]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
     if bad_sn.any():
         err_msg += "The south boundary can't be greater than the north one.\n"
         for prism in prisms[bad_sn]:
+            err_msg += "\tInvalid prism: {}\n".format(prism)
+        raise ValueError(err_msg)
+    if bad_we.any():
+        err_msg += "The west boundary can't be greater than the east one.\n"
+        for prism in prisms[bad_we]:
             err_msg += "\tInvalid prism: {}\n".format(prism)
         raise ValueError(err_msg)
     if bad_bt.any():
@@ -442,7 +442,7 @@ def _check_coordinates(coordinates):
     Parameters
     ----------
     coordinates : 2d-array
-        2d-array containing y (first line), x (second line), and z (third line) of
+        2d-array containing x (first line), y (second line), and z (third line) of
         the computation points. All coordinates should be in meters.
         Run ``_check_coordinates`` before.
     """
@@ -470,7 +470,7 @@ def _check_density(density, prisms):
     prisms : 2d-array
         2d-array containing the coordinates of the prisms. Each line must contain
         the coordinates of a single prism in the following order:
-        west (y1), east (y2), south (x1), north (x2), top (z1) and bottom (z2).
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
         All coordinates should be in meters.
     """
     density = np.asarray(density)
@@ -494,13 +494,13 @@ def _check_magnetization(magnetization, prisms):
     ----------
     magnetization : 1d-array
         2d-array containing the total-magnetization components of the prisms.
-        Each line must contain the y, x and z components of the total
+        Each line must contain the x, y and z components of the total
         magnetization of a single prism.
         All values should be in A/m.
     prisms : 2d-array
         2d-array containing the coordinates of the prisms. Each line must contain
         the coordinates of a single prism in the following order:
-        west (y1), east (y2), south (x1), north (x2), top (z1) and bottom (z2).
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
         All coordinates should be in meters.
     """
     magnetization = np.asarray(magnetization)
@@ -524,7 +524,7 @@ def _check_magnetization(magnetization, prisms):
 def magnetization_components(magnetization):
     """
     Given the total-magnetization intensity, inclination and declination,
-    compute the Cartesian components my, mx and mz.
+    compute the Cartesian components mx, my and mz.
     Run ``_check_magnetization`` before.
     """
     # transform inclination and declination from degrees to radians
@@ -536,10 +536,10 @@ def magnetization_components(magnetization):
     cos_dec = np.cos(dec)
     sin_dec = np.sin(dec)
     # compute the Cartesian components
-    my = magnetization[:,0]*cos_inc*sin_dec
     mx = magnetization[:,0]*cos_inc*cos_dec
+    my = magnetization[:,0]*cos_inc*sin_dec
     mz = magnetization[:,0]*sin_inc
-    return my, mx, mz
+    return mx, my, mz
 
 
 @njit
