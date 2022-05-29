@@ -122,8 +122,8 @@ def test_field_decreases_with_distance():
     "Check if field decreases with distance"
     model = np.array([[-100, 100, -100, 100, 100, 200]])
     density = np.array([1000])
-    close = np.array([[0], [20], [0]])
-    far = np.array([[0], [20], [-100]])
+    close = np.array([[20], [0], [0]])
+    far = np.array([[20], [0], [-100]])
     # potentia
     potential_close = prism.grav(close, model, density, field="g_potential")
     potential_far = prism.grav(far, model, density, field="g_potential")
@@ -141,9 +141,9 @@ def test_field_decreases_with_distance():
 
 def test_Laplace_equation():
     "Sum of derivatives xx, yy and zz must be zero outside the prism"
-    model = np.array([[-100, 100, -130, 100, 100, 213]])
-    coords = np.array([[0, -100, 100, -100, 400],
-                       [0, -130, 100, 50, 400],
+    model = np.array([[-130, 100, -100, 100, 100, 213]])
+    coords = np.array([[0, -130, 100, 50, 400],
+                       [0, -100, 100, -100, 400],
                        [0, -100, -100, -100, -100]])
     rho = np.array([1300])
     gxx = prism.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
@@ -154,9 +154,9 @@ def test_Laplace_equation():
 
 def test_Poisson_equation():
     "Sum of derivatives xx, yy and zz must -4*pi*rho*G inside the prism"
-    model = np.array([[-100, 100, -130, 100, 100, 213]])
-    coords = np.array([[0, -10, 80],
-                       [0, 30, -62.1],
+    model = np.array([[-130, 100, -100, 100, 100, 213]])
+    coords = np.array([[0, 30, -62.1],
+                       [0, -10, 80],
                        [150, 110, 200]])
     rho = np.array([1300])
     gxx = prism.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
