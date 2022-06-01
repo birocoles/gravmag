@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-import prism
+import prism_functions as prism
 
 
 def test_invalid_grav_field():
