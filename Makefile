@@ -3,10 +3,15 @@
 help:
 	@echo "Commands:"
 	@echo ""
+	@echo "  install      install the package"
 	@echo "  test      run the test suite and generate html report"
 	@echo "  report    open the html test report"
 	@echo "  clean     clean up generated files"
 	@echo ""
+
+install:
+	# Install the python package
+	pip install -e .
 
 test:
 	# Run tests using coverage and pytest
