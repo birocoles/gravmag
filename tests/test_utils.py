@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-import utils
+from .. import utils
 
 
 def test_safe_atan2():

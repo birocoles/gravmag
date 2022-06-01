@@ -1,0 +1,8 @@
+LICENSE
+README.md
+pyproject.toml
+setup.cfg
+GravMag_code/GravMag_code.egg-info/PKG-INFO
+GravMag_code/GravMag_code.egg-info/SOURCES.txt
+GravMag_code/GravMag_code.egg-info/dependency_links.txt
+GravMag_code/GravMag_code.egg-info/top_level.txt
