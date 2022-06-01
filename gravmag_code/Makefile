@@ -10,11 +10,12 @@ help:
 
 test:
 	# Run tests using coverage and pytest
-	cd gravmag_code/tests; coverage run -m pytest; coverage html
+	coverage run -m pytest
+	coverage html
 
 report:
 	# Show test report produced by coverage
-	cd gravmag_code/tests; firefox htmlcov/index.html
+	firefox htmlcov/index.html
 
 clean:
 	rm -rvf __pycache__
