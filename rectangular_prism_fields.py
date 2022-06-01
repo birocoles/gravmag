@@ -12,19 +12,9 @@ with singularities at some computation points.
 
 import numpy as np
 from numba import njit
-
-
-#: The gravitational constant in m^3 kg^{-1} s^{-1}
-GRAVITATIONAL_CONST = 0.00000000006673
-
-#: The magnetic constant in u0/4pi x 10^9
-MAGNETIC_CONST = 100
-CM = 1e-7
-
-#: Transforming constants
-SI2MGAL = 1e5
-SI2EOTVOS = 1e9
-T2NT = 1e9
+import check
+import utils
+import constants as cts
 
 
 def grav(coordinates, prisms, density, field):
@@ -87,22 +77,22 @@ def grav(coordinates, prisms, density, field):
         raise ValueError("Gravitational field {} not recognized".format(field))
 
     # Verify the input parameters
-    _check_prisms(prisms)
-    _check_coordinates(coordinates)
-    _check_density(density, prisms)
+    check.coordinates(coordinates)
+    check.rectangular_prisms(prisms)
+    check.density(density, prisms)
 
     # create the array to store the result
     result = np.zeros(coordinates[0].size, dtype="float64")
 
     # Compute gravitational field
     jit_grav(coordinates, prisms, density, fields[field], result)
-    result *= GRAVITATIONAL_CONST
+    result *= cts.GRAVITATIONAL_CONST
     # Convert from m/s^2 to mGal
     if field in ["g_x", "g_y", "g_z"]:
-        result *= SI2MGAL
+        result *= cts.SI2MGAL
     # Convert from 1/s^2 to Eötvös
     if field in ["g_xx", "g_xy", "g_xz", "g_yy", "g_yz", "g_zz"]:
-        result *= SI2EOTVOS
+        result *= cts.SI2EOTVOS
     return result
 
 
@@ -164,15 +154,15 @@ def mag(coordinates, prisms, magnetization, field):
         raise ValueError("Magnetic field {} not recognized".format(field))
 
     # Verify the input parameters
-    _check_prisms(prisms)
-    _check_coordinates(coordinates)
-    _check_magnetization(magnetization, prisms)
+    check.coordinates(coordinates)
+    check.rectangular_prisms(prisms)
+    check.magnetization(magnetization, prisms)
 
     # create the array to store the result
     result = np.zeros(coordinates[0].size, dtype="float64")
 
     # Compute the Cartesian components of total-magnetization
-    mx, my, mz = magnetization_components(magnetization)
+    mx, my, mz = utils.magnetization_components(magnetization)
 
     # Compute magnetic field
     fieldx = fields[field]["x"]
@@ -180,7 +170,7 @@ def mag(coordinates, prisms, magnetization, field):
     fieldz = fields[field]["z"]
     jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, result)
     #result *= CM*T2NT
-    result *= MAGNETIC_CONST
+    result *= cts.MAGNETIC_CONST
     if field == "b_potential":
         result *= -1
     return result
@@ -274,12 +264,12 @@ def kernel_inverse_r(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = (
-        Y * X * safe_log(Z + R)
-        + X * Z * safe_log(Y + R)
-        + Y * Z * safe_log(X + R)
-        - 0.5 * Y ** 2 * safe_atan2(Z * X, Y * R)
-        - 0.5 * X ** 2 * safe_atan2(Z * Y, X * R)
-        - 0.5 * Z ** 2 * safe_atan2(Y * X, Z * R)
+        Y * X * utils.safe_log(Z + R)
+        + X * Z * utils.safe_log(Y + R)
+        + Y * Z * utils.safe_log(X + R)
+        - 0.5 * Y ** 2 * utils.safe_atan2(Z * X, Y * R)
+        - 0.5 * X ** 2 * utils.safe_atan2(Z * Y, X * R)
+        - 0.5 * Z ** 2 * utils.safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -291,9 +281,9 @@ def kernel_dz(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        Y * safe_log(X + R)
-        + X * safe_log(Y + R)
-        - Z * safe_atan2(Y * X, Z * R)
+        Y * utils.safe_log(X + R)
+        + X * utils.safe_log(Y + R)
+        - Z * utils.safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -305,9 +295,9 @@ def kernel_dy(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        X * safe_log(Z + R)
-        + Z * safe_log(X + R)
-        - Y * safe_atan2(X * Z, Y * R)
+        X * utils.safe_log(Z + R)
+        + Z * utils.safe_log(X + R)
+        - Y * utils.safe_atan2(X * Z, Y * R)
     )
     return result
 
@@ -319,9 +309,9 @@ def kernel_dx(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        Y * safe_log(Z + R)
-        + Z * safe_log(Y + R)
-        - X * safe_atan2(Y * Z, X * R)
+        Y * utils.safe_log(Z + R)
+        + Z * utils.safe_log(Y + R)
+        - X * utils.safe_atan2(Y * Z, X * R)
     )
     return result
 
@@ -332,7 +322,7 @@ def kernel_dzz(X, Y, Z):
     Function for computing the zz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - safe_atan2(Y * X, Z * R)
+    result = - utils.safe_atan2(Y * X, Z * R)
     return result
 
 
@@ -342,7 +332,7 @@ def kernel_dyz(X, Y, Z):
     Function for computing the yz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = safe_log(X + R)
+    result = utils.safe_log(X + R)
     return result
 
 
@@ -352,7 +342,7 @@ def kernel_dxz(X, Y, Z):
     Function for computing the xz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = safe_log(Y + R)
+    result = utils.safe_log(Y + R)
     return result
 
 
@@ -362,7 +352,7 @@ def kernel_dyy(X, Y, Z):
     Function for computing the yy-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - safe_atan2(X * Z, Y * R)
+    result = - utils.safe_atan2(X * Z, Y * R)
     return result
 
 
@@ -372,7 +362,7 @@ def kernel_dxy(X, Y, Z):
     Function for computing the xy-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = safe_log(Z + R)
+    result = utils.safe_log(Z + R)
     return result
 
 
@@ -382,197 +372,5 @@ def kernel_dxx(X, Y, Z):
     Function for computing the xx-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - safe_atan2(Y * Z, X * R)
-    return result
-
-
-# auxiliary functions
-
-def _check_prisms(prisms):
-    """
-    Check if prisms are well defined
-
-    Parameters
-    ----------
-    prisms : 2d-array
-        Array containing the boundaries of the prisms in the following order:
-        ``s``, ``n``, ``w``, ``e``, ``top``, ``bottom``.
-        The array must have the following shape: (``n_prisms``, 6), where
-        ``n_prisms`` is the total number of prisms.
-        This array of prisms must have valid boundaries.
-        Run ``_check_prisms`` before.
-    """
-    prisms = np.asarray(prisms)
-    if prisms.ndim != 2:
-        raise ValueError(
-            "prisms ndim ({}) ".format(prisms.ndim)
-            + "not equal to 2"
-        )
-    if prisms.shape[1] != 6:
-        raise ValueError(
-            "Number of columns in prisms ({}) ".format(prisms.shape[1])
-            + "not equal to 6"
-        )
-    south, north, west, east, top, bottom = tuple(prisms[:, i] for i in range(6))
-    err_msg = "Invalid prism or prisms. "
-    bad_sn = south > north
-    bad_we = west > east
-    bad_bt = top > bottom
-    if bad_sn.any():
-        err_msg += "The south boundary can't be greater than the north one.\n"
-        for prism in prisms[bad_sn]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
-    if bad_we.any():
-        err_msg += "The west boundary can't be greater than the east one.\n"
-        for prism in prisms[bad_we]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
-    if bad_bt.any():
-        err_msg += "The top boundary can't be greater than the bottom one.\n"
-        for prism in prisms[bad_bt]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
-
-
-def _check_coordinates(coordinates):
-    """
-    Check if coordinates are well defined
-
-    Parameters
-    ----------
-    coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line) of
-        the computation points. All coordinates should be in meters.
-        Run ``_check_coordinates`` before.
-    """
-    coordinates = np.asarray(coordinates)
-    if coordinates.ndim != 2:
-        raise ValueError(
-            "coordinates ndim ({}) ".format(coordinates.ndim)
-            + "not equal to 2"
-        )
-    if coordinates.shape[0] != 3:
-        raise ValueError(
-            "Number of lines in coordinates ({}) ".format(coordinates.shape[0])
-            + "not equal to 3"
-        )
-
-
-def _check_density(density, prisms):
-    """
-    Check if densities are well defined. Run ``_check_prisms`` before.
-
-    Parameters
-    ----------
-    density : 1d-array
-        1d-array containing the density of each prism in kg/m^3.
-    prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
-        All coordinates should be in meters.
-    """
-    density = np.asarray(density)
-    if density.ndim != 1:
-        raise ValueError(
-            "density ndim ({}) ".format(density.ndim)
-            + "not equal to 1"
-        )
-    if density.size != prisms.shape[0]:
-        raise ValueError(
-            "Number of elements in density ({}) ".format(density.size)
-            + "mismatch the number of prisms ({})".format(prisms.shape[0])
-        )
-
-
-def _check_magnetization(magnetization, prisms):
-    """
-    Check if magnetizations are well defined. Run ``_check_prisms`` before.
-
-    Parameters
-    ----------
-    magnetization : 1d-array
-        2d-array containing the total-magnetization components of the prisms.
-        Each line must contain the x, y and z components of the total
-        magnetization of a single prism.
-        All values should be in A/m.
-    prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
-        All coordinates should be in meters.
-    """
-    magnetization = np.asarray(magnetization)
-    if magnetization.ndim != 2:
-        raise ValueError(
-            "magnetization ndim ({}) ".format(magnetization.ndim)
-            + "not equal to 2"
-        )
-    if magnetization.shape[1] != 3:
-        raise ValueError(
-            "magnetization ndim ({}) ".format(magnetization.shape[1])
-            + "not equal to 3"
-        )
-    if magnetization.shape[0] != prisms.shape[0]:
-        raise ValueError(
-            "Number of elements in magnetization ({}) ".format(magnetization.size)
-            + "mismatch the number of prisms ({})".format(prisms.shape[0])
-        )
-
-
-def magnetization_components(magnetization):
-    """
-    Given the total-magnetization intensity, inclination and declination,
-    compute the Cartesian components mx, my and mz.
-    Run ``_check_magnetization`` before.
-    """
-    # transform inclination and declination from degrees to radians
-    inc = np.deg2rad(magnetization[:,1])
-    dec = np.deg2rad(magnetization[:,2])
-    # compute the sines and cosines
-    cos_inc = np.cos(inc)
-    sin_inc = np.sin(inc)
-    cos_dec = np.cos(dec)
-    sin_dec = np.sin(dec)
-    # compute the Cartesian components
-    mx = magnetization[:,0]*cos_inc*cos_dec
-    my = magnetization[:,0]*cos_inc*sin_dec
-    mz = magnetization[:,0]*sin_inc
-    return mx, my, mz
-
-
-@njit
-def safe_atan2(y, x):
-    """
-    Principal value of the arctangent expressed as a two variable function
-
-    This modification has to be made to the arctangent function so the
-    gravitational field of the prism satisfies the Poisson's equation.
-    Therefore, it guarantees that the fields satisfies the symmetry properties
-    of the prism. This modified function has been defined according to
-    Fukushima (2020, eq. 72).
-    """
-    if x != 0:
-        result = np.arctan(y / x)
-    else:
-        if y > 0:
-            result = np.pi / 2
-        elif y < 0:
-            result = -np.pi / 2
-        else:
-            result = 0
-    return result
-
-
-@njit
-def safe_log(x):
-    """
-    Modified log to return 0 for log(0).
-    The limits in the formula terms tend to 0.
-    """
-    if np.abs(x) < 1e-10:
-        result = 0
-    else:
-        result = np.log(x)
+    result = - utils.safe_atan2(Y * Z, X * R)
     return result

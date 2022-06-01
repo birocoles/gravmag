@@ -10,7 +10,7 @@ help:
 
 test:
 	# Run tests using coverage and pytest
-	coverage run -m pytest test_prism_functions.py
+	coverage run -m pytest
 	coverage html
 
 report:

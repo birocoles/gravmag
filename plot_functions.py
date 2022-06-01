@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 import numpy as np
-import prism_functions as prf
+import rectangular_prism_functions as rpf
 
 
 def model_boundaries(model, m2km=True):
@@ -21,7 +21,7 @@ def model_boundaries(model, m2km=True):
 def draw_region(ax, xmin, xmax, ymin, ymax, zmin, zmax,
                 label_size = 14, ticks_size = 12):
     '''
-    Draw the 3D region where the obects will be plotted.
+    Draw the 3D region where the objects will be plotted.
 
     Parameters:
 
