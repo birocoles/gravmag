@@ -10,14 +10,14 @@ help:
 
 test:
 	# Run tests using coverage and pytest
-	cd GravMag_code/tests; coverage run -m pytest; coverage html
+	cd gravmag_code/tests; coverage run -m pytest; coverage html
 
 report:
 	# Show test report produced by coverage
-	cd GravMag_code/tests; firefox htmlcov/index.html
+	cd gravmag_code/tests; firefox htmlcov/index.html
 
 clean:
 	rm -rvf __pycache__
 	find . -name "*.pyc" -exec rm -v {} \;
 	find . -name ".coverage.*" -exec rm -v {} \;
-	rm -rvf __pycache__ .coverage .cache .pytest_cache
+	rm -rvf __pycache__ .coverage .cache .pytest_cache .egg-info
