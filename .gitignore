@@ -1,8 +1,14 @@
-*.ipynb_checkpoints
-*__pycache__
-*.cache
-*.coverage
+*.pyc
+*~
+*.so
+*.pyd
+.pytest_cache/
+.coverage
+.cache
+.ipynb_checkpoints
 *.egg-info
+.coverage.*
+*htmlcov/
 
 # Tex files
 *.synctex.gz
