@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 import numpy as np
-import rectangular_prism_functions as rpf
+from . import rectangular_prism_functions as rpf
 
 
 def model_boundaries(model, m2km=True):

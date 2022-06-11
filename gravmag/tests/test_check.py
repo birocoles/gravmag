@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-import check
+from .. import check
 
 
 def test_invalid_rectangular_prism_boundaries():

@@ -1,8 +1,8 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-import rectangular_prism_fields as rpf
-import constants as cts
+from .. import rectangular_prism_fields as rpf
+from .. import constants as cts
 
 
 def test_invalid_grav_field():

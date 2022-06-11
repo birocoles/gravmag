@@ -12,9 +12,9 @@ with singularities at some computation points.
 
 import numpy as np
 from numba import njit
-import check
-import utils
-import constants as cts
+from . import check
+from . import utils
+from . import constants as cts
 
 
 def grav(coordinates, prisms, density, field):
