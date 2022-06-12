@@ -29,7 +29,7 @@ clean:
 	find . -name "*.pyc" -exec rm -v {} \;
 	find . -name ".coverage" -exec rm -v {} \;
 	find . -name ".pytest_cache" -exec rm -rvf {} \;
-	find . -name "__pycache__" -exec rm -rvf {}
+	find . -name "__pycache__" -exec rm -rvf {} \;
 
 uninstall:
 	python -m pip uninstall $(PROJECT)
