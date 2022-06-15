@@ -32,13 +32,13 @@ def embedding_BCCB_first_column(b0, Q, P, symmetry):
         First column of the embedding BCCB matrix.
     '''
     # check b0 is a vector
-    if b0.ndim != 1:
+    if np.asarray(b0).ndim != 1:
         raise ValueError('b0 must be an array 1d')
     # check if Q and P are positive integers
-    assert (isinstance(Q, int)) or (Q > 0), 'Q must be a positive integer'
+    assert (isinstance(Q, int)) and (Q > 0), 'Q must be a positive integer'
     assert (isinstance(P, int)) and (P > 0), 'P must be a positive integer'
     # check if b0 match Q and P
-    if b0.size != Q*P:
+    if np.asarray(b0).size != Q*P:
         raise ValueError('b0 must have Q*P elements')
     # check if symmetry is valid
     if symmetry not in ['skew-skew', 'skew-symm', 'symm-skew', 'symm-symm']:
