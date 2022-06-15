@@ -3,6 +3,73 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 import numpy as np
 
 
+def plot_panels(size, nrows, ncols, X, Y, Z, bounds, titles,
+                shape, area, mask, masked_shape, save=None):
+    '''
+    Plot a regular grid of maps.
+    '''
+    plt.figure(figsize=size)
+
+    npanels = len(Z)
+
+    for i in range(npanels):
+
+        plt.subplot(nrows,ncols,i+1)
+        plt.axis('scaled')
+        plt.title(titles[i], fontsize=14)
+        plt.contourf(0.001*Y.ravel()[mask].reshape(masked_shape),
+                     0.001*X.ravel()[mask].reshape(masked_shape),
+                     Z[i].ravel()[mask].reshape(masked_shape),
+                     vmin=-bounds[i], vmax=bounds[i],
+                     cmap='seismic')
+        plt.colorbar(shrink=0.52)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+        plt.xlabel('y (km)', fontsize=14)
+        plt.ylabel('x (km)', fontsize=14)
+        plt.xlim(0.001*area[2], 0.001*area[3])
+        plt.ylim(0.001*area[0], 0.001*area[1])
+
+    if save is not None:
+        plt.savefig(save, dpi=300, facecolor='w')
+
+    plt.show()
+
+
+def define_bound(X, Y, Z, area):
+    '''
+    Define maximum absolute bounds for a list of data Z
+    defined at the coordinates X and Y on the area "area".
+    '''
+    mask = (X.ravel() >= area[0]) & (X.ravel() <= area[1]) & (Y.ravel() >= area[2]) & (Y.ravel() <= area[3])
+    Z_clipped = []
+    for Zi in Z:
+        Z_clipped.append(Zi.ravel()[mask])
+    bound = np.max(np.abs(Z_clipped))
+    return bound
+
+
+def define_mask(total, shape, clip):
+    '''
+    Defined a mask on a grid a regular of points
+    with shape "shape", on the area "total". The
+    area to be selected by the mask is defined by
+    "clip".
+    '''
+    xp = np.linspace(total[0], total[1], shape[0])
+    yp = np.linspace(total[2], total[3], shape[1])
+    maskx = (xp.ravel() >= clip[0]) & (xp.ravel() <= clip[1])
+    masky = (yp.ravel() >= clip[2]) & (yp.ravel() <= clip[3])
+    masked_shape = (xp[maskx].size, yp[masky].size)
+
+    yp, xp = np.meshgrid(yp, xp) # y-oriented grid
+    xp = np.ravel(xp)
+    yp = np.ravel(yp)
+    mask = (xp.ravel() >= clip[0]) & (xp.ravel() <= clip[1]) & \
+           (yp.ravel() >= clip[2]) & (yp.ravel() <= clip[3])
+    return mask, masked_shape
+
+
 def model_boundaries(model, m2km=True):
     '''
     Plot the projection of the model boundaries on plane xy.

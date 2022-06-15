@@ -54,8 +54,8 @@ def coordinates(coordinates):
     Parameters
     ----------
     coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line) of
-        the computation points. All coordinates should be in meters.
+        2d-array containing x (first line), y (second line), and z (third line)
+        of the computation points. All coordinates should be in meters.
     """
     coordinates = np.asarray(coordinates)
     if coordinates.ndim != 2:
