@@ -31,14 +31,16 @@ def embedding_BCCB_first_column(b0, Q, P, symmetry):
     c0: numpy array 1d
         First column of the embedding BCCB matrix.
     '''
+
+    b0 = np.asarray(b0)
     # check b0 is a vector
-    if np.asarray(b0).ndim != 1:
+    if b0.ndim != 1:
         raise ValueError('b0 must be an array 1d')
     # check if Q and P are positive integers
     assert (isinstance(Q, int)) and (Q > 0), 'Q must be a positive integer'
     assert (isinstance(P, int)) and (P > 0), 'P must be a positive integer'
     # check if b0 match Q and P
-    if np.asarray(b0).size != Q*P:
+    if b0.size != Q*P:
         raise ValueError('b0 must have Q*P elements')
     # check if symmetry is valid
     if symmetry not in ['skew-skew', 'skew-symm', 'symm-skew', 'symm-symm']:
@@ -127,12 +129,13 @@ def eigenvalues_BCCB(c0, Q, P, ordering='row'):
         Matrix formed by the eigenvalues of the BCCB.
     '''
 
-    # check if Q and P are positive integers
-    assert (isinstance(Q, int)) and (Q > 0), 'Q must be a positive integer'
-    assert (isinstance(P, int)) and (P > 0), 'P must be a positive integer'
+    c0 = np.asarray(c0)
     # verify if c0 is a vector
     if c0.ndim != 1:
         raise ValueError('c0 must be an array 1d')
+    # check if Q and P are positive integers
+    assert (isinstance(Q, int)) and (Q > 0), 'Q must be a positive integer'
+    assert (isinstance(P, int)) and (P > 0), 'P must be a positive integer'
     # check size of c0
     if c0.size != 4*Q*P:
         raise ValueError('c0 must have 4*Q*P elements')
