@@ -26,7 +26,6 @@ def sedm(data_points, source_points, check_input=True):
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
-
     returns
     -------
     SEDM: numpy array 2d

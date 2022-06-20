@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-from ..model import rectangular_prism as rp
+from ..models import rectangular_prism as rp
 from .. import constants as cts
 
 

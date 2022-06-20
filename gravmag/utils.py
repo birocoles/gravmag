@@ -59,45 +59,65 @@ def magnetization_components(magnetization):
     return mx, my, mz
 
 
-def unit_vector(I, D):
+def unit_vector(inc, dec, check_input=True):
     '''
     Compute the Cartesian components of a unit vector
-    as a function of its inclination I and declination D
+    as a function of its inclination inc and declination dec
 
     parameters
     ----------
-    I, D: floats - inclination and declination of the unit
-        vector (in degrees)
+    inc, dec: scalars
+        Inclination and declination of the unit vector (in degrees)
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    vector: numpy array 1d - unit vector
+    vector: numpy array 1D
+        Unit vector with inclination inc and declination dec
     '''
-    I_rad = np.deg2rad(I)
-    D_rad = np.deg2rad(D)
+    if check_input is True:
+        assert np.isscalar(inc), 'inc must be a scalar'
+        assert np.isscalar(dec), 'dec must be a scalar'
+
+    # convert inclination and declination to radians
+    I_rad = np.deg2rad(inc)
+    D_rad = np.deg2rad(dec)
+
+    # compute cosine and sine
     cosI = np.cos(I_rad)
     sinI = np.sin(I_rad)
     cosD = np.cos(D_rad)
     sinD = np.sin(D_rad)
+
+    # compute vector components
     vector = np.array([cosI*cosD, cosI*sinD, sinI])
+
     return vector
 
 
-def direction(vector):
-    """
+def direction(vector, check_input=True):
+    '''
     Convert a 3-component vector to intensity, inclination and
     declination.
 
     parameters
     ----------
-    vector : numpy array 1d - the vector.
+    vector : numpy array 1d
+        Real vector with 3 elements.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
     intensity, inclination, declination: floats - intensity,
         inclination and declination (in degrees).
 
-    """
+    '''
+    vector = np.asarray(vector)
+    if check_input is True:
+        assert vector.ndim == 1, 'vector must be a vector'
+        assert vector.size == 3, 'vector must have 3 elements'
     intensity = np.linalg.norm(vector)
     x, y, z = vector
     declination = np.rad2deg(np.arctan2(y, x))
