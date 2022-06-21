@@ -113,12 +113,14 @@ def rtp(FT_data, dx, dy, inc0, dec0, inc, dec):
     assert np.iscomplexobj(FT_data), 'FT_data must be a complex array'
     assert FT_data.ndim == 2, 'FT_data must be a matrix'
 
-
+    # compute the wavenumbers
     kx, ky, kz = wavenumbers(FT_data.shape, dx, dy)
-    theta_main_field = direction(kx, ky, kz, inc0, dec0,
-                                 check_input=True)
-    theta_magnetization = direction(kx, ky, kz, inc, dec,
-                                    check_input=True)
+
+    # compute the direction filter for the main field
+    theta_main_field = direction(kx, ky, kz, inc0, dec0, check_input=True)
+
+    # compute the direction filter for the total magnetization of the sources
+    theta_magnetization = direction(kx, ky, kz, inc, dec, check_input=True)
 
     # theta_main_field[0,0] and theta_magnetization[0,0] are zero and
     # it causes a division-by-zero problem. Because of that, we
@@ -134,7 +136,7 @@ def rtp(FT_data, dx, dy, inc0, dec0, inc, dec):
     return rtp_anomaly
 
 
-def derivative(FT_data, dx, dy, order, axes):
+def derivative(FT_data, dx, dy, axes):
     '''
     Compute the reduction to the pole.
 
@@ -144,10 +146,8 @@ def derivative(FT_data, dx, dy, order, axes):
         Discrete 2D Fourier Transform of the magnetic data.
     dx, dy : floats
         Grid spacing along x and y directions.
-    order : int
-        Positive integer defining the partial derivative order.
-    axes : list of strings
-        List of strings defining the axes along which the partial derivative
+    axes : list or tuple of strings
+        Sequence of strings defining the axes along which the partial derivative
         will be computed. Possible values are 'x', 'y' or 'z'.
 
     returns
@@ -158,23 +158,25 @@ def derivative(FT_data, dx, dy, order, axes):
     FT_data = np.asarray(FT_data)
     assert np.iscomplexobj(FT_data), 'FT_data must be a complex array'
     assert FT_data.ndim == 2, 'FT_data must be a matrix'
+    assert len(axes) > 0, 'axes must have at least one element'
+    for axis in axes:
+        assert axis in ['x', 'y', 'z'], 'invalid axis {}'.format(axis)
 
+    # compute the wavenumbers
+    kx, ky, kz = wavenumbers(FT_data.shape, dx, dy)
 
-    kx, ky, kz = wavenumbers(area, FT_data.shape)
-    theta_main_field = direction(kx, ky, kz, inc0, dec0,
-                                 check_input=False)
-    theta_magnetization = direction(kx, ky, kz, inc, dec,
-                                    check_input=False)
+    # define only the derivatives along the axes contained in 'axes'
+    exponents = [axes.count('x'), axes.count('y'), axes.count('z')]
+    filter = []
+    if exponents[0] > 0:
+        filter.append((1j*kx)**exponents[0])
+    if exponents[1] > 0:
+        filter.append((1j*ky)**exponents[1])
+    if exponents[2] > 0:
+        filter.append(kz**exponents[2])
+    filter = np.prod(filter, axis=0)
 
-    # theta_main_field[0,0] and theta_magnetization[0,0] are zero and
-    # it causes a division-by-zero problem. Because of that, we
-    # set theta_main_field[0,0] and theta_magnetization[0,0] equal to 1
-    theta_main_field[0,0] = 1.
-    theta_magnetization[0,0] = 1.
-    filter = 1/(theta_main_field*theta_magnetization)
-
-    # compute the RTP anomaly
-    rtp_anomaly = filter*FT_data # in Fourier domain
-    rtp_anomaly = (ifft2(rtp_anomaly).real).ravel() # in space domain
+    # compute the derivative
+    derivative = (ifft2(filter*FT_data).real).ravel()
 
     return derivative
