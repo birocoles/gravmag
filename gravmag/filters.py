@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftfreq
 from . import utils
+from . import check
 
 
 def wavenumbers(shape, dx, dy, check_input=True):
@@ -33,10 +34,12 @@ def wavenumbers(shape, dx, dy, check_input=True):
         assert isinstance(shape[1], int) and (shape[1] > 0), 'shape[1] must \
         be a positive integer'
 
-    # Frequencies kx = 2pi fx, ky = 2pi fy
-    kx = fftfreq(n=shape[0], d=dx)
-    ky = fftfreq(n=shape[1], d=dy)
+    # wavenumbers kx = 2pi fx and ky = 2pi fy
+    kx = 2*np.pi*fftfreq(n=shape[0], d=dx)
+    ky = 2*np.pi*fftfreq(n=shape[1], d=dy)
     ky, kx = np.meshgrid(ky, kx)
+
+    # this is valid for potential fields on a plane
     kz = np.sqrt(kx**2 + ky**2)
 
     return kx, ky, kz
@@ -64,63 +67,63 @@ def direction(kx, ky, kz, inc, dec, check_input=True):
         Direction filter evaluated at the wavenumbers kx, ky and kz.
     '''
 
-    # Convert the input to an array
-    kx = np.asarray(kx)
-    ky = np.asarray(ky)
-    kz = np.asarray(kz)
-
     if check_input is True:
-        assert kx.ndim == ky.ndim == kz.ndim == 2, 'kx, ky and kz must be \
-        matrices'
-        assert np.all(kz >= 0), 'kz elements must be >= 0'
+        check.wavenumbers(kx, ky, kz)
         assert np.isscalar(inc), 'inc must be a scalar'
         assert np.isscalar(dec), 'dec must be a scalar'
 
+    # define unit vector
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # kz[0,0] is zero and raises a division-by-zero problem
-    # because of that, we set kz[0,0] == 1
+    # because of that, we set kz[0,0] == 1 to compute the filter
     kz[0,0] = 1
-    theta = np.empty_like(kz, dtype=complex)
+
+    # compute the filter
     theta = u[2] + 1j*(kx*u[0] + ky*u[1])/kz
+
+    # return kz[0,0] to zero
+    kz[0,0] = 0.
 
     return theta
 
 
-def rtp(FT_data, dx, dy, inc0, dec0, inc, dec):
+def rtp(kx, ky, kz, inc0, dec0, inc, dec, check_input=True):
     '''
-    Compute the reduction to the pole.
+    Compute the reduction to the pole filter.
 
     parameters
     ----------
-    FT_data : numpy array 2D
-        Discrete 2D Fourier Transform of the magnetic data.
-    dx, dy : floats
-        Grid spacing along x and y directions.
+    kx, ky, kz: numpy arrays 2D
+        Wavenumbers in x, y and z directions computed according to
+        function 'wavenumbers'.
     inc0, dec0: scalars
         Constant inclination and declination (in degrees) of the main
         geomagnetic field.
     inc, dec: scalars
         Constant inclination and declination (in degrees) of the sources
         total-magnetization.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    rtp_data : numpy array 2D
-        Regular grid of reduced-to-the-pole data.
+    filter : numpy array 2D
+        RTP filter evaluated at the wavenumbers kx, ky and kz.
     '''
-    FT_data = np.asarray(FT_data)
-    assert np.iscomplexobj(FT_data), 'FT_data must be a complex array'
-    assert FT_data.ndim == 2, 'FT_data must be a matrix'
 
-    # compute the wavenumbers
-    kx, ky, kz = wavenumbers(FT_data.shape, dx, dy)
+    if check_input is True:
+        check.wavenumbers(kx, ky, kz)
+        assert np.isscalar(inc0), 'inc0 must be a scalar'
+        assert np.isscalar(dec0), 'dec0 must be a scalar'
+        assert np.isscalar(inc), 'inc must be a scalar'
+        assert np.isscalar(dec), 'dec must be a scalar'
 
     # compute the direction filter for the main field
-    theta_main_field = direction(kx, ky, kz, inc0, dec0, check_input=True)
+    theta_main_field = direction(kx, ky, kz, inc0, dec0, check_input=False)
 
     # compute the direction filter for the total magnetization of the sources
-    theta_magnetization = direction(kx, ky, kz, inc, dec, check_input=True)
+    theta_magnetization = direction(kx, ky, kz, inc, dec, check_input=False)
 
     # theta_main_field[0,0] and theta_magnetization[0,0] are zero and
     # it causes a division-by-zero problem. Because of that, we
@@ -129,41 +132,34 @@ def rtp(FT_data, dx, dy, inc0, dec0, inc, dec):
     theta_magnetization[0,0] = 1.
     filter = 1/(theta_main_field*theta_magnetization)
 
-    # compute the RTP anomaly
-    rtp_anomaly = filter*FT_data # in Fourier domain
-    rtp_anomaly = (ifft2(rtp_anomaly).real).ravel() # in space domain
-
-    return rtp_anomaly
+    return filter
 
 
-def derivative(FT_data, dx, dy, axes):
+def derivative(kx, ky, kz, axes, check_input=True):
     '''
-    Compute the reduction to the pole.
+    Compute the derivative filter.
 
     parameters
     ----------
-    FT_data : numpy array 2D
-        Discrete 2D Fourier Transform of the magnetic data.
-    dx, dy : floats
-        Grid spacing along x and y directions.
+    kx, ky, kz: numpy arrays 2D
+        Wavenumbers in x, y and z directions computed according to
+        function 'wavenumbers'.
     axes : list or tuple of strings
         Sequence of strings defining the axes along which the partial derivative
         will be computed. Possible values are 'x', 'y' or 'z'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    rtp_data : numpy array 2D
-        Regular grid of reduced-to-the-pole data.
+    filter : numpy array 2D
+        Derivative filter evaluated at the wavenumbers kx, ky and kz.
     '''
-    FT_data = np.asarray(FT_data)
-    assert np.iscomplexobj(FT_data), 'FT_data must be a complex array'
-    assert FT_data.ndim == 2, 'FT_data must be a matrix'
-    assert len(axes) > 0, 'axes must have at least one element'
-    for axis in axes:
-        assert axis in ['x', 'y', 'z'], 'invalid axis {}'.format(axis)
-
-    # compute the wavenumbers
-    kx, ky, kz = wavenumbers(FT_data.shape, dx, dy)
+    if check_input is True:
+        check.wavenumbers(kx, ky, kz)
+        assert len(axes) > 0, 'axes must have at least one element'
+        for axis in axes:
+            assert axis in ['x', 'y', 'z'], 'invalid axis {}'.format(axis)
 
     # define only the derivatives along the axes contained in 'axes'
     exponents = [axes.count('x'), axes.count('y'), axes.count('z')]
@@ -176,7 +172,4 @@ def derivative(FT_data, dx, dy, axes):
         filter.append(kz**exponents[2])
     filter = np.prod(filter, axis=0)
 
-    # compute the derivative
-    derivative = (ifft2(filter*FT_data).real).ravel()
-
-    return derivative
+    return filter
