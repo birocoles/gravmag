@@ -7,7 +7,7 @@ from scipy.linalg import toeplitz, circulant
 from scipy.fft import fft2, ifft2, fftshift, ifftshift, fftfreq
 
 
-def compute(FT_data, filters, domain='space', grid=True, check_input=True):
+def compute(FT_data, filters, domain="space", grid=True, check_input=True):
     """
     Compute the convolution in Fourier domain as the Hadamard (or element-wise)
     product of the Fourier-Transformed data and a sequence of filters.
@@ -34,28 +34,32 @@ def compute(FT_data, filters, domain='space', grid=True, check_input=True):
 
     # convert input to numpy arrays
     FT_data = np.asarray(FT_data)
-    assert len(filters) > 0, 'filters must have at least one element'
+    assert len(filters) > 0, "filters must have at least one element"
     for filter in filters:
         filter = np.asarray(filter)
 
     if check_input is True:
-        assert np.iscomplexobj(FT_data), 'FT_data must be a complex array'
-        assert FT_data.ndim == 2, 'FT_data must be a matrix'
+        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
+        assert FT_data.ndim == 2, "FT_data must be a matrix"
         shape_data = FT_data.shape
         for filter in filters:
-            assert np.iscomplexobj(filter), 'filter must be a complex array'
-            assert filter.ndim == 2, 'filter must be a matrix'
-            assert filter.shape == shape_data, 'filter must have the same shape as data'
-        assert domain in ['space', 'fourier'], 'invalid domain {}'.format(domain)
+            assert np.iscomplexobj(filter), "filter must be a complex array"
+            assert filter.ndim == 2, "filter must be a matrix"
+            assert (
+                filter.shape == shape_data
+            ), "filter must have the same shape as data"
+        assert domain in ["space", "fourier"], "invalid domain {}".format(
+            domain
+        )
 
     # create a single filter by multiplying all those
     # defined in filters
     resultant_filter = np.prod(filter, axis=0)
 
     # compute the convolved data in Fourier domain
-    convolved_data = FT_data*resultant_filter
+    convolved_data = FT_data * resultant_filter
 
-    if domain == 'space':
+    if domain == "space":
         # transform colvolved data to space domain by applying
         # a 2D Discrete Inverse Fourier Transform and take only
         # the real component

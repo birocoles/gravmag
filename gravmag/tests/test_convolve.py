@@ -9,14 +9,14 @@ from .. import convolve as cv
 
 
 def test_compute_FT_data_not_complex_matrix():
-    'must raise AssertionError if FT_data not a complex matrix'
-    filters = [np.ones((5,5))]
+    "must raise AssertionError if FT_data not a complex matrix"
+    filters = [np.ones((5, 5))]
     # FT_data as a complex vector
-    FT_data = np.ones(5) - 1j*np.ones(5)
+    FT_data = np.ones(5) - 1j * np.ones(5)
     with raises(AssertionError):
         cv.compute(FT_data, filters)
     # FT_data as a real matrix
-    FT_data = np.ones((5,5))
+    FT_data = np.ones((5, 5))
     with raises(AssertionError):
         cv.compute(FT_data, filters)
 
