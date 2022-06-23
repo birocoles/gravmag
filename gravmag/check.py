@@ -5,7 +5,7 @@ def rectangular_prisms(prisms):
     """
     Check if rectangular prisms are well defined
 
-    Parameters
+    parameters
     ----------
     prisms : 2d-array
         Array containing the boundaries of the prisms in the following order:
@@ -17,15 +17,16 @@ def rectangular_prisms(prisms):
     prisms = np.asarray(prisms)
     if prisms.ndim != 2:
         raise ValueError(
-            "prisms ndim ({}) ".format(prisms.ndim)
-            + "not equal to 2"
+            "prisms ndim ({}) ".format(prisms.ndim) + "not equal to 2"
         )
     if prisms.shape[1] != 6:
         raise ValueError(
             "Number of columns in prisms ({}) ".format(prisms.shape[1])
             + "not equal to 6"
         )
-    south, north, west, east, top, bottom = tuple(prisms[:, i] for i in range(6))
+    south, north, west, east, top, bottom = tuple(
+        prisms[:, i] for i in range(6)
+    )
     err_msg = "Invalid rectangular prism(s). "
     bad_sn = south > north
     bad_we = west > east
@@ -51,7 +52,7 @@ def coordinates(coordinates):
     """
     Check if coordinates are well defined
 
-    Parameters
+    parameters
     ----------
     coordinates : 2d-array
         2d-array containing x (first line), y (second line), and z (third line)
@@ -60,8 +61,7 @@ def coordinates(coordinates):
     coordinates = np.asarray(coordinates)
     if coordinates.ndim != 2:
         raise ValueError(
-            "coordinates ndim ({}) ".format(coordinates.ndim)
-            + "not equal to 2"
+            "coordinates ndim ({}) ".format(coordinates.ndim) + "not equal to 2"
         )
     if coordinates.shape[0] != 3:
         raise ValueError(
@@ -75,7 +75,7 @@ def density(density, sources):
     Check if sources densities are well defined.
     Check the ``sources`` before.
 
-    Parameters
+    parameters
     ----------
     density : 1d-array
         1d-array containing the density of each source in kg/m^3.
@@ -87,8 +87,7 @@ def density(density, sources):
     density = np.asarray(density)
     if density.ndim != 1:
         raise ValueError(
-            "density ndim ({}) ".format(density.ndim)
-            + "not equal to 1"
+            "density ndim ({}) ".format(density.ndim) + "not equal to 1"
         )
     if density.size != sources.shape[0]:
         raise ValueError(
@@ -102,7 +101,7 @@ def magnetization(magnetization, sources):
     Check if sources magnetizations are well defined.
     Check the ``sources`` before.
 
-    Parameters
+    parameters
     ----------
     magnetization : 1d-array
         2d-array containing the total-magnetization components of the prisms.
@@ -127,6 +126,33 @@ def magnetization(magnetization, sources):
         )
     if magnetization.shape[0] != sources.shape[0]:
         raise ValueError(
-            "Number of elements in magnetization ({}) ".format(magnetization.size)
+            "Number of elements in magnetization ({}) ".format(
+                magnetization.size
+            )
             + "mismatch the number of sources ({})".format(sources.shape[0])
         )
+
+
+def wavenumbers(kx, ky, kz):
+    """
+    Check if wavenumbers are well defined.
+    See function 'gravmag.filters.wavenumbers'.
+
+    parameters
+    ----------
+    kx, ky, kz: numpy arrays 2D
+        Wavenumbers in x, y and z directions computed according to
+        function 'wavenumbers'.
+    """
+    # Convert the wavenumbers to arrays
+    kx = np.asarray(kx)
+    ky = np.asarray(ky)
+    kz = np.asarray(kz)
+
+    assert kx.ndim == ky.ndim == kz.ndim == 2, "kx, ky and kz must be matrices"
+    assert (
+        kx.shape == ky.shape == kz.shape == 2
+    ), "kx, ky and kz must have the same shape"
+    assert np.all(kx[0, :] == 0), "first line of kx must be 0"
+    assert np.all(ky[:, 0] == 0), "first column of ky must be 0"
+    assert np.all(kz >= 0), "elements of kz must be >= 0"
