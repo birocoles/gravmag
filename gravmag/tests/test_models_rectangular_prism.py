@@ -73,7 +73,7 @@ def test_invalid_coordinates():
     with pytest.raises(ValueError):
         rp.grav(coordinates, model, density, field="g_z")
     # shape (4,3)
-    coordinates = np.zeros((4,3))
+    coordinates = np.zeros((4, 3))
     with pytest.raises(ValueError):
         rp.grav(coordinates, model, density, field="g_z")
 
@@ -102,36 +102,46 @@ def test_field_decreases_with_distance():
     # gx
     gx_close = rp.grav(close, model, density, field="g_x")
     gx_far = rp.grav(far, model, density, field="g_x")
-    diffs = np.array([np.abs(potential_far) < np.abs(potential_close),
-                      np.abs(gz_far) < np.abs(gz_close),
-                      np.abs(gx_far) < np.abs(gx_close)])
-    npt.assert_allclose(diffs, np.ones((3,1), dtype=bool))
+    diffs = np.array(
+        [
+            np.abs(potential_far) < np.abs(potential_close),
+            np.abs(gz_far) < np.abs(gz_close),
+            np.abs(gx_far) < np.abs(gx_close),
+        ]
+    )
+    npt.assert_allclose(diffs, np.ones((3, 1), dtype=bool))
 
 
 def test_Laplace_equation():
     "Sum of derivatives xx, yy and zz must be zero outside the prism"
     model = np.array([[-130, 100, -100, 100, 100, 213]])
-    coords = np.array([[0, -130, 100, 50, 400],
-                       [0, -100, 100, -100, 400],
-                       [0, -100, -100, -100, -100]])
+    coords = np.array(
+        [
+            [0, -130, 100, 50, 400],
+            [0, -100, 100, -100, 400],
+            [0, -100, -100, -100, -100],
+        ]
+    )
     rho = np.array([1300])
     gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
     gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_yy")
     gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_zz")
-    npt.assert_almost_equal(gxx+gyy+gzz, np.zeros(coords.shape[1]), decimal=12)
+    npt.assert_almost_equal(
+        gxx + gyy + gzz, np.zeros(coords.shape[1]), decimal=12
+    )
 
 
 def test_Poisson_equation():
     "Sum of derivatives xx, yy and zz must -4*pi*rho*G inside the prism"
     model = np.array([[-130, 100, -100, 100, 100, 213]])
-    coords = np.array([[0, 30, -62.1],
-                       [0, -10, 80],
-                       [150, 110, 200]])
+    coords = np.array([[0, 30, -62.1], [0, -10, 80], [150, 110, 200]])
     rho = np.array([1300])
     gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
     gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_yy")
     gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_zz")
-    reference_value = -4*np.pi*1300*cts.GRAVITATIONAL_CONST*cts.SI2EOTVOS
-    npt.assert_almost_equal(gxx+gyy+gzz,
-                            np.zeros(coords.shape[1]) + reference_value,
-                            decimal=12)
+    reference_value = (
+        -4 * np.pi * 1300 * cts.GRAVITATIONAL_CONST * cts.SI2EOTVOS
+    )
+    npt.assert_almost_equal(
+        gxx + gyy + gzz, np.zeros(coords.shape[1]) + reference_value, decimal=12
+    )

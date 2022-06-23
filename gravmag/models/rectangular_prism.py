@@ -1,4 +1,4 @@
-'''
+"""
 This code presents a general approach for implementing the gravitational
 potential and vertical component of the gravitational acceleration produced
 by a rectangular prism by using the analytical formulas of
@@ -7,7 +7,7 @@ Nagy et al (2000, 2002). This prototype is inspired on
 (Uieda et al, 2020). It makes use of the modified arctangent function proposed
 by Fukushima (2020, eq. 72) and of a modified logarithm function for dealing
 with singularities at some computation points.
-'''
+"""
 
 
 import numpy as np
@@ -69,7 +69,7 @@ def grav(coordinates, prisms, density, field):
         "g_xz": kernel_dxz,
         "g_yy": kernel_dyy,
         "g_yz": kernel_dyz,
-        "g_zz": kernel_dzz
+        "g_zz": kernel_dzz,
     }
 
     # Verify the field
@@ -135,18 +135,10 @@ def mag(coordinates, prisms, magnetization, field):
 
     # Available fields
     fields = {
-        "b_potential": {"x": kernel_dx,
-                        "y": kernel_dy,
-                        "z": kernel_dz},
-        "b_z": {"x": kernel_dxz,
-                "y": kernel_dyz,
-                "z": kernel_dzz},
-        "b_y": {"x": kernel_dxy,
-                "y": kernel_dyy,
-                "z": kernel_dyz},
-        "b_x": {"x": kernel_dxx,
-                "y": kernel_dxy,
-                "z": kernel_dxz},
+        "b_potential": {"x": kernel_dx, "y": kernel_dy, "z": kernel_dz},
+        "b_z": {"x": kernel_dxz, "y": kernel_dyz, "z": kernel_dzz},
+        "b_y": {"x": kernel_dxy, "y": kernel_dyy, "z": kernel_dyz},
+        "b_x": {"x": kernel_dxx, "y": kernel_dxy, "z": kernel_dxz},
     }
 
     # Verify the field
@@ -169,7 +161,7 @@ def mag(coordinates, prisms, magnetization, field):
     fieldy = fields[field]["y"]
     fieldz = fields[field]["z"]
     jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, result)
-    #result *= CM*T2NT
+    # result *= CM*T2NT
     result *= cts.MAGNETIC_CONST
     if field == "b_potential":
         result *= -1
@@ -186,15 +178,15 @@ def jit_grav(coordinates, prisms, density, field, out):
         # Iterate over prisms
         for p in range(prisms.shape[0]):
             # Change coordinates
-            X1 = prisms[p,0] - coordinates[0,l]
-            X2 = prisms[p,1] - coordinates[0,l]
-            Y1 = prisms[p,2] - coordinates[1,l]
-            Y2 = prisms[p,3] - coordinates[1,l]
-            Z1 = prisms[p,4] - coordinates[2,l]
-            Z2 = prisms[p,5] - coordinates[2,l]
+            X1 = prisms[p, 0] - coordinates[0, l]
+            X2 = prisms[p, 1] - coordinates[0, l]
+            Y1 = prisms[p, 2] - coordinates[1, l]
+            Y2 = prisms[p, 3] - coordinates[1, l]
+            Z1 = prisms[p, 4] - coordinates[2, l]
+            Z2 = prisms[p, 5] - coordinates[2, l]
             # Compute the field
             out[l] += density[p] * (
-                  field(X2, Y2, Z2)
+                field(X2, Y2, Z2)
                 - field(X2, Y2, Z1)
                 - field(X1, Y2, Z2)
                 + field(X1, Y2, Z1)
@@ -215,15 +207,15 @@ def jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, out):
         # Iterate over prisms
         for p in range(prisms.shape[0]):
             # Change coordinates
-            X1 = prisms[p,0] - coordinates[0,l]
-            X2 = prisms[p,1] - coordinates[0,l]
-            Y1 = prisms[p,2] - coordinates[1,l]
-            Y2 = prisms[p,3] - coordinates[1,l]
-            Z1 = prisms[p,4] - coordinates[2,l]
-            Z2 = prisms[p,5] - coordinates[2,l]
+            X1 = prisms[p, 0] - coordinates[0, l]
+            X2 = prisms[p, 1] - coordinates[0, l]
+            Y1 = prisms[p, 2] - coordinates[1, l]
+            Y2 = prisms[p, 3] - coordinates[1, l]
+            Z1 = prisms[p, 4] - coordinates[2, l]
+            Z2 = prisms[p, 5] - coordinates[2, l]
             # Compute the field component x
             out[l] += mx[p] * (
-                  fieldx(X2, Y2, Z2)
+                fieldx(X2, Y2, Z2)
                 - fieldx(X2, Y2, Z1)
                 - fieldx(X1, Y2, Z2)
                 + fieldx(X1, Y2, Z1)
@@ -234,7 +226,7 @@ def jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, out):
             )
             # Compute the field component y
             out[l] += my[p] * (
-                  fieldy(X2, Y2, Z2)
+                fieldy(X2, Y2, Z2)
                 - fieldy(X2, Y2, Z1)
                 - fieldy(X1, Y2, Z2)
                 + fieldy(X1, Y2, Z1)
@@ -245,7 +237,7 @@ def jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, out):
             )
             # Compute the field component z
             out[l] += mz[p] * (
-                  fieldz(X2, Y2, Z2)
+                fieldz(X2, Y2, Z2)
                 - fieldz(X2, Y2, Z1)
                 - fieldz(X1, Y2, Z2)
                 + fieldz(X1, Y2, Z1)
@@ -255,14 +247,16 @@ def jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, out):
                 - fieldz(X1, Y1, Z1)
             )
 
+
 # kernels
+
 
 @njit
 def kernel_inverse_r(X, Y, Z):
     """
     Function for computing the inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = (
         Y * X * utils.safe_log(Z + R)
         + X * Z * utils.safe_log(Y + R)
@@ -279,7 +273,7 @@ def kernel_dz(X, Y, Z):
     """
     Function for computing the z-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = -(
         Y * utils.safe_log(X + R)
         + X * utils.safe_log(Y + R)
@@ -293,7 +287,7 @@ def kernel_dy(X, Y, Z):
     """
     Function for computing the y-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = -(
         X * utils.safe_log(Z + R)
         + Z * utils.safe_log(X + R)
@@ -307,7 +301,7 @@ def kernel_dx(X, Y, Z):
     """
     Function for computing the x-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = -(
         Y * utils.safe_log(Z + R)
         + Z * utils.safe_log(Y + R)
@@ -321,8 +315,8 @@ def kernel_dzz(X, Y, Z):
     """
     Function for computing the zz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - utils.safe_atan2(Y * X, Z * R)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    result = -utils.safe_atan2(Y * X, Z * R)
     return result
 
 
@@ -331,7 +325,7 @@ def kernel_dyz(X, Y, Z):
     """
     Function for computing the yz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = utils.safe_log(X + R)
     return result
 
@@ -341,7 +335,7 @@ def kernel_dxz(X, Y, Z):
     """
     Function for computing the xz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = utils.safe_log(Y + R)
     return result
 
@@ -351,8 +345,8 @@ def kernel_dyy(X, Y, Z):
     """
     Function for computing the yy-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - utils.safe_atan2(X * Z, Y * R)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    result = -utils.safe_atan2(X * Z, Y * R)
     return result
 
 
@@ -361,7 +355,7 @@ def kernel_dxy(X, Y, Z):
     """
     Function for computing the xy-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
     result = utils.safe_log(Z + R)
     return result
 
@@ -371,6 +365,6 @@ def kernel_dxx(X, Y, Z):
     """
     Function for computing the xx-derivative of inverse distance kernel
     """
-    R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = - utils.safe_atan2(Y * Z, X * R)
+    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    result = -utils.safe_atan2(Y * Z, X * R)
     return result
