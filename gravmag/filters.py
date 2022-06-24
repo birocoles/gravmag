@@ -31,12 +31,10 @@ def wavenumbers(shape, dx, dy, check_input=True):
         assert len(shape) == 2, "shape must have 2 elements"
         assert isinstance(shape[0], int) and (
             shape[0] > 0
-        ), "shape[0] must \
-        be a positive integer"
+        ), "shape[0] must be a positive integer"
         assert isinstance(shape[1], int) and (
             shape[1] > 0
-        ), "shape[1] must \
-        be a positive integer"
+        ), "shape[1] must be a positive integer"
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
     kx = 2 * np.pi * fftfreq(n=shape[0], d=dx)
@@ -58,7 +56,7 @@ def direction(kx, ky, kz, inc, dec, check_input=True):
     ----------
     kx, ky, kz: numpy arrays 2D
         Wavenumbers in x, y and z directions computed according to
-        function 'wavenumbers'.
+        function 'gravmag.filters.wavenumbers'.
     inc, dec: scalars
         Inclination and declination of the unit vector (in degrees)
         defining the direction filter.
@@ -100,7 +98,7 @@ def rtp(kx, ky, kz, inc0, dec0, inc, dec, check_input=True):
     ----------
     kx, ky, kz: numpy arrays 2D
         Wavenumbers in x, y and z directions computed according to
-        function 'wavenumbers'.
+        function 'gravmag.filters.wavenumbers'.
     inc0, dec0: scalars
         Constant inclination and declination (in degrees) of the main
         geomagnetic field.
@@ -147,7 +145,7 @@ def derivative(kx, ky, kz, axes, check_input=True):
     ----------
     kx, ky, kz: numpy arrays 2D
         Wavenumbers in x, y and z directions computed according to
-        function 'wavenumbers'.
+        function 'gravmag.filters.wavenumbers'.
     axes : list or tuple of strings
         Sequence of strings defining the axes along which the partial derivative
         will be computed. Possible values are 'x', 'y' or 'z'.

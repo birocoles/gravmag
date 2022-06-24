@@ -30,37 +30,47 @@ def compute(FT_data, filters, domain="space", grid=True, check_input=True):
         input. If False, then the output is a flattened 1D array.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    convolved_data : numpy array 2D or flattened array 1D
+        Convolved data as a grid or a flattened array 1D, depending on
+        the parameter "grid".
     """
 
-    # convert input to numpy arrays
+    # convert FT_data to numpy array
     FT_data = np.asarray(FT_data)
-    assert len(filters) > 0, "filters must have at least one element"
-    for filter in filters:
-        filter = np.asarray(filter)
+
+    assert isinstance(filters, list), "filters must be a list"
 
     if check_input is True:
         assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
         assert FT_data.ndim == 2, "FT_data must be a matrix"
         shape_data = FT_data.shape
+        assert (len(filters) > 0), "filters must have at least one element"
         for filter in filters:
-            assert np.iscomplexobj(filter), "filter must be a complex array"
+            # convert filters elements into numpy arrays
+            filter = np.asarray(filter)
+            # verify filter ndim
             assert filter.ndim == 2, "filter must be a matrix"
+            # verify filter shape
             assert (
                 filter.shape == shape_data
             ), "filter must have the same shape as data"
         assert domain in ["space", "fourier"], "invalid domain {}".format(
             domain
         )
+        assert isinstance(grid, bool), "grid must be True or False"
 
     # create a single filter by multiplying all those
     # defined in filters
-    resultant_filter = np.prod(filter, axis=0)
+    resultant_filter = np.prod(filters, axis=0)
 
     # compute the convolved data in Fourier domain
     convolved_data = FT_data * resultant_filter
 
     if domain == "space":
-        # transform colvolved data to space domain by applying
+        # transform convolved data to space domain by applying
         # a 2D Discrete Inverse Fourier Transform and take only
         # the real component
         convolved_data = ifft2(convolved_data).real
