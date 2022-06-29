@@ -23,7 +23,7 @@ def test_compute_FT_data_not_complex_matrix():
 
 def test_compute_filters_not_complex_matrices():
     "must raise AssertionError if filters does not contain complex matrices"
-    FT_data = np.ones((5,5)) - 1j * np.ones((5,5))
+    FT_data = np.ones((5, 5)) - 1j * np.ones((5, 5))
     # filters without any element
     filters = []
     with raises(AssertionError):
@@ -37,27 +37,9 @@ def test_compute_filters_not_complex_matrices():
     with raises(AssertionError):
         cv.compute(FT_data, filters)
     # filters with matrices having a sahpe different from FT_data
-    filters = [np.ones((3,3))]
+    filters = [np.ones((3, 3))]
     with raises(AssertionError):
         cv.compute(FT_data, filters)
-
-
-def test_compute_invalid_domain():
-    "must raise AssertionError for invalid domain"
-    FT_data = np.ones((5,5)) - 1j * np.ones((5,5))
-    filters = [np.ones((5,5)), np.ones((5,5))]
-    domain = "not-valid-domain"
-    with raises(AssertionError):
-        cv.compute(FT_data, filters, domain)
-
-
-def test_compute_invalid_grid():
-    "must raise AssertionError for invalid domain"
-    FT_data = np.ones((5,5)) - 1j * np.ones((5,5))
-    filters = [np.ones((5,5)), np.ones((5,5))]
-    grid = "invalid-grid"
-    with raises(AssertionError):
-        cv.compute(FT_data, filters, grid)
 
 
 def test_general_BTTB_bad_num_blocks():

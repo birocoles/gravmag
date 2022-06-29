@@ -4,10 +4,10 @@ This file contains Python codes for dealing with 2D discrete convolutions.
 
 import numpy as np
 from scipy.linalg import toeplitz, circulant
-from scipy.fft import fft2, ifft2, fftshift, ifftshift, fftfreq
+from scipy.fft import fft2, ifft2
 
 
-def compute(FT_data, filters, domain="space", grid=True, check_input=True):
+def compute(FT_data, filters, check_input=True):
     """
     Compute the convolution in Fourier domain as the Hadamard (or element-wise)
     product of the Fourier-Transformed data and a sequence of filters.
@@ -20,14 +20,6 @@ def compute(FT_data, filters, domain="space", grid=True, check_input=True):
     filter : list of numpy arrays 2D
         List of matrices having the same shape of FT_data. These matrices
         represent the sequence of filters to be applied in Fourier domain.
-    domain : string
-        Define the domain of the output. If equal to 'fourier', the output is
-        simply the Hadamard product of 'FT_data' and the filters. If equal to
-        'space', then the output is the 2D Discrete Inverse Fourier Transform
-        of the Hadamard product of 'FT_data' and the filters.
-    grid : boolean
-        Define the output shape. If True, the output has the same shape as the
-        input. If False, then the output is a flattened 1D array.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -47,7 +39,7 @@ def compute(FT_data, filters, domain="space", grid=True, check_input=True):
         assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
         assert FT_data.ndim == 2, "FT_data must be a matrix"
         shape_data = FT_data.shape
-        assert (len(filters) > 0), "filters must have at least one element"
+        assert len(filters) > 0, "filters must have at least one element"
         for filter in filters:
             # convert filters elements into numpy arrays
             filter = np.asarray(filter)
@@ -57,10 +49,6 @@ def compute(FT_data, filters, domain="space", grid=True, check_input=True):
             assert (
                 filter.shape == shape_data
             ), "filter must have the same shape as data"
-        assert domain in ["space", "fourier"], "invalid domain {}".format(
-            domain
-        )
-        assert isinstance(grid, bool), "grid must be True or False"
 
     # create a single filter by multiplying all those
     # defined in filters
@@ -69,18 +57,7 @@ def compute(FT_data, filters, domain="space", grid=True, check_input=True):
     # compute the convolved data in Fourier domain
     convolved_data = FT_data * resultant_filter
 
-    if domain == "space":
-        # transform convolved data to space domain by applying
-        # a 2D Discrete Inverse Fourier Transform and take only
-        # the real component
-        convolved_data = ifft2(convolved_data).real
-
-    if grid is True:
-        # return the convolved data as a grid
-        return convolved_data
-    else:
-        # return the convolved data as a flattened 1D array
-        return convolved_data.ravel()
+    return convolved_data
 
 
 def general_BTTB(num_blocks, columns_blocks, rows_blocks=None):
@@ -719,7 +696,9 @@ def product_BCCB_vector(L, Q, P, v, ordering="row"):
 #     p0 = np.asarray(p0)
 #     assert dobs.size == A.shape[0], 'A order and dobs size must be the same'
 #     assert p0.size == A.shape[1], 'A order and p0 size must be the same'
-#     assert np.isscalar(tol) & (tol > 0.), 'tol must be a positive scalar'
+# assert (
+#     np.isistance(tol, (float, int)) & (tol > 0.)
+# ), 'tol must be a positive scalar'
 
 #     N = dobs.size
 #     p = p0.copy()
