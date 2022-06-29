@@ -77,8 +77,8 @@ def unit_vector(inc, dec, check_input=True):
         Unit vector with inclination inc and declination dec
     """
     if check_input is True:
-        assert np.isscalar(inc), "inc must be a scalar"
-        assert np.isscalar(dec), "dec must be a scalar"
+        assert isinstance(inc, (float, int)), "inc must be a scalar"
+        assert isinstance(dec, (float, int)), "dec must be a scalar"
 
     # convert inclination and declination to radians
     I_rad = np.deg2rad(inc)
@@ -198,7 +198,7 @@ def coordinate_transform(x, y, theta):
         vector with direction defined by "theta".
     """
     assert x.shape == y.shape, "x and y must have the same shape"
-    assert np.isscalar(theta), "theta must be a scalar"
+    assert isinstance(theta, (float, int)), "theta must be a scalar"
     cos_theta = np.cos(theta)
     sin_theta = np.sin(theta)
     x0 = 0.5 * (np.max(x) + np.min(x))
