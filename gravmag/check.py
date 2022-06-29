@@ -150,8 +150,9 @@ def wavenumbers(kx, ky, kz):
     kz = np.asarray(kz)
 
     assert kx.ndim == ky.ndim == kz.ndim == 2, "kx, ky and kz must be matrices"
+    common_shape = kx.shape
     assert (
-        kx.shape == ky.shape == kz.shape == 2
+        ky.shape == kz.shape == common_shape
     ), "kx, ky and kz must have the same shape"
     assert np.all(kx[0, :] == 0), "first line of kx must be 0"
     assert np.all(ky[:, 0] == 0), "first column of ky must be 0"

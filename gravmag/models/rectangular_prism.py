@@ -40,16 +40,16 @@ def grav(coordinates, prisms, density, field):
         Gravitational field to be computed.
         The available fields are:
 
-        - Gravitational potential: ``g_potential``
-        - z-component of acceleration: ``g_z``
-        - y-component of acceleration: ``g_y``
-        - x-component of acceleration: ``g_x``
-        - zz-component of acceleration: ``g_zz``
-        - yz-component of acceleration: ``g_yz``
-        - xz-component of acceleration: ``g_xz``
-        - yy-component of acceleration: ``g_yy``
-        - xy-component of acceleration: ``g_xy``
-        - xx-component of acceleration: ``g_xx``
+        - Gravitational potential: ``g_potential`` (in m² / s²)
+        - z-component of acceleration: ``g_z`` (in mGal)
+        - y-component of acceleration: ``g_y`` (in mGal)
+        - x-component of acceleration: ``g_x`` (in mGal)
+        - zz-component of acceleration: ``g_zz`` (in Eötvös)
+        - yz-component of acceleration: ``g_yz`` (in Eötvös)
+        - xz-component of acceleration: ``g_xz`` (in Eötvös)
+        - yy-component of acceleration: ``g_yy`` (in Eötvös)
+        - xy-component of acceleration: ``g_xy`` (in Eötvös)
+        - xx-component of acceleration: ``g_xx`` (in Eötvös)
 
     Returns
     -------
@@ -121,10 +121,10 @@ def mag(coordinates, prisms, magnetization, field):
         Magnetic field to be computed.
         The available fields are:
 
-        - Magnetic scalar potential: ``b_potential``
-        - z-component of induction: ``b_z``
-        - y-component of induction: ``b_y``
-        - x-component of induction: ``b_x``
+        - Magnetic scalar potential: ``b_potential`` (in uT x m)
+        - z-component of induction: ``b_z`` (in nT)
+        - y-component of induction: ``b_y`` (in nT)
+        - x-component of induction: ``b_x`` (in nT)
 
     Returns
     -------
@@ -161,10 +161,13 @@ def mag(coordinates, prisms, magnetization, field):
     fieldy = fields[field]["y"]
     fieldz = fields[field]["z"]
     jit_mag(coordinates, prisms, mx, my, mz, fieldx, fieldy, fieldz, result)
-    # result *= CM*T2NT
-    result *= cts.MAGNETIC_CONST
+    result *= cts.CM
+    # Convert from T to nT
+    if field in ["b_x", "b_y", "b_z"]:
+        result *= cts.T2NT
+    # Convert from T to uT and change sign
     if field == "b_potential":
-        result *= -1
+        result *= -cts.T2MT
     return result
 
 

@@ -9,7 +9,7 @@ help:
 	@echo "  test      run the test suite (including doctests) and report coverage"
 	@echo "  report    open the html test report"
 	@echo "  clean     clean up build and generated files"
-	@echo "  style     automatically format code"
+	@echo "  style     automatically format code with black"
 	@echo "  uninstall   uninstall and remove from "
 
 install:
