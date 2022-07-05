@@ -126,3 +126,37 @@ def derivative(kx, ky, kz, axes, check_input=True):
     filter = np.prod(filter, axis=0)
 
     return filter
+
+
+def continuation(kz, dz, check_input=True):
+    """
+    Compute the level-to-level upward/downward continuation filter.
+
+    parameters
+    ----------
+    kz: numpy array 2D
+        Wavenumber in z direction computed according to function
+        'gravmag.filters.wavenumbers'.
+    dz : int or float
+        Scalar defining the difference between the constant vertical coordinate
+        of the continuation plane and the constant vertical coordinate of the
+        original data. Negative and positive values define upward and downward
+        continuations, respectively.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    filter : numpy array 2D
+        Continuation filter evaluated at the wavenumbers kx, ky and kz.
+    """
+
+    if check_input is True:
+        kz = np.asarray(kz)
+        assert kz.ndim == 2, "kz must be a matrix"
+        assert np.all(kz >= 0), "elements of kz must be >= 0"
+        assert isinstance(dz, (int, float)), "dz must be int or float"
+
+    filter = np.exp(dz * kz)
+
+    return filter
