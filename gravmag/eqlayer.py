@@ -56,7 +56,7 @@ def kernel_matrix_monopoles(data_points, z0, field=["z"], check_input=True):
 
     # dictionary translating field into kernel matrix
     kernel = {
-        "potential": 1.0 / R2,
+        "potential": 1.0 / np.sqrt(R2),
         "x": id.grad(data_points, source_points, R2, ["x"], False)[0],
         "y": id.grad(data_points, source_points, R2, ["y"], False)[0],
         "z": id.grad(data_points, source_points, R2, ["z"], False)[0],
