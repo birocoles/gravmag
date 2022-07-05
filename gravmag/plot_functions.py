@@ -207,3 +207,28 @@ def draw_surface_prisms(
             [list(zip(x, y, z))], color=edges_color, linewidth=edges_width
         )
         ax.add_collection3d(edges)
+
+
+def bounds_diffs(computed, true):
+    assert len(computed) == len(true)
+    bounds = []
+    diffs = []
+    for c, t in zip(computed, true):
+        bound_fields = np.max(np.abs(t))
+        diffs.append(c - t)
+        bound_diff = np.max(np.abs(c - t))
+        bounds.append(bound_fields)
+        bounds.append(bound_fields)
+        bounds.append(bound_diff)
+
+    return bounds, diffs
+
+
+def fields_list(computed, true, diffs):
+    assert len(computed) == len(true) == len(diffs)
+    fields = []
+    for c, t, d in zip(computed, true, diffs):
+        fields.append(c)
+        fields.append(t)
+        fields.append(d)
+    return fields

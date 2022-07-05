@@ -90,13 +90,13 @@ def grad(
             raise ValueError("components must have at most 3 elements")
         # convert components to array of strings
         # repeated components are ignored
-        # the code below results in an unsorted array _components
+        # the code below removes possibly duplicated components in components
         _, _indices = np.unique(
             np.asarray(components, dtype=str), return_index=True
         )
-        _components = np.array(components)[np.sort(_indices)]
+        components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in _components:
+        for component in components:
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -113,7 +113,7 @@ def grad(
 
     # compute the gradient components defined in _components
     Ka = []
-    for component in _components:
+    for component in components:
         index = component_index[component]
         delta = data_points[index][:, np.newaxis] - source_points[index]
         Ka.append(-delta / R3)
@@ -170,13 +170,13 @@ def grad_tensor(
             raise ValueError("components must have at most 6 elements")
         # convert components to array of strings
         # repeated components are ignored
-        # the code below results in an unsorted array _components
+        # the code below removes possibly duplicated components in components
         _, _indices = np.unique(
             np.asarray(components, dtype=str), return_index=True
         )
-        _components = np.array(components)[np.sort(_indices)]
+        components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in _components:
+        for component in components:
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -199,13 +199,13 @@ def grad_tensor(
     R3 = SEDM * np.sqrt(SEDM)
     R5 = R3 * SEDM
 
-    # compute the gradient tensor components defined in _components
+    # compute the gradient tensor components defined in components
     Kab = []
-    if ("xx" in _components) or ("yy" in _components) or ("zz" in _components):
+    if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
     else:
         aux = 0
-    for component in _components:
+    for component in components:
         index1, index2 = component_indices[component]
         delta1 = data_points[index1][:, np.newaxis] - source_points[index1]
         delta2 = data_points[index2][:, np.newaxis] - source_points[index2]
@@ -215,110 +215,3 @@ def grad_tensor(
             Kab.append((3 * delta1 * delta2) / R5)
 
     return Kab
-
-
-def Dv(v, Kx, Ky, Kz, check_input=True):
-    """
-    Compute a directional derivative of first order along the unit vector v.
-
-    of the inverse distance
-    function between the data points and the source points.
-
-    parameters
-    ----------
-    v: numpy array 1d
-        Unit vector defining the derivative direction.
-    Kx, Ky, Kz: numpy arrays 2d
-        Matrices containing the partial derivatives of the inverse distance
-        function along x, y and z directions computed according to
-        function 'grad'.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    Kv: numpy array 2d
-        Matrix containing the directional derivative along v.
-    """
-    if check_input is True:
-        # check if v is a vector
-        if (v.ndim != 1) or (v.size != 3):
-            raise ValueError("v must be a vector with 3 elements")
-        # check if v is a unit vector
-        if np.sum(v * v) != 1:
-            raise ValueError("v must be a unit vector")
-        # check if Kx, Ky and Kz are matrices
-        if Kx.ndim != 2:
-            raise ValueError("Kx must be a matrix")
-        if Ky.ndim != 2:
-            raise ValueError("Ky must be a matrix")
-        if Kz.ndim != 2:
-            raise ValueError("Kz must be a matrix")
-        # check if Kx, Ky and Kz have the same shape
-        shape_x = Kx.shape
-        if Ky.shape != shape_x:
-            raise ValueError("Ky and Kx must have the same shape")
-        if Kz.shape != shape_x:
-            raise ValueError("Kz and Kx must have the same shape")
-
-    Kv = v[0] * Kx + v[1] * Ky + v[2] * Kz
-
-    return Kv
-
-
-def grad_Dv(v, Kxx, Kxy, Kxz, Kyy, Kyz, check_input=True):
-    """
-    Compute the gradient components of the directional derivative of first
-    order of the inverse distance function along the direction defined by
-    vector v.
-
-    parameters
-    ----------
-    v: numpy array 1d
-        Unit vector defining the derivative direction.
-    Kxx, Kxy, Kxz, Kyy, Kyz: numpyy arrays 2d
-        N x M matrices containing the second derivatives xx, xy, xz, yy and yz
-        computed according to function 'Dv'.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    Kvx, Kvy, Kvz: numpy array 2d
-        Matrix containing the Cartesian components of the gradient of the
-        directional derivative of the inverse distance along v.
-    """
-    if check_input is True:
-        # check if v is a vector
-        if (v.ndim != 1) or (v.size != 3):
-            raise ValueError("v must be a vector with 3 elements")
-        # check if v is a unit vector
-        if np.sum(v * v) != 1:
-            raise ValueError("v must be a unit vector")
-        # check if Kxx, Kxy, Kxz, Kyy and Kyz are matrices
-        if Kxx.ndim != 2:
-            raise ValueError("Kxx must be a matrix")
-        if Kxy.ndim != 2:
-            raise ValueError("Kxy must be a matrix")
-        if Kxz.ndim != 2:
-            raise ValueError("Kxz must be a matrix")
-        if Kyy.ndim != 2:
-            raise ValueError("Kyy must be a matrix")
-        if Kyz.ndim != 2:
-            raise ValueError("Kyz must be a matrix")
-        # check if Kxx, Kxy, Kxz, Kyy and Kyz have the same shape
-        shape_xx = Kxx.shape
-        if Kxy.shape != shape_xx:
-            raise ValueError("Kxy and Kxx must have the same shape")
-        if Kxz.shape != shape_xx:
-            raise ValueError("Kxz and Kxx must have the same shape")
-        if Kyy.shape != shape_xx:
-            raise ValueError("Kyy and Kxx must have the same shape")
-        if Kyz.shape != shape_xx:
-            raise ValueError("Kyz and Kxx must have the same shape")
-
-    Kvx = v[0] * Kxx + v[1] * Kxy + v[2] * Kxz
-    Kvy = v[0] * Kxy + v[1] * Kyy + v[2] * Kyz
-    Kvz = v[0] * Kxz + v[1] * Kyz - v[2] * (Kxx + Kyy)
-
-    return Kvx, Kvy, Kvz
