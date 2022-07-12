@@ -94,9 +94,9 @@ def grad(
         _, _indices = np.unique(
             np.asarray(components, dtype=str), return_index=True
         )
-        components = np.array(components)[np.sort(_indices)]
+        _components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in components:
+        for component in _components:
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -104,6 +104,8 @@ def grad(
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
+    else:
+        _components = components
 
     # define a dictionary for component indices
     component_index = {"x": 0, "y": 1, "z": 2}
@@ -113,7 +115,7 @@ def grad(
 
     # compute the gradient components defined in _components
     Ka = []
-    for component in components:
+    for component in _components:
         index = component_index[component]
         delta = data_points[index][:, np.newaxis] - source_points[index]
         Ka.append(-delta / R3)
@@ -174,9 +176,9 @@ def grad_tensor(
         _, _indices = np.unique(
             np.asarray(components, dtype=str), return_index=True
         )
-        components = np.array(components)[np.sort(_indices)]
+        _components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in components:
+        for component in _components:
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -184,6 +186,8 @@ def grad_tensor(
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
+    else:
+        _components = components
 
     # define a dictionary for component indices
     component_indices = {
@@ -201,11 +205,11 @@ def grad_tensor(
 
     # compute the gradient tensor components defined in components
     Kab = []
-    if ("xx" in components) or ("yy" in components) or ("zz" in components):
+    if ("xx" in _components) or ("yy" in _components) or ("zz" in _components):
         aux = 1 / R3  # compute this term only if it is necessary
     else:
         aux = 0
-    for component in components:
+    for component in _components:
         index1, index2 = component_indices[component]
         delta1 = data_points[index1][:, np.newaxis] - source_points[index1]
         delta2 = data_points[index2][:, np.newaxis] - source_points[index2]
