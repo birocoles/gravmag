@@ -146,7 +146,6 @@ def mag(coordinates, sources, moment, field, scale=True):
 
     # Verify the input parameters
     check.coordinates(coordinates)
-    check.rectangular_prisms(sources)
     check.magnetization(moment, sources)
 
     # check if field is valid
@@ -162,48 +161,50 @@ def mag(coordinates, sources, moment, field, scale=True):
     mx, my, mz = utils.magnetization_components(moment)
 
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = id.sedm(coordinates, sources, check_input=False)
+    # sources must be transposed because its shape is transposed
+    # with respect to coordinates
+    R2 = id.sedm(coordinates, sources.T, check_input=False)
 
     # compute the kernel matrix according to "field"
     if field is "potential":
         Gx, Gy, Gz = id.grad(
-            data_points=data_points,
-            source_points=source_points,
+            data_points=coordinates,
+            source_points=sources.T,
             SEDM=R2,
             components=["x", "y", "z"],
             check_input=False,
         )
-        G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
+        G = -(mx * Gx + my * Gy + mz * Gz)
     elif field is "x":
         Gxx, Gxy, Gxz = id.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
+            data_points=coordinates,
+            source_points=sources.T,
             SEDM=R2,
             components=["xx", "xy", "xz"],
             check_input=False,
         )
-        G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
+        G = mx * Gxx + my * Gxy + mz * Gxz
     elif field is "y":
         Gxy, Gyy, Gyz = id.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
+            data_points=coordinates,
+            source_points=sources.T,
             SEDM=R2,
             components=["xy", "yy", "yz"],
             check_input=False,
         )
-        G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
-    else field is "z":
+        G = mx * Gxy + my * Gyy + mz * Gyz
+    else: # field is "z"
         Gxz, Gyz, Gzz = id.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
+            data_points=coordinates,
+            source_points=sources.T,
             SEDM=R2,
             components=["xz", "yz", "zz"],
             check_input=False,
         )
-        G = u[0] * Gxz + u[1] * Gyz + u[2] * Gzz
+        G = mx * Gxz + my * Gyz + mz * Gzz
 
     # compute the potential field
-    result = G@mass
+    result = np.sum(G, axis=1)
 
     # multiply the computed field by the corresponding scale factors
     if scale is True:
