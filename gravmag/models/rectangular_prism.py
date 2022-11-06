@@ -40,16 +40,16 @@ def grav(coordinates, prisms, density, field, scale=True):
         Gravitational field to be computed.
         The available fields are:
 
-        - Gravitational potential: ``g_potential`` (in m² / s²)
-        - z-component of acceleration: ``g_z`` (in mGal)
-        - y-component of acceleration: ``g_y`` (in mGal)
-        - x-component of acceleration: ``g_x`` (in mGal)
-        - zz-component of acceleration: ``g_zz`` (in Eötvös)
-        - yz-component of acceleration: ``g_yz`` (in Eötvös)
-        - xz-component of acceleration: ``g_xz`` (in Eötvös)
-        - yy-component of acceleration: ``g_yy`` (in Eötvös)
-        - xy-component of acceleration: ``g_xy`` (in Eötvös)
-        - xx-component of acceleration: ``g_xx`` (in Eötvös)
+        - Gravitational potential: ``potential`` (in m² / s²)
+        - z-component of acceleration: ``z`` (in mGal)
+        - y-component of acceleration: ``y`` (in mGal)
+        - x-component of acceleration: ``x`` (in mGal)
+        - zz-component of acceleration: ``zz`` (in Eötvös)
+        - yz-component of acceleration: ``yz`` (in Eötvös)
+        - xz-component of acceleration: ``xz`` (in Eötvös)
+        - yy-component of acceleration: ``yy`` (in Eötvös)
+        - xy-component of acceleration: ``xy`` (in Eötvös)
+        - xx-component of acceleration: ``xx`` (in Eötvös)
      scale : boolean
         Defines if the resultant field will be multiplied by scale factors
         "constants.GRAVITATIONAL_CONST" (Gravitational constant),
@@ -70,16 +70,16 @@ def grav(coordinates, prisms, density, field, scale=True):
 
     # Available fields
     fields = {
-        "g_potential": kernel_inverse_r,
-        "g_x": kernel_dx,
-        "g_y": kernel_dy,
-        "g_z": kernel_dz,
-        "g_xx": kernel_dxx,
-        "g_xy": kernel_dxy,
-        "g_xz": kernel_dxz,
-        "g_yy": kernel_dyy,
-        "g_yz": kernel_dyz,
-        "g_zz": kernel_dzz,
+        "potential": kernel_inverse_r,
+        "x": kernel_dx,
+        "y": kernel_dy,
+        "z": kernel_dz,
+        "xx": kernel_dxx,
+        "xy": kernel_dxy,
+        "xz": kernel_dxz,
+        "yy": kernel_dyy,
+        "yz": kernel_dyz,
+        "zz": kernel_dzz,
     }
 
     # Verify the field
@@ -96,10 +96,10 @@ def grav(coordinates, prisms, density, field, scale=True):
     if scale is True:
         result *= cts.GRAVITATIONAL_CONST
         # Convert from m/s^2 to mGal
-        if field in ["g_x", "g_y", "g_z"]:
+        if field in ["x", "y", "z"]:
             result *= cts.SI2MGAL
         # Convert from 1/s^2 to Eötvös
-        if field in ["g_xx", "g_xy", "g_xz", "g_yy", "g_yz", "g_zz"]:
+        if field in ["xx", "xy", "xz", "yy", "yz", "zz"]:
             result *= cts.SI2EOTVOS
 
     return result
@@ -130,10 +130,10 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
         Magnetic field to be computed.
         The available fields are:
 
-        - Magnetic scalar potential: ``b_potential`` (in uT x m)
-        - z-component of induction: ``b_z`` (in nT)
-        - y-component of induction: ``b_y`` (in nT)
-        - x-component of induction: ``b_x`` (in nT)
+        - Magnetic scalar potential: ``potential`` (in uT x m)
+        - z-component of induction: ``z`` (in nT)
+        - y-component of induction: ``y`` (in nT)
+        - x-component of induction: ``x`` (in nT)
     scale : boolean
        Defines if the resultant field will be multiplied by scale factors
        "constants.CM" (Magnetic constant),
@@ -154,10 +154,10 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
 
     # Available fields
     fields = {
-        "b_potential": {"x": kernel_dx, "y": kernel_dy, "z": kernel_dz},
-        "b_z": {"x": kernel_dxz, "y": kernel_dyz, "z": kernel_dzz},
-        "b_y": {"x": kernel_dxy, "y": kernel_dyy, "z": kernel_dyz},
-        "b_x": {"x": kernel_dxx, "y": kernel_dxy, "z": kernel_dxz},
+        "potential": {"x": kernel_dx, "y": kernel_dy, "z": kernel_dz},
+        "z": {"x": kernel_dxz, "y": kernel_dyz, "z": kernel_dzz},
+        "y": {"x": kernel_dxy, "y": kernel_dyy, "z": kernel_dyz},
+        "x": {"x": kernel_dxx, "y": kernel_dxy, "z": kernel_dxz},
     }
 
     # Verify the field
@@ -180,10 +180,10 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
     if scale is True:
         result *= cts.CM
         # Convert from T to nT
-        if field in ["b_x", "b_y", "b_z"]:
+        if field in ["x", "y", "z"]:
             result *= cts.T2NT
         # Convert from T to uT and change sign
-        if field == "b_potential":
+        if field == "potential":
             result *= -cts.T2MT
 
     return result
