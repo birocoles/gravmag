@@ -128,7 +128,7 @@ def IDFT(FT_data, unpad=False, grid=True, check_input=True):
     if check_input is True:
         assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
         assert FT_data.ndim == 2, "FT_data must be a matrix"
-        assert isinstance(unpad, bool), "pad_width must be True or False"
+        assert isinstance(unpad, bool), "unpad must be True or False"
         assert isinstance(grid, bool), "grid must be True or False"
 
     # compute the 2D IDFT of FT_data using the Fast Fourier
@@ -136,14 +136,95 @@ def IDFT(FT_data, unpad=False, grid=True, check_input=True):
     IFT_data = ifft2(FT_data).real
 
     if unpad is True:
-        # define number of values padded to the edges of original data
-        pad_width = (FT_data.shape[0] // 3, FT_data.shape[1] // 3)
-        # remove the padding
-        IFT_data = IFT_data[
-            pad_width[0] : 2 * pad_width[0], pad_width[1] : 2 * pad_width[1]
-        ]
+        IFT_data = _unpad(IFT_data)
 
     if grid is False:
         IFT_data = IFT_data.ravel()
 
     return IFT_data
+
+
+def spectra(
+    FT_data,
+    shift=True,
+    types=["amplitude", "phase", "power"],
+    check_input=True,
+):
+    """
+    Compute the amplitude, phase and/or power spectra of a potential-field data
+    set arranged as regular grid on a horizontal surface.
+
+    parameters
+    ----------
+    FT_data : numpy array 2D
+        Matrix containing the DFT of a potential-field data set arranged as
+        regular grid on a horizontal surface.
+    shift : boolean
+        If True, swaps half-spaces for x and y directions so that the
+        zero-frequency component is placed to the center of the spectrum.
+    types : list of strings
+        List of strings defining the spectra to be computed.
+        Default is ['amplitude', 'phase', 'power'], which contains all available
+        spectra. Repeated types are ignored.
+    check_input : boolean
+        If True, it verifies if the input is valid. Default is True.
+
+    returns
+    -------
+    spectra_list : list of numpy arrays 2D
+        Matrices containing the computed spectra.
+    """
+
+    # convert data to numpy array
+    FT_data = np.asarray(FT_data)
+
+    if check_input is True:
+        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
+        assert FT_data.ndim == 2, "FT_data must be a matrix"
+        assert isinstance(shift, bool), "shift must be True or False"
+        # check number of elements in types
+        if len(types) > 3:
+            raise ValueError("types must have at most 3 elements")
+        # convert types to array of strings
+        # repeated elements are ignored
+        # the code below removes possibly duplicated elements in types
+        _, _indices = np.unique(np.asarray(types, dtype=str), return_index=True)
+        _types = np.array(types)[np.sort(_indices)]
+        # check if types are valid
+        for t in _types:
+            if t not in ["amplitude", "phase", "power"]:
+                raise ValueError("invalid type {}".format(t))
+    else:
+        _types = types
+
+    spectra_list = []
+
+    for t in _types:
+        if t is "amplitude":
+            spectra_list.append(np.abs(FT_data))
+        elif t is "phase":
+            spectra_list.append(np.angle(FT_data, deg=True))
+        else:  # type is "power"
+            spectra_list.append(np.abs(FT_data) ** 2)
+
+    if shift is True:
+        # swaps half-spaces for x and y directions so that the zero-frequency
+        # component is placed to the center of the spectrum.
+        for i in range(len(spectra_list)):
+            spectra_list[i] = fftshift(spectra_list[i])
+
+    return spectra_list
+
+
+def _unpad(data):
+    """
+    Remove padded values at the edges of data.
+    """
+    # define number of values padded to the edges of original data
+    pad_width = (data.shape[0] // 3, data.shape[1] // 3)
+    # remove padded values ate the edges of data
+    data = data[
+        pad_width[0] : 2 * pad_width[0], pad_width[1] : 2 * pad_width[1]
+    ]
+
+    return data
