@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftfreq, fftshift, ifftshift
+from . import utils
+from . import constants as cts
 
 
 def wavenumbers(shape, dx, dy, check_input=True):
@@ -228,3 +230,132 @@ def _unpad(data):
     ]
 
     return data
+
+
+def FT_magnetized_rectangular_prism(
+    kx,
+    ky,
+    kz,
+    prisms,
+    magnetization,
+    inct,
+    dect
+):
+    """
+    Prototype of closed-form spectrum associated with the approximated
+    total-field anomaly produced by a rectangular prism (Bhattacharyya, 1966)
+
+    Bhattacharyya, B. K., 1966. Continuous spectrum of the
+    total-magnetic-field anomaly due to a rectangular prismatic body,
+    Geophysics, 31, 97-121. https://doi.org/10.1190/1.1439767
+    """
+
+    result = np.zeros(kx.shape, dtype='complex')
+
+    # unit vector associated with constant main field
+    l, m, n = utils.unit_vector(inct, dect)
+    # unit vectors associated with the constant total magnetization
+    # of each prism
+    mx, my, mz = utils.magnetization_components(magnetization)
+
+    # iterate over prisms
+    for prism, L, M, N, Ip in zip(prisms, mx, my, mz, magnetization[:,0]):
+        # horizontal dimension x
+        b0 = prism[1] - prism[0]
+        # horizontal dimension y
+        c0 = prism[3] - prism[2]
+        # geometrical factor depending on the horizontal dimensions
+        B = np.zeros_like(kx)
+        B[1:,1:] = (
+            4*np.sin(kx[1:,1:]*b0/2)*np.sin(ky[1:,1:]*c0/2)
+        )/(kx[1:,1:]*ky[1:,1:])
+        # auxiliary constants
+        a12 = L*m + M*l
+        a13 = L*n + N*l
+        a23 = M*n + N*m
+        # dimensionless factor dependent on the main
+        # field and total-magnetization directions
+        kz[0,0] = 1.
+        D_real = (
+            -l*L*kx**2 - m*M*ky**2 + n*N*kz**2 - a12*kx*ky
+        )/kz**2
+        D_imag = (a13*kx + a23*ky)/kz
+        D = D_real + 1j*D_imag
+        kz[0,0] = 0.
+        # geometrical factor dependent on the top and bottom of the prism
+        H = np.exp(-kz*prism[4]) - np.exp(-kz*prism[5])
+        # Foutier transform of the prism
+        result += 2*np.pi*B*D*H*Ip
+
+    return result
+
+
+def FT_grav_potential_rectangular_prism(
+    shape,
+    dx,
+    dy,
+    prisms,
+    density,
+    z0,
+    scale=True
+):
+    """
+    Prototype of closed-form spectrum associated with the gravitational
+    potential produced by a rectangular prism (Bhattacharyya, 1966)
+
+    Bhattacharyya, B. K., 1966. Continuous spectrum of the
+    total-magnetic-field anomaly due to a rectangular prismatic body,
+    Geophysics, 31, 97-121. https://doi.org/10.1190/1.1439767
+    """
+
+    # compute the wavenumbers
+    kx, ky, kz = wavenumbers(shape, dx, dy)
+
+    result = np.zeros(shape, dtype='complex')
+
+    # iterate over prisms
+    for prism, rho in zip(prisms, density):
+        # horizontal dimension x
+        b0 = prism[1] - prism[0]
+        # horizontal dimension y
+        c0 = prism[3] - prism[2]
+        # top of the prism
+        ht = prism[4] - z0
+        # bottom of the prism
+        hb = prism[5] - z0
+        # horizontal coordinates of the center
+        xc = 0.5*(prism[1] + prism[0])
+        yc = 0.5*(prism[3] + prism[2])
+
+        # geometrical factor depending on the horizontal dimensions
+        B = np.zeros_like(kx)
+        B[1:,1:] = (
+            4*np.sin(kx[1:,1:]*b0/2)*np.sin(ky[1:,1:]*c0/2)
+        )/(kx[1:,1:]*ky[1:,1:])
+        # B = (
+        #     4*np.sin(kx*b0/2)*np.sin(ky*c0/2)
+        # )/(kx*ky)
+        kz[0,0] = 1.
+        B /= (kz**2)
+        kz[0,0] = 0.
+        # geometrical factor dependent on the top and bottom of the prism
+        H = np.exp(-kz*ht) - np.exp(-kz*hb)
+        # shifting factor
+        #S = np.exp(-1j*(kx*xc + ky*yc))
+        #S = np.exp(1j*(kx*xc + ky*yc))
+        # Fourier transform of the prism
+        #result += 2*np.pi*B*H*rho
+        result += B*H*rho/(2*np.pi)
+        #result += 2*np.pi*B*H*S*rho
+
+    # reorganize wavenumbers according to fftshift
+    #result = fftshift(result)
+
+    # remove FFT normalization and restore amplitude
+    #result *= np.sqrt(shape[0]*shape[1])/(dx*dy)
+
+    # multiply the computed field by the corresponding scale factors
+    if scale is True:
+        result *= cts.GRAVITATIONAL_CONST
+
+    return result

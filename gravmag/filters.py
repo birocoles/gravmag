@@ -148,7 +148,7 @@ def continuation(kz, dz, check_input=True):
     returns
     -------
     filter : numpy array 2D
-        Continuation filter evaluated at the wavenumbers kx, ky and kz.
+        Continuation filter evaluated at the wavenumber kz.
     """
 
     if check_input is True:
@@ -158,5 +158,40 @@ def continuation(kz, dz, check_input=True):
         assert isinstance(dz, (int, float)), "dz must be int or float"
 
     filter = np.exp(dz * kz)
+
+    return filter
+
+
+def cuttof_frequency(kz, max_freq, check_input=True):
+    """
+    Compute a simple low-pass filter.
+
+    parameters
+    ----------
+    kz: numpy array 2D
+        Wavenumber in z direction computed according to function
+        'gravmag.filters.wavenumbers'.
+    max_freq : int or float
+        Scalar defining the maximum frequency of the filtered data..
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    filter : numpy array 2D
+        Low-pass filter evaluated at the wavenumber kz.
+    """
+
+    if check_input is True:
+        kz = np.asarray(kz)
+        assert kz.ndim == 2, "kz must be a matrix"
+        assert np.all(kz >= 0), "elements of kz must be >= 0"
+        assert isinstance(max_freq, (int, float)) and (
+            max_freq > 0
+        ), "max_freq must be a positive scalar"
+
+    dead_zone = kz >= max_freq
+    filter = np.ones_like(kz)
+    filter[dead_zone] = 0.0
 
     return filter

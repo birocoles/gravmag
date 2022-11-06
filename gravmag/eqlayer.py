@@ -52,7 +52,7 @@ def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
     source_points = data_points.copy()
     source_points[2] = z0
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = distance.cdist(data_points.T, source_points.T, "sqeuclidean")
+    R2 = id.sedm(data_points, source_points, check_input=False)
 
     # compute the kernel matrix according to "field"
     if field is "potential":
