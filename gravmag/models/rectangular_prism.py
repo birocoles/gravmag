@@ -1,7 +1,7 @@
 """
 This code presents a general approach for implementing the gravitational
-potential and vertical component of the gravitational acceleration produced
-by a rectangular prism by using the analytical formulas of
+and magnetic induction fields produced
+by rectangular prisms by using the analytical formulas of
 Nagy et al (2000, 2002). This prototype is inspired on
 [Harmonica](https://www.fatiando.org/harmonica/latest/index.html)
 (Uieda et al, 2020). It makes use of the modified arctangent function proposed
@@ -20,7 +20,7 @@ from .. import constants as cts
 def grav(coordinates, prisms, density, field, scale=True):
     """
     Gravitational potential, first and second derivatives
-    produced by a right-rectangular prism in Cartesian coordinates.
+    produced by right-rectangular prisms in Cartesian coordinates.
     All values are referred to a topocentric Cartesian system with axes
     x, y and z pointing to north, east and down, respectively.
 
@@ -108,7 +108,7 @@ def grav(coordinates, prisms, density, field, scale=True):
 def mag(coordinates, prisms, magnetization, field, scale=True):
     """
     Magnetic scalar potential and magnetic induction components
-    produced by a right-rectangular prism in Cartesian coordinates.
+    produced by right-rectangular prisms in Cartesian coordinates.
     All values are referred to a topocentric Cartesian system with axes
     x, y and z pointing to north, east and down, respectively.
 
