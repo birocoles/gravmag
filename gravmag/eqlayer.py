@@ -127,7 +127,7 @@ def kernel_matrix_dipoles(
     source_points = data_points.copy()
     source_points[2] = z0
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = distance.cdist(data_points.T, source_points.T, "sqeuclidean")
+    R2 = id.sedm(data_points, source_points, check_input=False)
     # compute the unit vector defined by inc and dec
     u = utils.unit_vector(inc, dec, check_input=False)
 

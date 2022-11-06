@@ -40,7 +40,7 @@ def safe_log(x):
 
 def magnetization_components(magnetization):
     """
-    Given the total-magnetization intensity, inclination and declination,
+    Given the total-magnetization (moment) intensity, inclination and declination,
     compute the Cartesian components mx, my and mz.
     Run ``check.rectangular_prisms_magnetization`` before.
     """
