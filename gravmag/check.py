@@ -70,64 +70,63 @@ def coordinates(coordinates):
         )
 
 
-def density(density, sources):
+def scalar_prop(prop, sources):
     """
-    Check if sources densities are well defined.
+    Check if sources scalar physical property are well defined.
     Check the ``sources`` before.
 
     parameters
     ----------
-    density : 1d-array
-        1d-array containing the density of each source in kg/m^3.
+    prop : 1d-array
+        1d-array containing the scalar physical property of each source.
     sources : 2d-array
         2d-array containing the coordinates of the sources.
         Each line must contain the coordinates of a single source.
         All coordinates should be in meters.
     """
-    density = np.asarray(density)
-    if density.ndim != 1:
+    prop = np.asarray(prop)
+    if prop.ndim != 1:
         raise ValueError(
-            "density ndim ({}) ".format(density.ndim) + "not equal to 1"
+            "prop ndim ({}) ".format(prop.ndim) + "not equal to 1"
         )
-    if density.size != sources.shape[0]:
+    if prop.size != sources.shape[0]:
         raise ValueError(
-            "Number of elements in density ({}) ".format(density.size)
+            "Number of elements in prop ({}) ".format(prop.size)
             + "mismatch the number of sources ({})".format(sources.shape[0])
         )
 
 
-def magnetization(magnetization, sources):
+def vector_prop(prop, sources):
     """
-    Check if sources magnetizations are well defined.
+    Check if sources vector physical property are well defined.
     Check the ``sources`` before.
 
     parameters
     ----------
-    magnetization : 1d-array
-        2d-array containing the total-magnetization components of the prisms.
-        Each line must contain the x, y and z components of the total
-        magnetization of a single source.
-        All values should be in A/m.
+    prop : 1d-array
+        2d-array containing the vector physical property components of 
+        the prisms. Each line must contain the x, y and z components of 
+        the physical property of a single source. All values should be in A/m.
     sources : 2d-array
         2d-array containing the coordinates of the sources.
         Each line must contain the coordinates of a single source.
         All coordinates should be in meters.
     """
-    magnetization = np.asarray(magnetization)
-    if magnetization.ndim != 2:
+    prop = np.asarray(prop)
+    if prop.ndim != 2:
         raise ValueError(
-            "magnetization ndim ({}) ".format(magnetization.ndim)
+            "prop ndim ({}) ".format(prop.ndim)
             + "not equal to 2"
         )
-    if magnetization.shape[1] != 3:
+    if prop.shape[1] != 3:
         raise ValueError(
-            "magnetization ndim ({}) ".format(magnetization.shape[1])
+            "prop ndim ({}) ".format(prop.shape[1])
             + "not equal to 3"
         )
-    if magnetization.shape[0] != sources.shape[0]:
+    if prop.shape[0] != sources.shape[0]:
         raise ValueError(
-            "Number of elements in magnetization ({}) ".format(
-                magnetization.size
+            "Number of elements in prop ({}) ".format(
+                prop.size
             )
             + "mismatch the number of sources ({})".format(sources.shape[0])
         )

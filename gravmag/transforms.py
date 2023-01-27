@@ -202,9 +202,9 @@ def spectra(
     spectra_list = []
 
     for t in _types:
-        if t is "amplitude":
+        if t == "amplitude":
             spectra_list.append(np.abs(FT_data))
-        elif t is "phase":
+        elif t == "phase":
             spectra_list.append(np.angle(FT_data, deg=True))
         else:  # type is "power"
             spectra_list.append(np.abs(FT_data) ** 2)

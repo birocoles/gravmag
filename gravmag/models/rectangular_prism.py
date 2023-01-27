@@ -66,7 +66,7 @@ def grav(coordinates, prisms, density, field, scale=True):
     # Verify the input parameters
     check.coordinates(coordinates)
     check.rectangular_prisms(prisms)
-    check.density(density, prisms)
+    check.scalar_prop(density, prisms)
 
     # Available fields
     fields = {
@@ -150,7 +150,7 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
     # Verify the input parameters
     check.coordinates(coordinates)
     check.rectangular_prisms(prisms)
-    check.magnetization(magnetization, prisms)
+    check.vector_prop(magnetization, prisms)
 
     # Available fields
     fields = {

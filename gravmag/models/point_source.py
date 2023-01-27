@@ -59,7 +59,7 @@ def grav(coordinates, sources, mass, field, scale=True):
     if check_input is True:
         check.coordinates(coordinates)
         check.coordinates(sources)
-        check.density(mass)
+        check.scalar_prop(mass)
         # check if field is valid
         if field not in [
             "potential",

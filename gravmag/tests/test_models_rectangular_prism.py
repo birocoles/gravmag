@@ -31,37 +31,37 @@ def test_invalid_prism_boundaries():
     # wrong x boundaries
     model = np.array([[100, -100, -100, 100, 100, 200]])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_x")
-        rp.mag(coordinates, model, magnetization, field="b_y")
+        rp.grav(coordinates, model, density, field="x")
+        rp.mag(coordinates, model, magnetization, field="y")
     # wrong y boundaries
     model = np.array([[-100, 100, 100, -100, 100, 200]])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_z")
-        rp.mag(coordinates, model, magnetization, field="b_z")
+        rp.grav(coordinates, model, density, field="z")
+        rp.mag(coordinates, model, magnetization, field="z")
     # wrong z boundaries
     model = np.array([[-100, 100, -100, 100, 200, 100]])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_potential")
-        rp.mag(coordinates, model, magnetization, field="b_x")
+        rp.grav(coordinates, model, density, field="potential")
+        rp.mag(coordinates, model, magnetization, field="x")
 
 
 def test_invalid_prism():
     "Check if passing an invalid prism raises an error"
     density = np.array([1000])
     coordinates = np.array([[0], [0], [0]])
-    field = "g_potential"
+    field = "potential"
     # shape (1,)
     model = np.array([100, -100, -100, 100, 100, 200])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_potential")
+        rp.grav(coordinates, model, density, field="potential")
     # shape (2,4)
     model = np.empty((2, 4))
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_x")
+        rp.grav(coordinates, model, density, field="x")
     # shape (1,4)
     model = np.empty((1, 5))
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_z")
+        rp.grav(coordinates, model, density, field="z")
 
 
 def test_invalid_coordinates():
@@ -71,11 +71,11 @@ def test_invalid_coordinates():
     # shape (1,)
     coordinates = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_z")
+        rp.grav(coordinates, model, density, field="z")
     # shape (4,3)
     coordinates = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_z")
+        rp.grav(coordinates, model, density, field="z")
 
 
 def test_invalid_density():
@@ -84,7 +84,7 @@ def test_invalid_density():
     density = np.array([1000])
     coordinates = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        rp.grav(coordinates, model, density, field="g_z")
+        rp.grav(coordinates, model, density, field="z")
 
 
 def test_field_decreases_with_distance():
@@ -94,14 +94,14 @@ def test_field_decreases_with_distance():
     close = np.array([[20], [0], [0]])
     far = np.array([[20], [0], [-100]])
     # potentia
-    potential_close = rp.grav(close, model, density, field="g_potential")
-    potential_far = rp.grav(far, model, density, field="g_potential")
+    potential_close = rp.grav(close, model, density, field="potential")
+    potential_far = rp.grav(far, model, density, field="potential")
     # gz
-    gz_close = rp.grav(close, model, density, field="g_z")
-    gz_far = rp.grav(far, model, density, field="g_z")
+    gz_close = rp.grav(close, model, density, field="z")
+    gz_far = rp.grav(far, model, density, field="z")
     # gx
-    gx_close = rp.grav(close, model, density, field="g_x")
-    gx_far = rp.grav(far, model, density, field="g_x")
+    gx_close = rp.grav(close, model, density, field="x")
+    gx_far = rp.grav(far, model, density, field="x")
     diffs = np.array(
         [
             np.abs(potential_far) < np.abs(potential_close),
@@ -123,9 +123,9 @@ def test_Laplace_equation():
         ]
     )
     rho = np.array([1300])
-    gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
-    gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_yy")
-    gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_zz")
+    gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="xx")
+    gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="yy")
+    gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="zz")
     npt.assert_almost_equal(
         gxx + gyy + gzz, np.zeros(coords.shape[1]), decimal=12
     )
@@ -136,9 +136,9 @@ def test_Poisson_equation():
     model = np.array([[-130, 100, -100, 100, 100, 213]])
     coords = np.array([[0, 30, -62.1], [0, -10, 80], [150, 110, 200]])
     rho = np.array([1300])
-    gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_xx")
-    gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_yy")
-    gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="g_zz")
+    gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="xx")
+    gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="yy")
+    gzz = rp.grav(coordinates=coords, prisms=model, density=rho, field="zz")
     reference_value = (
         -4 * np.pi * 1300 * cts.GRAVITATIONAL_CONST * cts.SI2EOTVOS
     )
