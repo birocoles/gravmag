@@ -59,7 +59,7 @@ def grav(coordinates, sources, mass, field, scale=True):
     if check_input is True:
         check.coordinates(coordinates)
         check.coordinates(sources)
-        check.density(mass)
+        check.scalar_prop(mass)
         # check if field is valid
         if field not in [
             "potential",
@@ -87,7 +87,7 @@ def grav(coordinates, sources, mass, field, scale=True):
         G = id.grad_tensor(coordinates, sources, R2, [field], False)[0]
 
     # compute the potential field
-    result = G@mass
+    result = G @ mass
 
     # multiply the computed field by the corresponding scale factors
     if scale is True:
@@ -149,12 +149,7 @@ def mag(coordinates, sources, moment, field, scale=True):
     check.magnetization(moment, sources)
 
     # check if field is valid
-    if field not in [
-        "potential",
-        "x",
-        "y",
-        "z"
-    ]:
+    if field not in ["potential", "x", "y", "z"]:
         raise ValueError("invalid field {}".format(field))
 
     # Compute the Cartesian components of total-moment
@@ -193,7 +188,7 @@ def mag(coordinates, sources, moment, field, scale=True):
             check_input=False,
         )
         G = mx * Gxy + my * Gyy + mz * Gyz
-    else: # field is "z"
+    else:  # field is "z"
         Gxz, Gyz, Gzz = id.grad_tensor(
             data_points=coordinates,
             source_points=sources.T,

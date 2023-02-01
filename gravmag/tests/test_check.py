@@ -56,11 +56,11 @@ def test_invalid_rectangular_prism_densities():
     # density.ndim != 1
     density = np.array([[1000], [2000]])
     with pytest.raises(ValueError):
-        check.density(density, model)
+        check.scalar_prop(density, model)
     # density.size != prisms.shape[0]
     density = np.array([1000, 2000, 66])
     with pytest.raises(ValueError):
-        check.density(density, model)
+        check.scalar_prop(density, model)
 
 
 def test_invalid_rectangular_prism_magnetizations():
@@ -71,12 +71,12 @@ def test_invalid_rectangular_prism_magnetizations():
     # magnetization.ndim != 2
     magnetization = np.array([2.1, -13, 22])
     with pytest.raises(ValueError):
-        check.magnetization(magnetization, model)
+        check.vector_prop(magnetization, model)
     # magnetization.shape[1] != 3
     magnetization = np.array([[2.1, -13], [1.1, 45], [0.5, 10]])
     with pytest.raises(ValueError):
-        check.magnetization(magnetization, model)
+        check.vector_prop(magnetization, model)
     # magnetization.shape[0] != prisms.shape[0]
     magnetization = np.array([[2.1, -13, 10], [1.1, 45, -18], [0.5, -31, 70]])
     with pytest.raises(ValueError):
-        check.magnetization(magnetization, model)
+        check.vector_prop(magnetization, model)
