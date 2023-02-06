@@ -1,5 +1,6 @@
 import numpy as np
 from numba import njit
+from . import check
 
 
 @njit
@@ -210,3 +211,29 @@ def coordinate_transform(x, y, theta):
     u_prime = cos_theta * cos_theta + sin_theta * sin_theta
     v_prime = -sin_theta * cos_theta + cos_theta * sin_theta
     return x_prime, y_prime, u_prime, v_prime
+
+
+def prisms_volume(prisms):
+    """
+    Compute the volume of each prism forming the model.
+
+    parameters
+    ----------
+    prisms : 2d-array
+        2d-array containing the coordinates of the prisms. Each line must contain
+        the coordinates of a single prism in the following order:
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
+        All coordinates should be in meters.
+
+    returns
+    -------
+    volume : 1d-array
+        1d-array containing the volume of each prism in prisms.
+    """
+
+    # Verify the input parameters
+    check.rectangular_prisms(prisms)
+
+    volume = np.prod(prisms[:,[1,3,5]] - prisms[:,[0,2,4]], axis=1)
+
+    return volume
