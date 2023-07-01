@@ -186,3 +186,249 @@ def kernel_matrix_dipoles(
         G = axx * Gxx + axy * Gxy + axz * Gxz + ayy * Gyy + ayz * Gyz
 
     return G
+
+
+def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
+    """
+    Solves the unconstrained overdetermined problem to estimate the physical-property
+    distribution on the equivalent layer via conjugate gradient normal equation residual 
+    (CGNR) (Golub and Van Loan, 2013, sec. 11.3) or conjugate gradient least squares (CGLS) 
+    (Aster et al., 2019, p. 165) method.
+
+    parameters
+    ----------
+    G: numpy array 2d
+        N x M matrix defined by the kernel of the equivalent layer integral.
+    data : numpy array 1d
+        Potential-field data.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    delta : float
+        Ratio of Euclidean norm of the residuals and number of data.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
+    
+    if check_input is True:
+
+        # check if data is a 1d numpy array
+        if data.ndim != 1:
+            raise ValueError(
+                "data must be a 1d array"
+            )
+
+        # check if G is a 2d numpy array
+        if G.ndim != 2:
+            raise ValueError(
+                "G must be a matriz"
+            )
+
+        # check if G match number of data
+        if G.shape[0] != (data.size):
+            raise ValueError(
+                "G does not match the number of data"
+            )
+
+        assert isinstance(epsilon, float) and (
+            epsilon > 0
+        ), "epsilon must be a positive scalar"
+
+        assert isinstance(ITMAX, int) and (
+            ITMAX > 0
+        ), "ITMAX must be a positive integer"
+
+
+    # initializations
+    D = data.size
+    residuals = np.copy(data)
+    delta = np.sqrt(np.sum(residuals*residuals))/D
+    vartheta = G.T@residuals
+    rho0 = np.sum(vartheta*vartheta)
+    parameters = np.zeros(G.shape[1])
+    tau = 0
+    eta = np.zeros_like(parameters)
+    m = 1
+    # updates
+    while (delta > epsilon) and (m < ITMAX):
+        eta = vartheta + tau*eta
+        nu = G@vartheta
+        upsilon = rho0/np.sum(nu*nu)
+        parameters += upsilon*eta
+        residuals -= upsilon*nu
+        delta = np.sqrt(np.sum(residuals*residuals))/D
+        vartheta = G.T@residuals
+        rho = np.sum(vartheta*vartheta)
+        tau = rho/rho0
+        rho0 = rho
+        m += 1
+
+    return delta, parameters
+
+
+def method_column_action_C92(G, data, data_points, zlayer, epsilon, ITMAX, check_input=True):
+    """
+    Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
+
+    parameters
+    ----------
+    G: numpy array 2d
+        N x M matrix defined by the kernel of the equivalent layer integral.
+    data : numpy array 1d
+        Potential-field data.
+    data_points : numpy array 2d
+        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
+        z (3rd row) of N data points. The ith column contains the
+        coordinates of the ith data point.
+    zlayer : float
+        Constant defining the vertical position for all equivalent sources.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    rmax : float
+        Maximum absolute residual.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """    
+
+    if check_input is True:
+
+        # check if data is a 1d numpy array
+        if data.ndim != 1:
+            raise ValueError(
+                "data must be a 1d array"
+            )
+
+        # check if G is a 2d numpy array
+        if G.ndim != 2:
+            raise ValueError(
+                "G must be a matriz"
+            )
+
+        # check if G match number of data
+        if G.shape[0] != (data.size):
+            raise ValueError(
+                "G does not match the number of data"
+            )
+
+        data_points = np.asarray(data_points)
+        check.coordinates(data_points)
+
+        assert isinstance(zlayer, float) and (
+            np.all(zlayer > data_points[2])
+        ), "zlayer must be below the observation points"
+
+        assert isinstance(epsilon, float) and (
+            epsilon > 0
+        ), "epsilon must be a positive scalar"
+
+        assert isinstance(ITMAX, int) and (
+            ITMAX > 0
+        ), "ITMAX must be a positive integer"
+
+
+        # initializations
+        residuals = np.copy(data)
+        parameters = np.zeros_like(data)
+        imax = np.argmax(np.abs(residuals))
+        rmax = residuals[imax]
+        m = 1
+        # updates
+        while (rmax > epsilon) and (m < ITMAX):
+            xmax, ymax, zmax = data_points[:,imax]
+            parameters[imax] += rmax*(zlayer - data_points[imax])
+            residuals -= G[:,imax]*rmax
+            imax = np.argmax(np.abs(residuals))
+            rmax = residuals[imax]
+            m += 1
+
+
+def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True):
+    """
+    Solves the unconstrained problem to estimate the physical-property
+    distribution on the equivalent layer via iterative method.
+
+    parameters
+    ----------
+    G: numpy array 2d
+        N x M matrix defined by the kernel of the equivalent layer integral.
+    data : numpy array 1d
+        Potential-field data.
+    factor : float
+        Positive scalar controlling the convergence.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    delta : float
+        Ratio of Euclidean norm of the residuals and number of data.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
+    
+    if check_input is True:
+
+        # check if data is a 1d numpy array
+        if data.ndim != 1:
+            raise ValueError(
+                "data must be a 1d array"
+            )
+
+        # check if G is a 2d numpy array
+        if G.ndim != 2:
+            raise ValueError(
+                "G must be a matriz"
+            )
+
+        # check if G match number of data
+        if G.shape[0] != (data.size):
+            raise ValueError(
+                "G does not match the number of data"
+            )
+
+        assert isinstance(factor, float) and (
+            factor > 0
+        ), "factor must be a positive scalar"
+
+        assert isinstance(epsilon, float) and (
+            epsilon > 0
+        ), "epsilon must be a positive scalar"
+
+        assert isinstance(ITMAX, int) and (
+            ITMAX > 0
+        ), "ITMAX must be a positive integer"
+
+
+    # initializations
+    D = data.size
+    parameters = factor*data
+    residuals = data - G@parameters
+    delta = np.sqrt(np.sum(residuals*residuals))/D
+    m = 1
+    # updates
+    while (delta > epsilon) and (m < ITMAX):
+        dp = factor*residuals
+        p += dp
+        nu = G@dp
+        r -= nu
+        delta = np.sqrt(np.sum(residuals*residuals))/D
+        m += 1
+
+    return delta, parameters
