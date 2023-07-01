@@ -15,6 +15,7 @@ from numba import njit
 from .. import check
 from .. import utils
 from .. import constants as cts
+from .. import inverse_distance as idist
 
 
 def grav(coordinates, prisms, density, field, scale=True):
@@ -189,6 +190,36 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
     return result
 
 
+# functions for computing the field produced by all prisms at all coordinates
+
+
+# def vectorized_grav(coordinates, prisms, density, field, out):
+#     """
+#     Compute the gravitational field of all 'prisms' at all 'coordinates'
+#     """
+
+#     # Iterate over x vertices
+#     for i in [0, 1]:
+#         X = coordinates[0][:, np.newaxis] - prisms[:,i]
+#         # Iterate over y vertices
+#         for j in [2, 3]:
+#             Y = coordinates[1][:, np.newaxis] - prisms[:,j]
+#             # Iterate over z vertices
+#             for k in [4, 5]:
+#                 Z = coordinates[2][:, np.newaxis] - prisms[:,k]
+#                 # compute the SEDM between the coordinates and a vertex
+#                 R = np.sqrt(
+#                     idist.sedm(
+#                         data_points = coordinates, 
+#                         source_points = prisms[:,[i,j,k]].T, 
+#                         check_input=False
+#                         )
+#                     )
+#                 PAREI AQUI
+
+#     return result
+
+
 @njit
 def jit_grav(coordinates, prisms, density, field, out):
     """
@@ -285,6 +316,21 @@ def kernel_inverse_r(X, Y, Z):
         - 0.5 * Y ** 2 * utils.safe_atan2(Z * X, Y * R)
         - 0.5 * X ** 2 * utils.safe_atan2(Z * Y, X * R)
         - 0.5 * Z ** 2 * utils.safe_atan2(Y * X, Z * R)
+    )
+    return result
+
+
+def vectorized_kernel_inverse_r(X, Y, Z, R):
+    """
+    Function for computing the inverse distance kernel
+    """
+    result = (
+        Y * X * utils.numpy_safe_log(Z + R)
+        + X * Z * utils.numpy_safe_log(Y + R)
+        + Y * Z * utils.numpy_safe_log(X + R)
+        - 0.5 * Y ** 2 * utils.numpy_safe_atan2(Z * X, Y * R)
+        - 0.5 * X ** 2 * utils.numpy_safe_atan2(Z * Y, X * R)
+        - 0.5 * Z ** 2 * utils.numpy_safe_atan2(Y * X, Z * R)
     )
     return result
 

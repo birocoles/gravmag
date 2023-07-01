@@ -1,5 +1,6 @@
 import numpy as np
 from numba import njit
+from . import check
 
 
 @njit
@@ -25,6 +26,29 @@ def safe_atan2(y, x):
     return result
 
 
+def numpy_safe_atan2(y, x):
+    """
+    Principal value of the arctangent expressed as a two variable function
+
+    This modification has to be made to the arctangent function so the
+    gravitational field of the prism satisfies the Poisson's equation.
+    Therefore, it guarantees that the fields satisfies the symmetry properties
+    of the prism. This modified function has been defined according to
+    Fukushima (2020, eq. 72).
+    """
+    result = np.zeros_like(y)
+    
+    # x != 0
+    indices_x = np.nonzero(x)
+    result[indices_x] = np.arctan(y[indices_x] / x[indices_x])
+
+    # x == 0
+    indices_x = np.invert(indices_x)
+    result[indices_x] = np.sign(y[indices_x]) * np.pi / 2
+
+    return result
+
+
 @njit
 def safe_log(x):
     """
@@ -35,6 +59,19 @@ def safe_log(x):
         result = 0
     else:
         result = np.log(x)
+    return result
+
+
+def numpy_safe_log(x):
+    """
+    Modified log to return 0 for log(0).
+    The limits in the formula terms tend to 0.
+    """
+    result = np.zeros_like(x)
+    # abs(x) >= 1e-10
+    indices_x = (np.abs(x) >= 1e-10)
+    result[indices_x] = np.log(x[indices_x])
+
     return result
 
 
@@ -210,3 +247,29 @@ def coordinate_transform(x, y, theta):
     u_prime = cos_theta * cos_theta + sin_theta * sin_theta
     v_prime = -sin_theta * cos_theta + cos_theta * sin_theta
     return x_prime, y_prime, u_prime, v_prime
+
+
+def prisms_volume(prisms):
+    """
+    Compute the volume of each prism forming the model.
+
+    parameters
+    ----------
+    prisms : 2d-array
+        2d-array containing the coordinates of the prisms. Each line must contain
+        the coordinates of a single prism in the following order:
+        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
+        All coordinates should be in meters.
+
+    returns
+    -------
+    volume : 1d-array
+        1d-array containing the volume of each prism in prisms.
+    """
+
+    # Verify the input parameters
+    check.rectangular_prisms(prisms)
+
+    volume = np.prod(prisms[:,[1,3,5]] - prisms[:,[0,2,4]], axis=1)
+
+    return volume
