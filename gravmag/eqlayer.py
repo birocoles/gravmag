@@ -4,7 +4,7 @@ from . import inverse_distance as id
 from . import check, utils
 
 
-def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
+def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=True):
     """
     Compute the kernel matrix produced by a planar layer of monopoles.
 
@@ -14,8 +14,10 @@ def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
         3 x N matrix containing the coordinates x (1rt row), y (2nd row),
         z (3rd row) of N data points. The ith column contains the
         coordinates of the ith data point.
-    z0 : int or float
-        Scalar defining the constant vertical coordinate of the layer.
+    source_points: numpy array 2d
+        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
+        z (3rd row) of M sources. The jth column contains the coordinates of
+        the jth source.
     field : string
         Defines the field produced by the layer. The available options are:
         "potential", "x", "y", "z", "xx", "xy", "xz", "yy", "yz", "zz".
@@ -31,8 +33,8 @@ def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
     if check_input is True:
         data_points = np.asarray(data_points)
         check.coordinates(data_points)
-        assert isinstance(z0, (int, float)), "z0 must be int or float"
-        assert np.all(data_points[2] < z0), "all data points must be above z0"
+        check.coordinates(source_points)
+        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
         # check if field is valid
         if field not in [
             "potential",
@@ -48,14 +50,11 @@ def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
         ]:
             raise ValueError("invalid field {}".format(field))
 
-    # define source points
-    source_points = data_points.copy()
-    source_points[2] = z0
     # compute Squared Euclidean Distance Matrix (SEDM)
     R2 = id.sedm(data_points, source_points, check_input=False)
 
     # compute the kernel matrix according to "field"
-    if field is "potential":
+    if field == "potential":
         G = 1.0 / np.sqrt(R2)
     elif field in ["x", "y", "z"]:
         G = id.grad(data_points, source_points, R2, [field], False)[0]
@@ -66,7 +65,7 @@ def kernel_matrix_monopoles(data_points, z0, field="z", check_input=True):
 
 
 def kernel_matrix_dipoles(
-    data_points, z0, inc, dec, field="t", inct=None, dect=None, check_input=True
+    data_points, source_points, inc, dec, field="t", inct=None, dect=None, check_input=True
 ):
     """
     Compute the kernel matrix produced by a planar layer of dipoles with
@@ -78,8 +77,10 @@ def kernel_matrix_dipoles(
         3 x N matrix containing the coordinates x (1rt row), y (2nd row),
         z (3rd row) of N data points. The ith column contains the
         coordinates of the ith data point.
-    z0 : int or float
-        Scalar defining the constant vertical coordinate of the layer.
+    source_points: numpy array 2d
+        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
+        z (3rd row) of M sources. The jth column contains the coordinates of
+        the jth source.
     inc, dec : ints or floats
         Scalars defining the constant inclination and declination of the
         dipoles magnetization.
@@ -108,14 +109,14 @@ def kernel_matrix_dipoles(
     if check_input is True:
         data_points = np.asarray(data_points)
         check.coordinates(data_points)
-        assert isinstance(z0, (int, float)), "z0 must be int or float"
-        assert np.all(data_points[2] < z0), "all data points must be above z0"
+        check.coordinates(source_points)
+        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
         assert isinstance(inc, (float, int)), "inc must be a scalar"
         assert isinstance(dec, (float, int)), "dec must be a scalar"
         # check if field is valid
         if field not in ["potential", "x", "y", "z", "t"]:
             raise ValueError("invalid field {}".format(field))
-        if field is "t":
+        if field == "t":
             assert isinstance(
                 inct, (float, int)
             ), "inct must be a scalar because field is 't'"
@@ -123,16 +124,13 @@ def kernel_matrix_dipoles(
                 dect, (float, int)
             ), "dect must be a scalar because field is 't'"
 
-    # define source points
-    source_points = data_points.copy()
-    source_points[2] = z0
     # compute Squared Euclidean Distance Matrix (SEDM)
     R2 = id.sedm(data_points, source_points, check_input=False)
     # compute the unit vector defined by inc and dec
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # compute the kernel matrix according to "field"
-    if field is "potential":
+    if field == "potential":
         Gx, Gy, Gz = id.grad(
             data_points=data_points,
             source_points=source_points,
@@ -141,7 +139,7 @@ def kernel_matrix_dipoles(
             check_input=False,
         )
         G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
-    elif field is "x":
+    elif field == "x":
         Gxx, Gxy, Gxz = id.grad_tensor(
             data_points=data_points,
             source_points=source_points,
@@ -150,7 +148,7 @@ def kernel_matrix_dipoles(
             check_input=False,
         )
         G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
-    elif field is "y":
+    elif field == "y":
         Gxy, Gyy, Gyz = id.grad_tensor(
             data_points=data_points,
             source_points=source_points,
@@ -159,7 +157,7 @@ def kernel_matrix_dipoles(
             check_input=False,
         )
         G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
-    elif field is "z":
+    elif field == "z":
         Gxz, Gyz, Gzz = id.grad_tensor(
             data_points=data_points,
             source_points=source_points,
@@ -210,8 +208,8 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
 
     returns
     -------
-    delta : float
-        Ratio of Euclidean norm of the residuals and number of data.
+    delta_list : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -248,7 +246,9 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     # initializations
     D = data.size
     residuals = np.copy(data)
+    delta_list = []
     delta = np.sqrt(np.sum(residuals*residuals))/D
+    delta_list.append(delta)
     vartheta = G.T@residuals
     rho0 = np.sum(vartheta*vartheta)
     parameters = np.zeros(G.shape[1])
@@ -258,21 +258,22 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     # updates
     while (delta > epsilon) and (m < ITMAX):
         eta = vartheta + tau*eta
-        nu = G@vartheta
+        nu = G@eta
         upsilon = rho0/np.sum(nu*nu)
         parameters += upsilon*eta
         residuals -= upsilon*nu
         delta = np.sqrt(np.sum(residuals*residuals))/D
+        delta_list.append(delta)
         vartheta = G.T@residuals
         rho = np.sum(vartheta*vartheta)
         tau = rho/rho0
         rho0 = rho
         m += 1
 
-    return delta, parameters
+    return delta_list, parameters
 
 
-def method_column_action_C92(G, data, data_points, zlayer, epsilon, ITMAX, check_input=True):
+def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX, check_input=True):
     """
     Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
 
@@ -297,8 +298,8 @@ def method_column_action_C92(G, data, data_points, zlayer, epsilon, ITMAX, check
 
     returns
     -------
-    rmax : float
-        Maximum absolute residual.
+    rmax_list : list of floats
+        List of maximum absolute residuals.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """    
@@ -344,15 +345,20 @@ def method_column_action_C92(G, data, data_points, zlayer, epsilon, ITMAX, check
         parameters = np.zeros_like(data)
         imax = np.argmax(np.abs(residuals))
         rmax = residuals[imax]
+        rmax_list = []
+        rmax_list.append(rmax)
         m = 1
         # updates
         while (rmax > epsilon) and (m < ITMAX):
             xmax, ymax, zmax = data_points[:,imax]
-            parameters[imax] += rmax*(zlayer - data_points[imax])
+            parameters[imax] += rmax*(zlayer - zmax)*sigma
             residuals -= G[:,imax]*rmax
             imax = np.argmax(np.abs(residuals))
             rmax = residuals[imax]
+            rmax_list.append(rmax)
             m += 1
+
+        return rmax_list, parameters
 
 
 def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True):
