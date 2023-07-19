@@ -173,13 +173,27 @@ def wavenumbers(kx, ky, kz):
         raise ValueError("all elements of kz must be positive or zero")
 
 
-def positive_scalar(x):
+def scalar(x, positive=True):
     """
-    Check if x is a positive float or int.
+    Check if x is a float or int.
+
+    parameters
+    ----------
+    x : generic object
+        Python object to be verified.
+    positive : boolean
+        If True, impose that x must be positive.
     """
 
-    if (type(x) not in [float, int]) or (x <= 0):
+    if (type(x) not in [float, int]):
         raise ValueError(
-            "x must be a positive float or int."
+            "x must be a float or int"
         )
+
+    if positive == True:
+        if x <= 0:
+            raise ValueError(
+                "x must be positive"
+            )
+
 

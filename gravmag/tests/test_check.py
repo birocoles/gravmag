@@ -156,3 +156,35 @@ def test_invalid_rectangular_prism_magnetizations():
     with pytest.raises(ValueError):
         check.vector_prop(magnetization, P)
 
+##### scalar
+
+def test_invalid_scalar():
+    "Check if passing a non-scalar raises an error"
+    # tuple
+    y = (5, 7, 8.7)
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=False)
+    # list
+    y = [5, 7, 8.7]
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=False)
+    # array
+    y = np.array([5, 7, 8.7])
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=False)
+    # complex
+    y = 34. + 5j
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=False)
+
+
+def test_scalar_non_positive():
+    "Check if passing a non-positive raises an error"
+    # zero
+    y = 0.
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=True)
+    # negative
+    y = -5.7
+    with pytest.raises(ValueError):
+        check.scalar(y, positive=True)
