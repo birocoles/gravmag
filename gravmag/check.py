@@ -28,17 +28,17 @@ def rectangular_prisms(prisms):
         )
     # check the x lower and upper limits
     if np.any(prisms[:,1] <= prisms[:,0]):
-        raises ValueError(
+        raise ValueError(
             "all x2 values (2nd column) must be greater than x1 values (1st column)."
             )
     # check the y lower and upper limits
     if np.any(prisms[:,3] <= prisms[:,2]):
-        raises ValueError(
+        raise ValueError(
             "all y2 values (4th column) must be greater than y1 values (3rd column)."
             )
     # check the z lower and upper limits
     if np.any(prisms[:,5] <= prisms[:,4]):
-        raises ValueError(
+        raise ValueError(
             "all bottom (z2) values (5th column) must be greater than top (z1) values (6th column)."
             )
 
