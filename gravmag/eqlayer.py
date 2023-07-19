@@ -34,7 +34,8 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
         data_points = np.asarray(data_points)
         check.coordinates(data_points)
         check.coordinates(source_points)
-        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
+        if np.any(data_points[2] >= source_points[2]):
+            raise ValueError("all data points must be above source points")
         # check if field is valid
         if field not in [
             "potential",
@@ -110,19 +111,20 @@ def kernel_matrix_dipoles(
         data_points = np.asarray(data_points)
         check.coordinates(data_points)
         check.coordinates(source_points)
-        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
-        assert isinstance(inc, (float, int)), "inc must be a scalar"
-        assert isinstance(dec, (float, int)), "dec must be a scalar"
+        if np.any(data_points[2] >= source_points[2]):
+            raise ValueError("all data points must be above source points")
+        if type(inc) not in [float, int]:
+            raise ValueError("inc must be a scalar")
+        if type(dec) not in [float, int]:
+            raise ValueError("dec must be a scalar")
         # check if field is valid
         if field not in ["potential", "x", "y", "z", "t"]:
             raise ValueError("invalid field {}".format(field))
         if field == "t":
-            assert isinstance(
-                inct, (float, int)
-            ), "inct must be a scalar because field is 't'"
-            assert isinstance(
-                dect, (float, int)
-            ), "dect must be a scalar because field is 't'"
+            if type(inct) not in [float, int]:
+                raise ValueError("inct must be a scalar because field is 't'")
+            if type(dect) not in [float, int]:
+                raise ValueError("dect must be a scalar because field is 't'")
 
     # compute Squared Euclidean Distance Matrix (SEDM)
     R2 = id.sedm(data_points, source_points, check_input=False)
@@ -215,32 +217,26 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     """
     
     if check_input is True:
-
         # check if data is a 1d numpy array
         if data.ndim != 1:
             raise ValueError(
                 "data must be a 1d array"
             )
-
         # check if G is a 2d numpy array
         if G.ndim != 2:
             raise ValueError(
                 "G must be a matriz"
             )
-
         # check if G match number of data
         if G.shape[0] != (data.size):
             raise ValueError(
                 "G does not match the number of data"
             )
-
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
-
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
+        # check if epsilon is a positive scalar
+        check.scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        if (type(ITMAX) != int) or (ITMAX <= 0):
+            raise ValueError("ITMAX must be a positive integer")
 
 
     # initializations

@@ -188,3 +188,34 @@ def test_scalar_non_positive():
     y = -5.7
     with pytest.raises(ValueError):
         check.scalar(y, positive=True)
+
+
+##### sensibility matrix and data vector
+
+def test_sensibility_matrix_and_data_non_arrays():
+    "Check is passing non-arrays raises an error"
+    # G array, d tuple
+    G = np.empty((4,3))
+    data = (9, 7.1)
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(G=G, data=data)
+    # G float, d array
+    G = 7.5
+    data = np.empty(3)
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(G=G, data=data)
+    # G 1d array, d 1d array
+    G = np.empty(5)
+    data = np.empty(5)
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(G=G, data=data)
+    # G 2d array, d 2d array
+    G = np.empty((4,3))
+    data = np.empty((3,5))
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(G=G, data=data)
+    # G complex, d list
+    G = 7.2+9.1j
+    data = [3, 5, 6.6]
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(G=G, data=data)

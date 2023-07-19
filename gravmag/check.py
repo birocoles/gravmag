@@ -197,3 +197,22 @@ def scalar(x, positive=True):
             )
 
 
+def sensibility_matrix_and_data(G, data):
+    """
+    Check if G and data are consistent numpy arrays.
+
+    parameters
+    ----------
+    G , data : generic objects
+        Python objects to be verified.
+    """
+    if type(G) != np.ndarray:
+        raise ValueError("G must be a numpy array")
+    if type(data) != np.ndarray:
+        raise ValueError("data must be a numpy array")
+    if G.ndim != 2:
+        raise ValueError("G must be a matrix")
+    if data.ndim != 1:
+        raise ValueError("data must be a vector")
+    if G.shape[0] != data.size:
+        raise ValueError("Sensibility matrix rows mismatch data size")
