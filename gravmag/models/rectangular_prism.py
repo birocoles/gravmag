@@ -65,9 +65,9 @@ def grav(coordinates, prisms, density, field, scale=True):
     """
 
     # Verify the input parameters
-    check.coordinates(coordinates)
-    check.rectangular_prisms(prisms)
-    check.scalar_prop(density, prisms)
+    D = check.coordinates(coordinates) # D = total number of data points
+    P = check.rectangular_prisms(prisms) # P = total number of prisms
+    check.scalar_prop(density, P)
 
     # Available fields
     fields = {
@@ -88,7 +88,7 @@ def grav(coordinates, prisms, density, field, scale=True):
         raise ValueError("Gravitational field {} not recognized".format(field))
 
     # create the array to store the result
-    result = np.zeros(coordinates[0].size, dtype="float64")
+    result = np.zeros(D, dtype="float64")
 
     # Compute gravitational field
     jit_grav(coordinates, prisms, density, fields[field], result)
@@ -149,9 +149,9 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
     """
 
     # Verify the input parameters
-    check.coordinates(coordinates)
-    check.rectangular_prisms(prisms)
-    check.vector_prop(magnetization, prisms)
+    D = check.coordinates(coordinates) # D = total number of data points
+    P = check.rectangular_prisms(prisms) # P = total number of prisms
+    check.vector_prop(magnetization, P)
 
     # Available fields
     fields = {
@@ -166,7 +166,7 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
         raise ValueError("Magnetic field {} not recognized".format(field))
 
     # create the array to store the result
-    result = np.zeros(coordinates[0].size, dtype="float64")
+    result = np.zeros(D, dtype="float64")
 
     # Compute the Cartesian components of total-magnetization
     mx, my, mz = utils.magnetization_components(magnetization)

@@ -3,18 +3,20 @@ import numpy as np
 
 def rectangular_prisms(prisms):
     """
-    Check if rectangular prisms are well defined
+    Check if prisms is a 2d numpy array with 6 columns.
 
     parameters
     ----------
-    prisms : 2d-array
-        Array containing the boundaries of the prisms in the following order:
-        ``s``, ``n``, ``w``, ``e``, ``top``, ``bottom``.
-        The array must have the following shape: (``n_prisms``, 6), where
-        ``n_prisms`` is the total number of prisms.
-        This array of prisms must have valid boundaries.
+    prisms : generic object 
+        Python object to be verified.
+
+    returns
+    -------
+    P : int
+        Number of rows in prisms (total number of prisms).
     """
-    prisms = np.asarray(prisms)
+    if type(prisms) != np.ndarray:
+        raise ValueError("prisms must be a numpy array")
     if prisms.ndim != 2:
         raise ValueError(
             "prisms ndim ({}) ".format(prisms.ndim) + "not equal to 2"
@@ -24,41 +26,43 @@ def rectangular_prisms(prisms):
             "Number of columns in prisms ({}) ".format(prisms.shape[1])
             + "not equal to 6"
         )
-    south, north, west, east, top, bottom = tuple(
-        prisms[:, i] for i in range(6)
-    )
-    err_msg = "Invalid rectangular prism(s). "
-    bad_sn = south > north
-    bad_we = west > east
-    bad_bt = top > bottom
-    if bad_sn.any():
-        err_msg += "The south boundary can't be greater than the north one.\n"
-        for prism in prisms[bad_sn]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
-    if bad_we.any():
-        err_msg += "The west boundary can't be greater than the east one.\n"
-        for prism in prisms[bad_we]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
-    if bad_bt.any():
-        err_msg += "The top boundary can't be greater than the bottom one.\n"
-        for prism in prisms[bad_bt]:
-            err_msg += "\tInvalid prism: {}\n".format(prism)
-        raise ValueError(err_msg)
+    # check the x lower and upper limits
+    if np.any(prisms[:,1] <= prisms[:,0]):
+        raises ValueError(
+            "all x2 values (2nd column) must be greater than x1 values (1st column)."
+            )
+    # check the y lower and upper limits
+    if np.any(prisms[:,3] <= prisms[:,2]):
+        raises ValueError(
+            "all y2 values (4th column) must be greater than y1 values (3rd column)."
+            )
+    # check the z lower and upper limits
+    if np.any(prisms[:,5] <= prisms[:,4]):
+        raises ValueError(
+            "all bottom (z2) values (5th column) must be greater than top (z1) values (6th column)."
+            )
+
+    # number of rows in prisms
+    P = prisms.shape[0]
+    return P
 
 
 def coordinates(coordinates):
     """
-    Check if coordinates are well defined
+    Check if coordinates is a 2d numpy array with 3 rows.
 
     parameters
     ----------
-    coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line)
-        of the computation points. All coordinates should be in meters.
+    coordinates : generic object 
+        Python object to be verified.
+
+    returns
+    -------
+    D : int
+        Number of columns in coordinates (total number of data points).
     """
-    coordinates = np.asarray(coordinates)
+    if type(coordinates) != np.ndarray:
+        raise ValueError("coordinates must be a numpy array")
     if coordinates.ndim != 2:
         raise ValueError(
             "coordinates ndim ({}) ".format(coordinates.ndim) + "not equal to 2"
@@ -68,51 +72,53 @@ def coordinates(coordinates):
             "Number of lines in coordinates ({}) ".format(coordinates.shape[0])
             + "not equal to 3"
         )
+    # number of columns in coordinates
+    D = coordinates.shape[1]
+    return D
 
 
-def scalar_prop(prop, sources):
+def scalar_prop(prop, P):
     """
-    Check if sources scalar physical property are well defined.
-    Check the ``sources`` before.
+    Check if prop is a 1d numpy array having a previously defined number of elements P.
 
     parameters
     ----------
-    prop : 1d-array
-        1d-array containing the scalar physical property of each source.
-    sources : 2d-array
-        2d-array containing the coordinates of the sources.
-        Each line must contain the coordinates of a single source.
-        All coordinates should be in meters.
+    prop : generic object 
+        Python object to be verified.
+    P : int
+        Positive integer defining the desired numbe of element is prop.
     """
-    prop = np.asarray(prop)
+    if (type(P) != int) and (P <= 0):
+        raise ValueError("P must be a positive integer")
+    if type(prop) != np.ndarray:
+        raise ValueError("prop must be a numpy array")
     if prop.ndim != 1:
         raise ValueError(
             "prop ndim ({}) ".format(prop.ndim) + "not equal to 1"
         )
-    if prop.size != sources.shape[0]:
+    if prop.size != P:
         raise ValueError(
             "Number of elements in prop ({}) ".format(prop.size)
-            + "mismatch the number of sources ({})".format(sources.shape[0])
+            + "mismatch P ({})".format(P)
         )
 
 
-def vector_prop(prop, sources):
+def vector_prop(prop, P):
     """
-    Check if sources vector physical property are well defined.
-    Check the ``sources`` before.
+    Check if prop is a 2d numpy array having 3 columns and 
+    a previously defined number of rows elements P.
 
     parameters
     ----------
-    prop : 1d-array
-        2d-array containing the vector physical property components of 
-        the prisms. Each line must contain the x, y and z components of 
-        the physical property of a single source. All values should be in A/m.
-    sources : 2d-array
-        2d-array containing the coordinates of the sources.
-        Each line must contain the coordinates of a single source.
-        All coordinates should be in meters.
+    prop : generic object 
+        Python object to be verified.
+    P : int
+        Positive integer defining the desired numbe of element is prop.
     """
-    prop = np.asarray(prop)
+    if (type(P) != int) and (P <= 0):
+        raise ValueError("P must be a positive integer")
+    if type(prop) != np.ndarray:
+        raise ValueError("prop must be a numpy array")
     if prop.ndim != 2:
         raise ValueError(
             "prop ndim ({}) ".format(prop.ndim)
@@ -123,36 +129,57 @@ def vector_prop(prop, sources):
             "prop ndim ({}) ".format(prop.shape[1])
             + "not equal to 3"
         )
-    if prop.shape[0] != sources.shape[0]:
+    if prop.shape[0] != P:
         raise ValueError(
             "Number of elements in prop ({}) ".format(
                 prop.size
             )
-            + "mismatch the number of sources ({})".format(sources.shape[0])
+            + "mismatch P ({})".format(P)
         )
 
 
 def wavenumbers(kx, ky, kz):
     """
-    Check if wavenumbers are well defined.
-    See function 'gravmag.filters.wavenumbers'.
+    Check if kx, ky and kz are 2d numpy array having the same shape 
+    and specific properties (See function 'gravmag.filters.wavenumbers').
 
     parameters
     ----------
-    kx, ky, kz: numpy arrays 2D
-        Wavenumbers in x, y and z directions computed according to
-        function 'wavenumbers'.
+    kx, ky, kz: generic objects
+        Python objects to be verified.
     """
-    # Convert the wavenumbers to arrays
-    kx = np.asarray(kx)
-    ky = np.asarray(ky)
-    kz = np.asarray(kz)
-
-    assert kx.ndim == ky.ndim == kz.ndim == 2, "kx, ky and kz must be matrices"
+    if type(kx) != np.ndarray:
+        raise ValueError("kx must be a numpy array")
+    if type(ky) != np.ndarray:
+        raise ValueError("ky must be a numpy array")
+    if type(kz) != np.ndarray:
+        raise ValueError("kz must be a numpy array")
+    if kx.ndim != 2:
+        raise ValueError("kx must be a matrix")
+    if ky.ndim != 2:
+        raise ValueError("ky must be a matrix")
+    if kz.ndim != 2:
+        raise ValueError("kz must be a matrix")
     common_shape = kx.shape
-    assert (
-        ky.shape == kz.shape == common_shape
-    ), "kx, ky and kz must have the same shape"
-    assert np.all(kx[0, :] == 0), "first line of kx must be 0"
-    assert np.all(ky[:, 0] == 0), "first column of ky must be 0"
-    assert np.all(kz >= 0), "elements of kz must be >= 0"
+    if ky.shape != common_shape:
+       raise ValueError("ky shape mismatch kx shape")
+    if kz.shape != common_shape:
+       raise ValueError("kz shape mismatch kx shape")
+    if np.any(kx[0, :] != 0):
+        raise ValueError("first line of kx must be 0")
+    if np.any(ky[:, 0] != 0):
+        raise ValueError("first column of ky must be 0")
+    if np.any(kz < 0):
+        raise ValueError("all elements of kz must be positive or zero")
+
+
+def positive_scalar(x):
+    """
+    Check if x is a positive float or int.
+    """
+
+    if (type(x) not in [float, int]) or (x <= 0):
+        raise ValueError(
+            "x must be a positive float or int."
+        )
+
