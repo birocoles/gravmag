@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import distance
 from . import inverse_distance as id
-from . import check, utils
+from . import check, utils, constants
 
 
 def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=True):
@@ -269,7 +269,7 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     return delta_list, parameters
 
 
-def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX, check_input=True):
+def method_column_action_C92(G, data, data_points, zlayer, scale, epsilon, ITMAX, check_input=True):
     """
     Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
 
@@ -301,44 +301,21 @@ def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX
     """    
 
     if check_input is True:
-
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
-            raise ValueError(
-                "data must be a 1d array"
-            )
-
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
-            )
-
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
-
-        data_points = np.asarray(data_points)
-        check.coordinates(data_points)
-
-        assert isinstance(zlayer, float) and (
-            np.all(zlayer > data_points[2])
-        ), "zlayer must be below the observation points"
-
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
-
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
-
+        # check if data and G are consistent numpy arrays
+        check.sensibility_matrix_and_data(G=G, data=data)
+        check.coordinates(coordinates=data_points)
+        # check if zlayer result in a layer below the data points
+        if (type(zlayer) != float) and (np.any(zlayer <= data_points[2])):
+            raise ValueError("zlayer must be a scalar greater than the z coordinate of all data points")
+        # check if epsilon is a positive scalar
+        check.scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        if (type(ITMAX) != int) or (ITMAX <= 0):
+            raise ValueError("ITMAX must be a positive integer")
 
         # initializations
         residuals = np.copy(data)
-        parameters = np.zeros_like(data)
+        parameters = data*scale
         imax = np.argmax(np.abs(residuals))
         rmax = residuals[imax]
         rmax_list = []
@@ -347,7 +324,7 @@ def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX
         # updates
         while (rmax > epsilon) and (m < ITMAX):
             xmax, ymax, zmax = data_points[:,imax]
-            parameters[imax] += rmax*(zlayer - zmax)*sigma
+            parameters[imax] += rmax*scale*np.abs(zlayer - zmax)
             residuals -= G[:,imax]*rmax
             imax = np.argmax(np.abs(residuals))
             rmax = residuals[imax]
