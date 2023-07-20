@@ -31,7 +31,6 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
     """
 
     if check_input is True:
-        data_points = np.asarray(data_points)
         check.coordinates(data_points)
         check.coordinates(source_points)
         if np.any(data_points[2] >= source_points[2]):
@@ -108,7 +107,6 @@ def kernel_matrix_dipoles(
     """
 
     if check_input is True:
-        data_points = np.asarray(data_points)
         check.coordinates(data_points)
         check.coordinates(source_points)
         if np.any(data_points[2] >= source_points[2]):
@@ -217,26 +215,12 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     """
     
     if check_input is True:
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
-            raise ValueError(
-                "data must be a 1d array"
-            )
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
-            )
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
+        # check if G and data are consistent numpy arrays
+        check.sensibility_matrix_and_data(G=G, data=data)
         # check if epsilon is a positive scalar
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
-        if (type(ITMAX) != int) or (ITMAX <= 0):
-            raise ValueError("ITMAX must be a positive integer")
+        check.integer(x=factor, positive=True)
 
 
     # initializations
@@ -303,6 +287,7 @@ def method_column_action_C92(G, data, data_points, zlayer, scale, epsilon, ITMAX
     if check_input is True:
         # check if data and G are consistent numpy arrays
         check.sensibility_matrix_and_data(G=G, data=data)
+        # check data points
         check.coordinates(coordinates=data_points)
         # check if zlayer result in a layer below the data points
         if (type(zlayer) != float) and (np.any(zlayer <= data_points[2])):
@@ -310,8 +295,7 @@ def method_column_action_C92(G, data, data_points, zlayer, scale, epsilon, ITMAX
         # check if epsilon is a positive scalar
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
-        if (type(ITMAX) != int) or (ITMAX <= 0):
-            raise ValueError("ITMAX must be a positive integer")
+        check.integer(x=factor, positive=True)
 
         # initializations
         residuals = np.copy(data)
@@ -356,50 +340,28 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
 
     returns
     -------
-    delta : float
-        Ratio of Euclidean norm of the residuals and number of data.
+    delta_list : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
     
     if check_input is True:
-
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
-            raise ValueError(
-                "data must be a 1d array"
-            )
-
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
-            )
-
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
-
-        assert isinstance(factor, float) and (
-            factor > 0
-        ), "factor must be a positive scalar"
-
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
-
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
-
+        # check if data and G are consistent numpy arrays
+        check.sensibility_matrix_and_data(G=G, data=data)
+        # check if factor and epsilon are positive scalars
+        check.scalar(x=factor, positive=True)
+        check.scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.integer(x=factor, positive=True)
 
     # initializations
     D = data.size
-    parameters = factor*data
-    residuals = data - G@parameters
+    parameters = np.zeros_like(data)
+    residuals = np.copy(data)
+    delta_list = []
     delta = np.sqrt(np.sum(residuals*residuals))/D
+    delta_list.append(delta)
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
@@ -408,6 +370,7 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
         nu = G@dp
         r -= nu
         delta = np.sqrt(np.sum(residuals*residuals))/D
+        delta_list.append(delta)
         m += 1
 
-    return delta, parameters
+    return delta_list, parameters

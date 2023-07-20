@@ -184,7 +184,7 @@ def scalar(x, positive=True):
     positive : boolean
         If True, impose that x must be positive.
     """
-    if (type(x) not in [float, int]):
+    if isinstance(x, (float, int)) is False:
         raise ValueError(
             "x must be in float or int"
         )
@@ -206,7 +206,7 @@ def integer(x, positive=True):
     positive : boolean
         If True, impose that x must be positive.
     """
-    if (type(x) is not int):
+    if isinstance(x, int) is False:
         raise ValueError(
             "x must be an int"
         )
