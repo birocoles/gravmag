@@ -220,7 +220,7 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
         # check if epsilon is a positive scalar
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
-        check.integer(x=factor, positive=True)
+        check.integer(x=ITMAX, positive=True)
 
 
     # initializations
@@ -295,7 +295,7 @@ def method_column_action_C92(G, data, data_points, zlayer, scale, epsilon, ITMAX
         # check if epsilon is a positive scalar
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
-        check.integer(x=factor, positive=True)
+        check.integer(x=ITMAX, positive=True)
 
         # initializations
         residuals = np.copy(data)
@@ -353,7 +353,7 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
         check.scalar(x=factor, positive=True)
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
-        check.integer(x=factor, positive=True)
+        check.integer(x=ITMAX, positive=True)
 
     # initializations
     D = data.size
@@ -366,9 +366,9 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
     # updates
     while (delta > epsilon) and (m < ITMAX):
         dp = factor*residuals
-        p += dp
+        parameters += dp
         nu = G@dp
-        r -= nu
+        residuals -= nu
         delta = np.sqrt(np.sum(residuals*residuals))/D
         delta_list.append(delta)
         m += 1
