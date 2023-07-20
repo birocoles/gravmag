@@ -190,6 +190,45 @@ def test_scalar_non_positive():
         check.scalar(y, positive=True)
 
 
+##### integer
+
+def test_invalid_integer():
+    "Check if passing a non-integer raises an error"
+    # tuple
+    y = (5, 7, 8.7)
+    with pytest.raises(ValueError):
+        check.integer(y, positive=False)
+    # list
+    y = [5, 7, 8.7]
+    with pytest.raises(ValueError):
+        check.integer(y, positive=False)
+    # array
+    y = np.array([5, 7, 8.7])
+    with pytest.raises(ValueError):
+        check.integer(y, positive=False)
+    # complex
+    y = 34. + 5j
+    with pytest.raises(ValueError):
+        check.integer(y, positive=False)
+    # float
+    y = 34.1
+    with pytest.raises(ValueError):
+        check.integer(y, positive=False)
+
+
+def test_integer_non_positive():
+    "Check if passing a non-integer raises an error"
+    # zero
+    y = 0
+    with pytest.raises(ValueError):
+        check.integer(y, positive=True)
+    # negative
+    y = -5
+    with pytest.raises(ValueError):
+        check.integer(y, positive=True)
+
+
+
 ##### sensibility matrix and data vector
 
 def test_sensibility_matrix_and_data_non_arrays():

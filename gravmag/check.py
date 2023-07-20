@@ -184,12 +184,32 @@ def scalar(x, positive=True):
     positive : boolean
         If True, impose that x must be positive.
     """
-
     if (type(x) not in [float, int]):
         raise ValueError(
-            "x must be a float or int"
+            "x must be in float or int"
         )
+    if positive == True:
+        if x <= 0:
+            raise ValueError(
+                "x must be positive"
+            )
 
+
+def integer(x, positive=True):
+    """
+    Check if x is an int.
+
+    parameters
+    ----------
+    x : generic object
+        Python object to be verified.
+    positive : boolean
+        If True, impose that x must be positive.
+    """
+    if (type(x) is not int):
+        raise ValueError(
+            "x must be an int"
+        )
     if positive == True:
         if x <= 0:
             raise ValueError(
