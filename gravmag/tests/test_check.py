@@ -278,10 +278,70 @@ def test_array_wrong_ndim_shape():
         check.is_array(x=y, ndim=2, shape=(2,2))
 
 
+##### wavenumbers
+
+def test_invalid_wavenumbers():
+    "Check if passing non-dictionary wavenumbers raises an error"
+    # tuple
+    w = (5, 7, 8.7)
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+    # list
+    w = [5, 7, 8.7]
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+    # complex
+    w = 34. + 5j
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+
+
+def test_invalid_wavenumbers_xyz():
+    "Check if passing dictionary of invalid wavenumbers x, y and z raises an error"
+    # wrong 'x'
+    kx = np.ones((3, 4)) 
+    ky = np.ones((3, 4)) 
+    ky[:,0] = 0.
+    kz = np.ones((3, 4)) 
+    w = {
+        'x' : kx,
+        'y' : ky,
+        'z' : kz
+    }
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+    # wrong 'y'
+    kx = np.ones((3, 4)) 
+    kx[0,:] = 0.
+    ky = np.ones((3,4))
+    kz = np.ones((3, 4)) 
+    w = {
+        'x' : kx,
+        'y' : ky,
+        'z' : kz
+    }
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+    # wrong 'z'
+    kx = np.ones((3, 4)) 
+    kx[0,:] = 0.
+    ky = np.ones((3,4))
+    ky[:,0] = 0.
+    kz = np.ones((3, 4)) 
+    kz[1,1] = -2.
+    w = {
+        'x' : kx,
+        'y' : ky,
+        'z' : kz
+    }
+    with pytest.raises(ValueError):
+        check.wavenumbers(wavenumbers=w)
+    
+
 ##### sensibility matrix and data vector
 
 def test_sensibility_matrix_and_data_non_arrays():
-    "Check is passing non-arrays raises an error"
+    "Check if passing non-arrays raises an error"
     # G array, d tuple
     G = np.empty((4,3))
     data = (9, 7.1)

@@ -155,39 +155,38 @@ def is_array(x, ndim, shape):
         )
 
 
-def wavenumbers(kx, ky, kz):
+# wavenumbers
+
+
+def wavenumbers(wavenumbers):
     """
-    Check if kx, ky and kz are 2d numpy array having the same shape 
-    and specific properties (See function 'gravmag.filters.wavenumbers').
+    Check if wavenumbers is a dictionary formed by 3 numpy arrays 2d. 
+    (See function 'gravmag.filters.wavenumbers').
 
     parameters
     ----------
-    kx, ky, kz: generic objects
+    wavenumbers: generic objects
         Python objects to be verified.
     """
-    if type(kx) != np.ndarray:
-        raise ValueError("kx must be a numpy array")
-    if type(ky) != np.ndarray:
-        raise ValueError("ky must be a numpy array")
-    if type(kz) != np.ndarray:
-        raise ValueError("kz must be a numpy array")
-    if kx.ndim != 2:
-        raise ValueError("kx must be a matrix")
-    if ky.ndim != 2:
-        raise ValueError("ky must be a matrix")
-    if kz.ndim != 2:
-        raise ValueError("kz must be a matrix")
-    common_shape = kx.shape
-    if ky.shape != common_shape:
-       raise ValueError("ky shape mismatch kx shape")
-    if kz.shape != common_shape:
-       raise ValueError("kz shape mismatch kx shape")
-    if np.any(kx[0, :] != 0):
-        raise ValueError("first line of kx must be 0")
-    if np.any(ky[:, 0] != 0):
-        raise ValueError("first column of ky must be 0")
-    if np.any(kz < 0):
-        raise ValueError("all elements of kz must be positive or zero")
+    if type(wavenumbers) != dict:
+        raise ValueError("wavenumbers must be a dictionary")
+    if list(wavenumbers.keys()) != ['x', 'y', 'z']:
+        raise ValueError("wavenumbers must have the following 3 keys: 'x', 'y', 'z'")
+    for key in wavenumbers.keys():
+        if type(wavenumbers[key]) != np.ndarray:
+            raise ValueError("all keys in wavenumbers must be numpy arrays")
+    for key in wavenumbers.keys():
+        if wavenumbers[key].ndim != 2:
+            raise ValueError("all keys in wavenumbers must be a numpy array 2d")
+    shape = wavenumbers['x'].shape
+    if (wavenumbers['y'].shape != shape) or (wavenumbers['z'].shape != shape):
+        raise ValueError("all keys in wavenumbers must have the same shape")
+    if np.any(wavenumbers['x'][0, :] != 0):
+        raise ValueError("first line of key 'x' must be 0")
+    if np.any(wavenumbers['y'][:, 0] != 0):
+        raise ValueError("first column of key 'y' must be 0")
+    if np.any(wavenumbers['z'] < 0):
+        raise ValueError("all elements of key 'z' must be positive or zero")
 
 
 def sensibility_matrix_and_data(G, data):
