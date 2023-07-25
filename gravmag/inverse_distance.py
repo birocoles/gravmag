@@ -52,7 +52,7 @@ def sedm(data_points, source_points, check_input=True):
     # use broadcasting rules to add D1, D2 and D3
     D = D1[:,np.newaxis] + D2[np.newaxis,:] - D3
 
-    return SEDM
+    return D
 
 
 def grad(
