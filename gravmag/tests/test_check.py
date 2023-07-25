@@ -170,87 +170,26 @@ def test_invalid_coordinates():
     with pytest.raises(ValueError):
         check.coordinates(coordinates)
 
-
-##### scalar properties
-
-
-def test_invalid_rectangular_prism_densities():
-    "Check if passing invalid densities raises an error"
-    # number of prisms
-    P = 2
-    # array with ndim != 1
-    density = np.array([[1000], [2000]])
-    with pytest.raises(ValueError):
-        check.scalar_prop(density, P)
-    # tuple
-    density = (1, 5)
-    with pytest.raises(ValueError):
-        check.scalar_prop(density, P)
-    # list
-    density = [1,2,3.]
-    with pytest.raises(ValueError):
-        check.scalar_prop(density, P)
-    # float
-    density = 10.2
-    with pytest.raises(ValueError):
-        check.scalar_prop(density, P)
-    # density.size != P
-    density = np.array([1000, 2000, 66])
-    with pytest.raises(ValueError):
-        check.scalar_prop(density, P)
-
-##### vector properties
-
-
-def test_invalid_rectangular_prism_magnetizations():
-    "Check if passing invalid magnetizations raises an error"
-    # number of prisms
-    P = 3
-    # array with ndim != 2
-    magnetization = np.array([2.1, -13, 22])
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-    # array with shape[1] != 3
-    magnetization = np.array([[2.1, -13], [1.1, 45], [0.5, 10]])
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-    # tuple
-    magnetization = (1, 5)
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-    # list
-    magnetization = [1,2,3.]
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-    # float
-    magnetization = 10.2
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-    # magnetization.shape[0] != P
-    magnetization = np.zeros((2,6))
-    with pytest.raises(ValueError):
-        check.vector_prop(magnetization, P)
-
-##### scalar
+##### is_scalar
 
 def test_invalid_scalar():
     "Check if passing a non-scalar raises an error"
     # tuple
     y = (5, 7, 8.7)
     with pytest.raises(ValueError):
-        check.scalar(y, positive=False)
+        check.is_scalar(x=y, positive=False)
     # list
     y = [5, 7, 8.7]
     with pytest.raises(ValueError):
-        check.scalar(y, positive=False)
+        check.is_scalar(x=y, positive=False)
     # array
     y = np.array([5, 7, 8.7])
     with pytest.raises(ValueError):
-        check.scalar(y, positive=False)
+        check.is_scalar(x=y, positive=False)
     # complex
     y = 34. + 5j
     with pytest.raises(ValueError):
-        check.scalar(y, positive=False)
+        check.is_scalar(x=y, positive=False)
 
 
 def test_scalar_non_positive():
@@ -258,37 +197,37 @@ def test_scalar_non_positive():
     # zero
     y = 0.
     with pytest.raises(ValueError):
-        check.scalar(y, positive=True)
+        check.is_scalar(x=y, positive=True)
     # negative
     y = -5.7
     with pytest.raises(ValueError):
-        check.scalar(y, positive=True)
+        check.is_scalar(x=y, positive=True)
 
 
-##### integer
+##### is_integer
 
 def test_invalid_integer():
     "Check if passing a non-integer raises an error"
     # tuple
     y = (5, 7, 8.7)
     with pytest.raises(ValueError):
-        check.integer(y, positive=False)
+        check.is_integer(x=y, positive=False)
     # list
     y = [5, 7, 8.7]
     with pytest.raises(ValueError):
-        check.integer(y, positive=False)
+        check.is_integer(x=y, positive=False)
     # array
     y = np.array([5, 7, 8.7])
     with pytest.raises(ValueError):
-        check.integer(y, positive=False)
+        check.is_integer(x=y, positive=False)
     # complex
     y = 34. + 5j
     with pytest.raises(ValueError):
-        check.integer(y, positive=False)
+        check.is_integer(x=y, positive=False)
     # float
     y = 34.1
     with pytest.raises(ValueError):
-        check.integer(y, positive=False)
+        check.is_integer(x=y, positive=False)
 
 
 def test_integer_non_positive():
@@ -296,12 +235,47 @@ def test_integer_non_positive():
     # zero
     y = 0
     with pytest.raises(ValueError):
-        check.integer(y, positive=True)
+        check.is_integer(x=y, positive=True)
     # negative
     y = -5
     with pytest.raises(ValueError):
-        check.integer(y, positive=True)
+        check.is_integer(x=y, positive=True)
 
+
+##### is_array
+
+def test_invalid_array():
+    "Check if passing a non-array raises an error"
+    # tuple
+    y = (5, 7, 8.7)
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=1, shape=(4,))
+    # list
+    y = [5, 7, 8.7]
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=1, shape=(4,))
+    # complex
+    y = 34. + 5j
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=1, shape=(2,))
+
+
+def test_array_wrong_ndim_shape():
+    "Check if passing an array with wrong ndim and/or shape raises an error"
+    # wrong ndim
+    y = np.array([1, 2, 3])
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=2, shape=(3,1))
+    # wrong ndim
+    y = np.array([[1], [2], [3]])
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=1, shape=(3,1))
+    # wrong shape
+    y = np.array(
+        [[1, 2, 3],
+         [0, 0, 0]])
+    with pytest.raises(ValueError):
+        check.is_array(x=y, ndim=2, shape=(2,2))
 
 
 ##### sensibility matrix and data vector

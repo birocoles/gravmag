@@ -79,64 +79,79 @@ def coordinates(coordinates):
     return D
 
 
-def scalar_prop(prop, P):
+def is_scalar(x, positive=True):
     """
-    Check if prop is a 1d numpy array having a previously defined number of elements P.
+    Check if x is a float or int.
 
     parameters
     ----------
-    prop : generic object 
+    x : generic object
         Python object to be verified.
-    P : int
-        Positive integer defining the desired numbe of element is prop.
+    positive : boolean
+        If True, impose that x must be positive.
     """
-    if (type(P) != int) and (P <= 0):
-        raise ValueError("P must be a positive integer")
-    if type(prop) != np.ndarray:
-        raise ValueError("prop must be a numpy array")
-    if prop.ndim != 1:
+    if isinstance(x, (float, int)) is False:
         raise ValueError(
-            "prop ndim ({}) ".format(prop.ndim) + "not equal to 1"
+            "x must be in float or int"
         )
-    if prop.size != P:
-        raise ValueError(
-            "Number of elements in prop ({}) ".format(prop.size)
-            + "mismatch P ({})".format(P)
-        )
-
-
-def vector_prop(prop, P):
-    """
-    Check if prop is a 2d numpy array having 3 columns and 
-    a previously defined number of rows elements P.
-
-    parameters
-    ----------
-    prop : generic object 
-        Python object to be verified.
-    P : int
-        Positive integer defining the desired numbe of element is prop.
-    """
-    if (type(P) != int) and (P <= 0):
-        raise ValueError("P must be a positive integer")
-    if type(prop) != np.ndarray:
-        raise ValueError("prop must be a numpy array")
-    if prop.ndim != 2:
-        raise ValueError(
-            "prop ndim ({}) ".format(prop.ndim)
-            + "not equal to 2"
-        )
-    if prop.shape[1] != 3:
-        raise ValueError(
-            "prop ndim ({}) ".format(prop.shape[1])
-            + "not equal to 3"
-        )
-    if prop.shape[0] != P:
-        raise ValueError(
-            "Number of elements in prop ({}) ".format(
-                prop.size
+    if positive == True:
+        if x <= 0:
+            raise ValueError(
+                "x must be positive"
             )
-            + "mismatch P ({})".format(P)
+
+
+def is_integer(x, positive=True):
+    """
+    Check if x is an int.
+
+    parameters
+    ----------
+    x : generic object
+        Python object to be verified.
+    positive : boolean
+        If True, impose that x must be positive.
+    """
+    if isinstance(x, int) is False:
+        raise ValueError(
+            "x must be an int"
+        )
+    if positive == True:
+        if x <= 0:
+            raise ValueError(
+                "x must be positive"
+            )
+
+
+def is_array(x, ndim, shape):
+    """
+    Check if x is a numpy array having specific ndim and shape.
+
+    parameters
+    ----------
+    prop : generic object 
+        Python object to be verified.
+    ndim : int
+        Positive integer defining the dimension of x.
+    shape : tuple
+        Tuple defining the shape of x.
+    """
+    if (type(ndim) != int) and (ndim <= 0):
+        raise ValueError("'ndim' must be a positive integer")
+    if (type(shape) != tuple) or (len(shape) != ndim):
+        raise ValueError("'shape' must be a tuple of 'ndim' elements")
+    for item in shape:
+        if (type(item) != int) and (item <= 0):
+            raise ValueError("'shape' must be formed by positive integers")
+    if type(x) != np.ndarray:
+        raise ValueError("x must be a numpy array")
+    if x.ndim != ndim:
+        raise ValueError(
+            "x.ndim ({}) ".format(x.ndim) + "not equal to the predefined ndim {}".format(ndim)
+        )
+    if x.shape != shape:
+        raise ValueError(
+            "x.shape ({}) ".format(x.shape) + "not equal to the predefined shape {}".format(shape)
         )
 
 
@@ -173,50 +188,6 @@ def wavenumbers(kx, ky, kz):
         raise ValueError("first column of ky must be 0")
     if np.any(kz < 0):
         raise ValueError("all elements of kz must be positive or zero")
-
-
-def scalar(x, positive=True):
-    """
-    Check if x is a float or int.
-
-    parameters
-    ----------
-    x : generic object
-        Python object to be verified.
-    positive : boolean
-        If True, impose that x must be positive.
-    """
-    if isinstance(x, (float, int)) is False:
-        raise ValueError(
-            "x must be in float or int"
-        )
-    if positive == True:
-        if x <= 0:
-            raise ValueError(
-                "x must be positive"
-            )
-
-
-def integer(x, positive=True):
-    """
-    Check if x is an int.
-
-    parameters
-    ----------
-    x : generic object
-        Python object to be verified.
-    positive : boolean
-        If True, impose that x must be positive.
-    """
-    if isinstance(x, int) is False:
-        raise ValueError(
-            "x must be an int"
-        )
-    if positive == True:
-        if x <= 0:
-            raise ValueError(
-                "x must be positive"
-            )
 
 
 def sensibility_matrix_and_data(G, data):
