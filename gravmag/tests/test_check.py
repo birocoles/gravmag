@@ -82,6 +82,40 @@ def test_invalid_rectangular_prism():
     model = 10.2
     with pytest.raises(ValueError):
         check.rectangular_prisms(model)
+    # dict with correct keys in wrong order
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'x2' : np.array([ 100,  100,  100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200])
+        }
+    with pytest.raises(ValueError):
+        check.rectangular_prisms(model)
+    # dict with one extra key
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'x2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200]),
+        'qw' : np.array([ 200,  200,  200])
+        }
+    with pytest.raises(ValueError):
+        check.rectangular_prisms(model)
+    # dict with one wrong key
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'X2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200])
+        }
+    with pytest.raises(ValueError):
+        check.rectangular_prisms(model)
 
 ##### coordinates
 
