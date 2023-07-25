@@ -7,11 +7,14 @@ from .. import check
 
 def test_rectangular_prism_n_prisms():
     "Check if return the correct number of prisms"
-    model = np.array([
-        [-100, 100, -100, 100, 100, 200],
-        [-100, 100, -100, 100, 100, 200],
-        [-100, 100, -100, 100, 100, 200]
-        ])
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'x2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200])
+        }
     P = check.rectangular_prisms(model)
     assert P == 3
 
@@ -19,22 +22,43 @@ def test_rectangular_prism_n_prisms():
 def test_invalid_rectangular_prism_boundaries():
     "Check if passing an invalid prism boundaries raises an error"
     # wrong x boundaries
-    model = np.array([[100, -100, -100, 100, 100, 200]])
+    model = {
+        'x1' : np.array([ 100, -100, -100]),
+        'x2' : np.array([-100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200])
+        }
     with pytest.raises(ValueError):
         check.rectangular_prisms(model)
     # wrong y boundaries
-    model = np.array([[-100, 100, 100, -100, 100, 200]])
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'x2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100,  100, -100]),
+        'y2' : np.array([ 100, -100,  100]),
+        'z1' : np.array([ 100,  100,  100]),
+        'z2' : np.array([ 200,  200,  200])
+        }
     with pytest.raises(ValueError):
         check.rectangular_prisms(model)
     # wrong z boundaries
-    model = np.array([[-100, 100, -100, 100, 200, 100]])
+    model = {
+        'x1' : np.array([-100, -100, -100]),
+        'x2' : np.array([ 100,  100,  100]),
+        'y1' : np.array([-100, -100, -100]),
+        'y2' : np.array([ 100,  100,  100]),
+        'z1' : np.array([ 100,  100,  300]),
+        'z2' : np.array([ 200,  200,  200])
+        }
     with pytest.raises(ValueError):
         check.rectangular_prisms(model)
 
 
 def test_invalid_rectangular_prism():
     "Check if passing an invalid prism raises an error"
-    # array with shape (1,)
+    # array
     model = np.array([100, -100, -100, 100, 100, 200])
     with pytest.raises(ValueError):
         check.rectangular_prisms(model)

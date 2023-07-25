@@ -3,7 +3,7 @@ import numpy as np
 
 def rectangular_prisms(prisms):
     """
-    Check if prisms is a 2d numpy array with 6 columns.
+    Check if prisms is a dictionary formed by 6 numpy arrays 1d.
 
     parameters
     ----------
@@ -13,37 +13,38 @@ def rectangular_prisms(prisms):
     returns
     -------
     P : int
-        Number of rows in prisms (total number of prisms).
+        Total number of prisms.
     """
-    if type(prisms) != np.ndarray:
-        raise ValueError("prisms must be a numpy array")
-    if prisms.ndim != 2:
-        raise ValueError(
-            "prisms ndim ({}) ".format(prisms.ndim) + "not equal to 2"
-        )
-    if prisms.shape[1] != 6:
-        raise ValueError(
-            "Number of columns in prisms ({}) ".format(prisms.shape[1])
-            + "not equal to 6"
-        )
+    if type(prisms) != dict:
+        raise ValueError("prisms must be a dictionary")
+    if list(prisms.keys()) != ['x1', 'x2', 'y1', 'y2', 'z1', 'z2']:
+        raise ValueError("prisms must have the following 6 keys: 'x1', 'x2', 'y1', 'y2', 'z1', 'z2'")
+    for key in prisms.keys():
+        if type(prisms[key]) != np.ndarray:
+            raise ValueError("all keys in prisms must be numpy arrays")
+    for key in prisms.keys():
+        if prisms[key].ndim != 1:
+            raise ValueError("all keys in prisms must be a numpy array 1d")
+    P = prisms['x1'].size
+    for key in prisms.keys():
+        if prisms[key].size != P:
+            raise ValueError("all keys in prisms must have the same number of elements")
     # check the x lower and upper limits
-    if np.any(prisms[:,1] <= prisms[:,0]):
+    if np.any(prisms['x2'] <= prisms['x1']):
         raise ValueError(
-            "all x2 values (2nd column) must be greater than x1 values (1st column)."
+            "all 'x2' values must be greater than 'x1' values."
             )
     # check the y lower and upper limits
-    if np.any(prisms[:,3] <= prisms[:,2]):
+    if np.any(prisms['y2'] <= prisms['y1']):
         raise ValueError(
-            "all y2 values (4th column) must be greater than y1 values (3rd column)."
+            "all 'y2' values must be greater than 'y1' values."
             )
     # check the z lower and upper limits
-    if np.any(prisms[:,5] <= prisms[:,4]):
+    if np.any(prisms['z2'] <= prisms['z1']):
         raise ValueError(
-            "all bottom (z2) values (5th column) must be greater than top (z1) values (6th column)."
+            "all 'z2' values must be greater than 'z1' values."
             )
 
-    # number of rows in prisms
-    P = prisms.shape[0]
     return P
 
 
