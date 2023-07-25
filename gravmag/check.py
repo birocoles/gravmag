@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def rectangular_prisms(prisms):
+def are_rectangular_prisms(prisms):
     """
     Check if prisms is a dictionary formed by 6 numpy arrays 1d.
 
@@ -48,7 +48,7 @@ def rectangular_prisms(prisms):
     return P
 
 
-def coordinates(coordinates):
+def are_coordinates(coordinates):
     """
     Check if coordinates is a dictionary formed by 3 numpy arrays 1d.
 
@@ -158,10 +158,10 @@ def is_array(x, ndim, shape):
 # wavenumbers
 
 
-def wavenumbers(wavenumbers):
+def are_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary formed by 3 numpy arrays 2d. 
-    (See function 'gravmag.filters.wavenumbers').
+    (See function 'gravmag.transforms.wavenumbers').
 
     parameters
     ----------

@@ -15,7 +15,7 @@ def test_rectangular_prism_n_prisms():
         'z1' : np.array([ 100,  100,  100]),
         'z2' : np.array([ 200,  200,  200])
         }
-    P = check.rectangular_prisms(model)
+    P = check.are_rectangular_prisms(model)
     assert P == 3
 
 
@@ -31,7 +31,7 @@ def test_invalid_rectangular_prism_boundaries():
         'z2' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # wrong y boundaries
     model = {
         'x1' : np.array([-100, -100, -100]),
@@ -42,7 +42,7 @@ def test_invalid_rectangular_prism_boundaries():
         'z2' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # wrong z boundaries
     model = {
         'x1' : np.array([-100, -100, -100]),
@@ -53,7 +53,7 @@ def test_invalid_rectangular_prism_boundaries():
         'z2' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
 
 
 def test_invalid_rectangular_prism():
@@ -61,27 +61,27 @@ def test_invalid_rectangular_prism():
     # array
     model = np.array([100, -100, -100, 100, 100, 200])
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # array with shape (2,4)
     model = np.empty((2, 4))
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # array with shape (1,4)
     model = np.empty((1, 5))
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # tuple
     model = (1, 5)
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # list
     model = [1,2,3.]
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # float
     model = 10.2
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # dict with correct keys in wrong order
     model = {
         'x1' : np.array([-100, -100, -100]),
@@ -92,7 +92,7 @@ def test_invalid_rectangular_prism():
         'z2' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # dict with one extra key
     model = {
         'x1' : np.array([-100, -100, -100]),
@@ -104,7 +104,7 @@ def test_invalid_rectangular_prism():
         'qw' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
     # dict with one wrong key
     model = {
         'x1' : np.array([-100, -100, -100]),
@@ -115,7 +115,7 @@ def test_invalid_rectangular_prism():
         'z2' : np.array([ 200,  200,  200])
         }
     with pytest.raises(ValueError):
-        check.rectangular_prisms(model)
+        check.are_rectangular_prisms(model)
 
 ##### coordinates
 
@@ -126,7 +126,7 @@ def test_coordinates_n_points():
         'y' : np.array([-100, 100, -100, 100, 100, 200]),
         'z' : np.array([-100, 100, -100, 100, 100, 200])
         }
-    D = check.coordinates(coordinates)
+    D = check.are_coordinates(coordinates)
     assert D == 6
 
 
@@ -135,23 +135,23 @@ def test_invalid_coordinates():
     # array
     coordinates = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # array
     coordinates = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # tuple
     coordinates = (1, 5)
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # list
     coordinates = [1,2,3.]
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # float
     coordinates = 10.2
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # dictionary with one extra key
     coordinates = {
         'x' : np.array([-100, 100, -100, 100, 100, 200]),
@@ -160,7 +160,7 @@ def test_invalid_coordinates():
         'k' : np.array([-100, 100, -100, 100, 100, 200])
         }
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
     # dictionary with one wrong key
     coordinates = {
         'x' : np.array([-100, 100, -100, 100, 100, 200]),
@@ -168,7 +168,7 @@ def test_invalid_coordinates():
         'Z' : np.array([-100, 100, -100, 100, 100, 200])
         }
     with pytest.raises(ValueError):
-        check.coordinates(coordinates)
+        check.are_coordinates(coordinates)
 
 ##### is_scalar
 
@@ -285,15 +285,15 @@ def test_invalid_wavenumbers():
     # tuple
     w = (5, 7, 8.7)
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
     # list
     w = [5, 7, 8.7]
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
     # complex
     w = 34. + 5j
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
 
 
 def test_invalid_wavenumbers_xyz():
@@ -309,7 +309,7 @@ def test_invalid_wavenumbers_xyz():
         'z' : kz
     }
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
     # wrong 'y'
     kx = np.ones((3, 4)) 
     kx[0,:] = 0.
@@ -321,7 +321,7 @@ def test_invalid_wavenumbers_xyz():
         'z' : kz
     }
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
     # wrong 'z'
     kx = np.ones((3, 4)) 
     kx[0,:] = 0.
@@ -335,7 +335,7 @@ def test_invalid_wavenumbers_xyz():
         'z' : kz
     }
     with pytest.raises(ValueError):
-        check.wavenumbers(wavenumbers=w)
+        check.are_wavenumbers(wavenumbers=w)
     
 
 ##### sensibility matrix and data vector
