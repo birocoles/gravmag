@@ -50,7 +50,7 @@ def rectangular_prisms(prisms):
 
 def coordinates(coordinates):
     """
-    Check if coordinates is a 2d numpy array with 3 rows.
+    Check if coordinates is a dictionary formed by 3 numpy arrays 1d.
 
     parameters
     ----------
@@ -60,21 +60,22 @@ def coordinates(coordinates):
     returns
     -------
     D : int
-        Number of columns in coordinates (total number of data points).
+        Total number of points.
     """
-    if type(coordinates) != np.ndarray:
-        raise ValueError("coordinates must be a numpy array")
-    if coordinates.ndim != 2:
-        raise ValueError(
-            "coordinates ndim ({}) ".format(coordinates.ndim) + "not equal to 2"
-        )
-    if coordinates.shape[0] != 3:
-        raise ValueError(
-            "Number of lines in coordinates ({}) ".format(coordinates.shape[0])
-            + "not equal to 3"
-        )
-    # number of columns in coordinates
-    D = coordinates.shape[1]
+    if type(coordinates) != dict:
+        raise ValueError("coordinates must be a dictionary")
+    if list(coordinates.keys()) != ['x', 'y', 'z']:
+        raise ValueError("coordinates must have the following 3 keys: 'x', 'y', 'z'")
+    for key in coordinates.keys():
+        if type(coordinates[key]) != np.ndarray:
+            raise ValueError("all keys in coordinates must be numpy arrays")
+    for key in coordinates.keys():
+        if coordinates[key].ndim != 1:
+            raise ValueError("all keys in coordinates must be a numpy array 1d")
+    D = coordinates['x'].size
+    if (coordinates['y'].size != D) or (coordinates['z'].size != D):
+        raise ValueError("all keys in coordinates must have the same number of elements")
+    
     return D
 
 

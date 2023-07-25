@@ -121,22 +121,22 @@ def test_invalid_rectangular_prism():
 
 def test_coordinates_n_points():
     "Check if return the correct number of points"
-    coordinates = np.array([
-        [-100, 100, -100, 100, 100, 200],
-        [-100, 100, -100, 100, 100, 200],
-        [-100, 100, -100, 100, 100, 200]
-        ])
+    coordinates = {
+        'x' : np.array([-100, 100, -100, 100, 100, 200]),
+        'y' : np.array([-100, 100, -100, 100, 100, 200]),
+        'z' : np.array([-100, 100, -100, 100, 100, 200])
+        }
     D = check.coordinates(coordinates)
     assert D == 6
 
 
 def test_invalid_coordinates():
     "Check if passing an invalid coordinates raises an error"
-    # shape (1,)
+    # array
     coordinates = np.array([0, 0, 0])
     with pytest.raises(ValueError):
         check.coordinates(coordinates)
-    # shape (4,3)
+    # array
     coordinates = np.zeros((4, 3))
     with pytest.raises(ValueError):
         check.coordinates(coordinates)
@@ -150,6 +150,23 @@ def test_invalid_coordinates():
         check.coordinates(coordinates)
     # float
     coordinates = 10.2
+    with pytest.raises(ValueError):
+        check.coordinates(coordinates)
+    # dictionary with one extra key
+    coordinates = {
+        'x' : np.array([-100, 100, -100, 100, 100, 200]),
+        'y' : np.array([-100, 100, -100, 100, 100, 200]),
+        'z' : np.array([-100, 100, -100, 100, 100, 200]),
+        'k' : np.array([-100, 100, -100, 100, 100, 200])
+        }
+    with pytest.raises(ValueError):
+        check.coordinates(coordinates)
+    # dictionary with one wrong key
+    coordinates = {
+        'x' : np.array([-100, 100, -100, 100, 100, 200]),
+        'y' : np.array([-100, 100, -100, 100, 100, 200]),
+        'Z' : np.array([-100, 100, -100, 100, 100, 200])
+        }
     with pytest.raises(ValueError):
         check.coordinates(coordinates)
 
