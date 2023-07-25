@@ -68,14 +68,12 @@ def grad(
 
     parameters
     ----------
-    data_points: numpy array 2d
-        3 x N matrix containing the coordinates
-        x (1rt row), y (2nd row), z (3rd row) of N data points.
-        The ith column contains the coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
         points and the M sources computed according to function 'sedm'.
@@ -95,8 +93,8 @@ def grad(
 
     if check_input is True:
         # check shape and ndim of points
-        check.coordinates(data_points)
-        check.coordinates(source_points)
+        D = check.are_coordinates(data_points)
+        P = check.are_coordinates(source_points)
         # check number of elements in components
         if len(components) > 3:
             raise ValueError("components must have at most 3 elements")
@@ -112,15 +110,16 @@ def grad(
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if SEDM.shape != (data_points.shape[1], source_points.shape[1]):
+        if type(SEDM) != np.ndarray:
+            raise ValueError("SEDM must be a numpy array")
+        if SEDM.ndim != 2:
+            raise ValueError("SEDM must be have ndim = 2")
+        if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
     else:
         _components = components
-
-    # define a dictionary for component indices
-    component_index = {"x": 0, "y": 1, "z": 2}
 
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM * np.sqrt(SEDM)
@@ -128,8 +127,7 @@ def grad(
     # compute the gradient components defined in _components
     Ka = []
     for component in _components:
-        index = component_index[component]
-        delta = data_points[index][:, np.newaxis] - source_points[index]
+        delta = data_points[component][:, np.newaxis] - source_points[component]
         Ka.append(-delta / R3)
 
     return Ka
@@ -149,14 +147,12 @@ def grad_tensor(
 
     parameters
     ----------
-    data_points: numpy array 2d
-        3 x N matrix containing the coordinates
-        x (1rt row), y (2nd row), z (3rd row) of N data points.
-        The ith column contains the coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
         points and the M sources computed according to function 'sedm'.
@@ -177,8 +173,8 @@ def grad_tensor(
 
     if check_input is True:
         # check shape and ndim of points
-        check.coordinates(data_points)
-        check.coordinates(source_points)
+        D = check.are_coordinates(data_points)
+        P = check.are_coordinates(source_points)
         # check number of elements in components
         if len(components) > 6:
             raise ValueError("components must have at most 6 elements")
@@ -194,7 +190,11 @@ def grad_tensor(
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if SEDM.shape != (data_points.shape[1], source_points.shape[1]):
+        if type(SEDM) != np.ndarray:
+            raise ValueError("SEDM must be a numpy array")
+        if SEDM.ndim != 2:
+            raise ValueError("SEDM must be have ndim = 2")
+        if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
@@ -222,9 +222,8 @@ def grad_tensor(
     else:
         aux = 0
     for component in _components:
-        index1, index2 = component_indices[component]
-        delta1 = data_points[index1][:, np.newaxis] - source_points[index1]
-        delta2 = data_points[index2][:, np.newaxis] - source_points[index2]
+        delta1 = data_points[component[0]][:, np.newaxis] - source_points[component[0]]
+        delta2 = data_points[component[1]][:, np.newaxis] - source_points[component[1]]
         if component in ["xx", "yy", "zz"]:
             Kab.append((3 * delta1 * delta2) / R5 - aux)
         else:
