@@ -1,8 +1,9 @@
 import numpy as np
 from numpy.testing import assert_almost_equal as aae
 from pytest import raises
-from .. import inverse_distance as id
+from .. import inverse_distance as idist
 
+##### SEDM
 
 def test_sedm_symmetric_points():
     "verify results obtained for symmetrically positioned sources"
@@ -36,8 +37,8 @@ def test_sedm_symmetric_points():
     P_down = np.copy(S)
     P_down[2] += 64
 
-    V_up = 1.0 / np.sqrt(id.sedm(P_up, S))
-    V_down = 1.0 / np.sqrt(id.sedm(P_down, S))
+    V_up = 1.0 / np.sqrt(idist.sedm(P_up, S))
+    V_down = 1.0 / np.sqrt(idist.sedm(P_down, S))
     aae(V_up, V_down, decimal=15)
 
 
@@ -63,8 +64,11 @@ def test_sedm_known_points():
         ]
     )
 
-    V = 1.0 / np.sqrt(id.sedm(P, S))
+    V = 1.0 / np.sqrt(idist.sedm(P, S))
     aae(V, V_ref, decimal=15)
+
+
+#### grad
 
 
 def test_grad_invalid_component():
@@ -73,15 +77,15 @@ def test_grad_invalid_component():
     S = np.array([0, 0, 0]).reshape((3, 1))
     # singe data point
     P = np.array([0, 0, -10]).reshape((3, 1))
-    R2 = id.sedm(P, S)
+    R2 = idist.sedm(P, S)
     # components with more than 3 elements
     components = ["x", "y", "z", "z"]
     with raises(ValueError):
-        id.grad(P, S, R2, components)
+        idist.grad(P, S, R2, components)
     # invalid component
     components = ["x", "h"]
     with raises(ValueError):
-        id.grad(P, S, R2, components)
+        idist.grad(P, S, R2, components)
 
 
 def test_grad_invalid_SEDM():
@@ -93,7 +97,7 @@ def test_grad_invalid_SEDM():
     components = ["x", "y", "z"]
     # SEDM with shape different from (1,1)
     with raises(ValueError):
-        id.grad(P, S, np.ones((2, 2)), components)
+        idist.grad(P, S, np.ones((2, 2)), components)
 
 
 def test_grad_known_points():
@@ -144,28 +148,31 @@ def test_grad_known_points():
         ]
     )
 
-    R2 = id.sedm(P, S)
+    R2 = idist.sedm(P, S)
 
     # all components
-    Vx, Vy, Vz = id.grad(P, S, R2)
+    Vx, Vy, Vz = idist.grad(P, S, R2)
     aae(Vx, Vx_ref, decimal=15)
     aae(Vy, Vy_ref, decimal=15)
     aae(Vz, Vz_ref, decimal=15)
 
     # x and y components
-    Vx, Vy = id.grad(P, S, R2, ["x", "y"])
+    Vx, Vy = idist.grad(P, S, R2, ["x", "y"])
     aae(Vx, Vx_ref, decimal=15)
     aae(Vy, Vy_ref, decimal=15)
 
     # x and z components
-    Vx, Vz = id.grad(P, S, R2, ["x", "z"])
+    Vx, Vz = idist.grad(P, S, R2, ["x", "z"])
     aae(Vx, Vx_ref, decimal=15)
     aae(Vz, Vz_ref, decimal=15)
 
     # z and y components
-    Vz, Vy = id.grad(P, S, R2, ["z", "y"])
+    Vz, Vy = idist.grad(P, S, R2, ["z", "y"])
     aae(Vz, Vz_ref, decimal=15)
     aae(Vy, Vy_ref, decimal=15)
+
+
+#### grad tensor
 
 
 def test_grad_tensor_invalid_component():
@@ -174,15 +181,15 @@ def test_grad_tensor_invalid_component():
     S = np.array([0, 0, 0]).reshape((3, 1))
     # singe data point
     P = np.array([0, 0, -10]).reshape((3, 1))
-    R2 = id.sedm(P, S)
+    R2 = idist.sedm(P, S)
     # components with more than 6 elements
     components = ["xx", "xy", "xz", "yy", "yz", "zz", "zz"]
     with raises(ValueError):
-        id.grad_tensor(P, S, R2, components)
+        idist.grad_tensor(P, S, R2, components)
     # invalid component
     components = ["xx", "xh"]
     with raises(ValueError):
-        id.grad_tensor(P, S, R2, components)
+        idist.grad_tensor(P, S, R2, components)
 
 
 def test_grad_tensor_invalid_SEDM():
@@ -193,7 +200,7 @@ def test_grad_tensor_invalid_SEDM():
     P = np.array([0, 0, -10]).reshape((3, 1))
     # SEDM with shape different from (1,1)
     with raises(ValueError):
-        id.grad_tensor(P, S, np.ones((2, 2)))
+        idist.grad_tensor(P, S, np.ones((2, 2)))
 
 
 def test_grad_tensor_xx_symmetric_points():
@@ -205,8 +212,8 @@ def test_grad_tensor_xx_symmetric_points():
     # computation points
     P = np.array([[-140, 140], [0, 0], [0, 0]])
 
-    R2 = id.sedm(P, S)
-    Vxx = id.grad_tensor(P, S, R2, ["xx"])
+    R2 = idist.sedm(P, S)
+    Vxx = idist.grad_tensor(P, S, R2, ["xx"])
 
     aae(Vxx[0][0, :], Vxx[0][1, :], decimal=15)
 
@@ -220,8 +227,8 @@ def test_grad_tensor_yy_symmetric_points():
     # computation points
     P = np.array([[0, 0], [-140, 140], [0, 0]])
 
-    R2 = id.sedm(P, S)
-    Vyy = id.grad_tensor(P, S, R2, ["yy"])
+    R2 = idist.sedm(P, S)
+    Vyy = idist.grad_tensor(P, S, R2, ["yy"])
 
     aae(Vyy[0][0, :], Vyy[0][1, :], decimal=15)
 
@@ -235,8 +242,8 @@ def test_grad_tensor_zz_symmetric_points():
     # computation points
     P = np.array([[0, 140], [-140, 0], [0, 0]])
 
-    R2 = id.sedm(P, S)
-    Vzz = id.grad_tensor(P, S, R2, ["zz"])
+    R2 = idist.sedm(P, S)
+    Vzz = idist.grad_tensor(P, S, R2, ["zz"])
 
     aae(Vzz[0][0, :], Vzz[0][1, :], decimal=15)
 
@@ -253,8 +260,8 @@ def test_grad_tensor_Laplace():
     )
 
     # second derivatives produced by shallow sources
-    R2 = id.sedm(P, S)
-    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = id.grad_tensor(P, S, R2)
+    R2 = idist.sedm(P, S)
+    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = idist.grad_tensor(P, S, R2)
 
     aae(Vzz, -Vxx - Vyy, decimal=15)
 
@@ -329,8 +336,8 @@ def test_grad_tensor_known_points():
         ]
     )
 
-    R2 = id.sedm(P, S)
-    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = id.grad_tensor(P, S, R2)
+    R2 = idist.sedm(P, S)
+    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = idist.grad_tensor(P, S, R2)
     aae(Vxx, Vxx_ref, decimal=15)
     aae(Vxy, Vxy_ref, decimal=15)
     aae(Vxz, Vxz_ref, decimal=15)
