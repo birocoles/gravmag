@@ -1,12 +1,9 @@
 """
 This code presents a general approach for implementing the gravitational
 and magnetic induction fields produced
-by rectangular prisms by using the analytical formulas of
-Nagy et al (2000, 2002). This prototype is inspired on
-[Harmonica](https://www.fatiando.org/harmonica/latest/index.html)
-(Uieda et al, 2020). It makes use of the modified arctangent function proposed
-by Fukushima (2020, eq. 72) and of a modified logarithm function for dealing
-with singularities at some computation points.
+by rectangular prisms by using the closed-form formulas of
+Nagy et al (2000, 2002). This prototype makes use of the modified arctangent and logarithm 
+functions proposed by Fukushima (2020) for dealing with singularities at some computation points.
 """
 
 
@@ -27,20 +24,20 @@ def grav(coordinates, prisms, density, field, scale=True):
 
     Parameters
     ----------
-    coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line) of
-        the computation points. All coordinates should be in meters.
-    prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
+    coordinates : dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
         All coordinates should be in meters.
+    prisms : dictionary
+        Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+        prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
+        Each key is a numpy array 1d having the same number of elements.
     density : 1d-array
         1d-array containing the density of each prism in kg/m^3.
     field : str
         Gravitational field to be computed.
         The available fields are:
-
         - Gravitational potential: ``potential`` (in m² / s²)
         - z-component of acceleration: ``z`` (in mGal)
         - y-component of acceleration: ``y`` (in mGal)
@@ -65,9 +62,9 @@ def grav(coordinates, prisms, density, field, scale=True):
     """
 
     # Verify the input parameters
-    D = check.coordinates(coordinates) # D = total number of data points
-    P = check.rectangular_prisms(prisms) # P = total number of prisms
-    check.scalar_prop(density, P)
+    D = check.are_coordinates(coordinates) # D = total number of data points
+    P = check.are_rectangular_prisms(prisms) # P = total number of prisms
+    check.is_array(density, ndim=1, shape=(P,))
 
     # Available fields
     fields = {
@@ -106,7 +103,7 @@ def grav(coordinates, prisms, density, field, scale=True):
     return result
 
 
-def mag(coordinates, prisms, magnetization, field, scale=True):
+def mag(coordinates, prisms, mx, my, mz, field, scale=True):
     """
     Magnetic scalar potential and magnetic induction components
     produced by right-rectangular prisms in Cartesian coordinates.
@@ -115,22 +112,20 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
 
     Parameters
     ----------
-    coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line) of
-        the computation points. All coordinates should be in meters.
-    prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
+    coordinates : dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
         All coordinates should be in meters.
-    magnetization : 2d-array
-        2d-array containing the total-magnetization components of the prisms.
-        Each line must contain the intensity (in A/m), inclination and
-        declination (in degrees) of the total magnetization of a single prism.
+    prisms : dictionary
+        Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+        prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
+        Each key is a numpy array 1d having the same number of elements.
+    mx, my, mz : numpy arrays 1d
+        Numpy arrays 1d containing the x, y and z total-magnetization components of the prisms in A/m.
     field : str
         Magnetic field to be computed.
         The available fields are:
-
         - Magnetic scalar potential: ``potential`` (in uT x m)
         - z-component of induction: ``z`` (in nT)
         - y-component of induction: ``y`` (in nT)
@@ -149,9 +144,11 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
     """
 
     # Verify the input parameters
-    D = check.coordinates(coordinates) # D = total number of data points
-    P = check.rectangular_prisms(prisms) # P = total number of prisms
-    check.vector_prop(magnetization, P)
+    D = check.are_coordinates(coordinates) # D = total number of data points
+    P = check.are_rectangular_prisms(prisms) # P = total number of prisms
+    check.is_array(mx, ndim=1, shape=(P,))
+    check.is_array(my, ndim=1, shape=(P,))
+    check.is_array(mz, ndim=1, shape=(P,))
 
     # Available fields
     fields = {
@@ -167,9 +164,6 @@ def mag(coordinates, prisms, magnetization, field, scale=True):
 
     # create the array to store the result
     result = np.zeros(D, dtype="float64")
-
-    # Compute the Cartesian components of total-magnetization
-    mx, my, mz = utils.magnetization_components(magnetization)
 
     # Compute magnetic field
     fieldx = fields[field]["x"]
