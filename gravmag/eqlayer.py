@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import distance
-from . import inverse_distance as id
-from . import check, utils, constants
+from . import inverse_distance as idist
+from . import check, utils, constants, convolve
 
 
 def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=True):
@@ -51,15 +51,15 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
             raise ValueError("invalid field {}".format(field))
 
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = id.sedm(data_points, source_points, check_input=False)
+    R2 = idist.sedm(data_points, source_points, check_input=False)
 
     # compute the kernel matrix according to "field"
     if field == "potential":
         G = 1.0 / np.sqrt(R2)
     elif field in ["x", "y", "z"]:
-        G = id.grad(data_points, source_points, R2, [field], False)[0]
+        G = idist.grad(data_points, source_points, R2, [field], False)[0]
     else:  # field is in ["xx", "xy", "xz", "yy", "yz", "zz"]
-        G = id.grad_tensor(data_points, source_points, R2, [field], False)[0]
+        G = idist.grad_tensor(data_points, source_points, R2, [field], False)[0]
 
     return G
 
@@ -125,13 +125,13 @@ def kernel_matrix_dipoles(
                 raise ValueError("dect must be a scalar because field is 't'")
 
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = id.sedm(data_points, source_points, check_input=False)
+    R2 = idist.sedm(data_points, source_points, check_input=False)
     # compute the unit vector defined by inc and dec
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # compute the kernel matrix according to "field"
     if field == "potential":
-        Gx, Gy, Gz = id.grad(
+        Gx, Gy, Gz = idist.grad(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -140,7 +140,7 @@ def kernel_matrix_dipoles(
         )
         G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
     elif field == "x":
-        Gxx, Gxy, Gxz = id.grad_tensor(
+        Gxx, Gxy, Gxz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -149,7 +149,7 @@ def kernel_matrix_dipoles(
         )
         G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
     elif field == "y":
-        Gxy, Gyy, Gyz = id.grad_tensor(
+        Gxy, Gyy, Gyz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -158,7 +158,7 @@ def kernel_matrix_dipoles(
         )
         G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
     elif field == "z":
-        Gxz, Gyz, Gzz = id.grad_tensor(
+        Gxz, Gyz, Gzz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -169,7 +169,7 @@ def kernel_matrix_dipoles(
     else:  # field is "t"
         # compute the unit vector defined by inct and dect
         t = utils.unit_vector(inct, dect, check_input=False)
-        Gxx, Gxy, Gxz, Gyy, Gyz = id.grad_tensor(
+        Gxx, Gxy, Gxz, Gyy, Gyz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -376,103 +376,69 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
     return delta_list, parameters
 
 
-def method_iterative_deconvolution(first_columns, datasets, transposition_factors, symmetries, epsilon, ITMAX=50, check_input=True):
-    """
-    Solves the unconstrained overdetermined problem to estimate the physical-property
-    distribution on the equivalent layer via convolutional equivalent-layer method 
-    proposed by Takahashi et al. (2020, 2022).
+# def method_iterative_deconvolution(G_dict, datasets, epsilon, ITMAX=50, check_input=True):
+#     """
+#     Solves the unconstrained overdetermined problem to estimate the physical-property
+#     distribution on the equivalent layer via convolutional equivalent-layer method 
+#     proposed by Takahashi et al. (2020, 2022).
 
-    parameters
-    ----------
-    first_columns : list of numpy arrays 1d
-        List of N x 1 vectors defining the first columns of the kernel associated with the potential-field data.
-    datasets : list of numpy arrays 1d
-        List of potential-field data sets.
-    transposition_factors : list of ints
-        List containing 1 and -1 values defining the relationship between the eigenvalues of
-        a given kernel matrix and those of its transposed form.
-    symmetries : list of strings
-        List of strings defining the symmetries of kernel matrices. See the docstring of
-        function 'convolve.embedding_BCCB_first_column'.
-    epsilon : float
-        Tolerance for evaluating convergence criterion.
-    ITMAX : int
-        Maximum number of iterations. Default is 50.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
+#     parameters
+#     ----------
+#     datasets : numpy arrays 2d
+#         Matrix containing one potential-field data per row.
+#     epsilon : float
+#         Tolerance for evaluating convergence criterion.
+#     ITMAX : int
+#         Maximum number of iterations. Default is 50.
+#     check_input : boolean
+#         If True, verify if the input is valid. Default is True.
 
-    returns
-    -------
-    delta_list : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
-    parameters : numpy array 1d
-        Physical property distribution on the equivalent layer.
-    """
+#     returns
+#     -------
+#     delta_list : list of floats
+#         List of ratios of Euclidean norm of the residuals and number of data.
+#     parameters : numpy array 1d
+#         Physical property distribution on the equivalent layer.
+#     """
     
-    if check_input is True:
-        # check if first_columns, datasets, transposition_factors and symmetries are lists
-        if type(first_columns) != list:
-            raise ValueError("first_columns must be a list")
-        if type(datasets) != list:
-            raise ValueError("datasets must be a list")
-        if type(transposition_factors) != list:
-            raise ValueError("transposition_factors must be a list")
-        if type(symmetries) != list:
-            raise ValueError("symmetries must be a list")
-        # check if first_columns, datasets, transposition_factors and symmetries have the
-        # same number of elements
-        common_length = len(first_columns) 
-        if len(datasets) 
-        # check if first_columns and datasets elements are consistent numpy arrays
-        for i, (first_column, data) in enumerate(zip(first_columns, datasets)):
-            if type(first_column) != np.ndarray:
-                raise ValueError("first_column {} is not a numpy array".format{i})
-            if type(data) != np.ndarray:
-                raise ValueError("data {} is not a numpy array".format{i})
-            if first_column.ndim != 1:
-                raise ValueError("first_column {} must be a numpy array 1d".format(i))
-            if data.ndim != 1:
-                raise ValueError("data {} must be a numpy array 1d".format(i))
-            if first_column.size != data.size:
-                raise ValueError("first_column and data {} must have the same size".format(i))
-        # check if symmetry is valid
-        for i, symmetry in enumerate(symmetries):
-            if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
-                raise ValueError("symmetry {} ({}) is invalid".format(i, symmetry))
-        # check if symmetry is valid
-        for i, symmetry in enumerate(symmetries):
-            if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
-                raise ValueError("symmetry {} ({}) is invalid".format(i, symmetry))
-        # check if epsilon is a positive scalar
-        check.scalar(x=epsilon, positive=True)
-        # check if ITMAX is a positive integer
-        check.integer(x=ITMAX, positive=True)
+#     if check_input is True:
+#         # check if epsilon is a positive scalar
+#         check.scalar(x=epsilon, positive=True)
+#         # check if ITMAX is a positive integer
+#         check.integer(x=ITMAX, positive=True)
 
-    # initializations
-    D = data.size
-    residuals = np.copy(data)
-    delta_list = []
-    delta = np.sqrt(np.sum(residuals*residuals))/D
-    delta_list.append(delta)
-    vartheta = G.T@residuals
-    rho0 = np.sum(vartheta*vartheta)
-    parameters = np.zeros(G.shape[1])
-    tau = 0
-    eta = np.zeros_like(parameters)
-    m = 1
-    # updates
-    while (delta > epsilon) and (m < ITMAX):
-        eta = vartheta + tau*eta
-        nu = G@eta
-        upsilon = rho0/np.sum(nu*nu)
-        parameters += upsilon*eta
-        residuals -= upsilon*nu
-        delta = np.sqrt(np.sum(residuals*residuals))/D
-        delta_list.append(delta)
-        vartheta = G.T@residuals
-        rho = np.sum(vartheta*vartheta)
-        tau = rho/rho0
-        rho0 = rho
-        m += 1
+#     # initializations
+#     D = datasets.size
+#     residuals = np.copy(datasets)
+#     delta_list = []
+#     delta = np.sum(np.sqrt(np.sum(residuals*residuals, axis=1))/D)/6
+#     delta_list.append(delta)
 
-    return delta_list, parameters
+#     # eigenvalues matrices
+#     L_matrices = []
+#     for (g0, symmetry) in zip(G0, symmetries):
+#         c0 = convolve.embedding_BCCB_first_column(b0=g0, Q=Q, P=P, symmetry=symmetry)
+#         L_matrices.append(convolve.eigenvalues_BCCB(c0=c0, Q=Q, P=P))
+#     vartheta = G.T@residuals
+#     rho0 = np.sum(vartheta*vartheta)
+    
+#     parameters = np.zeros(D)
+#     tau = 0
+#     eta = np.zeros_like(parameters)
+#     m = 1
+#     # updates
+#     while (delta > epsilon) and (m < ITMAX):
+#         eta = vartheta + tau*eta
+#         nu = G@eta
+#         upsilon = rho0/np.sum(nu*nu)
+#         parameters += upsilon*eta
+#         residuals -= upsilon*nu
+#         delta = np.sqrt(np.sum(residuals*residuals))/D
+#         delta_list.append(delta)
+#         vartheta = G.T@residuals
+#         rho = np.sum(vartheta*vartheta)
+#         tau = rho/rho0
+#         rho0 = rho
+#         m += 1
+
+#     return delta_list, parameters
