@@ -213,3 +213,8 @@ def sensibility_matrix_and_data(matrices, vectors):
             raise ValueError("vectors[{}] must be a vector".format(i))
         if G.shape[0] != data.size:
             raise ValueError("matrices[{}] rows mismatch vectors[{}] size".format(i))
+    if len(matrices) > 1:
+        common_n_of_columns = matrices[0].shape[1]
+        for i, G in enumerate(matrices[1:]):
+            if G.shape[1] != common_n_of_columns:
+                raise ValueError("matrices[{}] does not have the same number of columns of matrices[0]".format(i))

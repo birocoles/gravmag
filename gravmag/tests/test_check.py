@@ -367,3 +367,19 @@ def test_sensibility_matrix_and_data_non_arrays():
     data = [3, 5, 6.6]
     with pytest.raises(ValueError):
         check.sensibility_matrix_and_data(matrices=[G], vectors=[data])
+
+
+def test_sensibility_matrix_and_data_incompatible_matrices():
+    "Check if passing matrices with different number of columns raises an error"
+    G = [
+        np.empty((4,3)),
+        np.ones((5,3)),
+        np.zeros((2,2))
+        ]
+    data = [
+        np.empty(4),
+        np.ones(5),
+        np.zeros(2)
+        ]
+    with pytest.raises(ValueError):
+        check.sensibility_matrix_and_data(matrices=[G], vectors=[data])
