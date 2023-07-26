@@ -10,14 +10,12 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
 
     parameters
     ----------
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     field : string
         Defines the field produced by the layer. The available options are:
         "potential", "x", "y", "z", "xx", "xy", "xz", "yy", "yz", "zz".
@@ -31,9 +29,9 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
     """
 
     if check_input is True:
-        check.coordinates(data_points)
-        check.coordinates(source_points)
-        if np.any(data_points[2] >= source_points[2]):
+        check.are_coordinates(data_points)
+        check.are_coordinates(source_points)
+        if np.any(data_points['z'] >= source_points['z']):
             raise ValueError("all data points must be above source points")
         # check if field is valid
         if field not in [
@@ -65,7 +63,7 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
 
 
 def kernel_matrix_dipoles(
-    data_points, source_points, inc, dec, field="t", inct=None, dect=None, check_input=True
+    data_points, source_points, inc, dec, field="z", inct=None, dect=None, check_input=True
 ):
     """
     Compute the kernel matrix produced by a planar layer of dipoles with
@@ -73,14 +71,12 @@ def kernel_matrix_dipoles(
 
     parameters
     ----------
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     inc, dec : ints or floats
         Scalars defining the constant inclination and declination of the
         dipoles magnetization.
@@ -107,9 +103,9 @@ def kernel_matrix_dipoles(
     """
 
     if check_input is True:
-        check.coordinates(data_points)
-        check.coordinates(source_points)
-        if np.any(data_points[2] >= source_points[2]):
+        check.are_coordinates(data_points)
+        check.are_coordinates(source_points)
+        if np.any(data_points['z'] >= source_points['z']):
             raise ValueError("all data points must be above source points")
         if type(inc) not in [float, int]:
             raise ValueError("inc must be a scalar")
@@ -376,69 +372,76 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
     return delta_list, parameters
 
 
-# def method_iterative_deconvolution(G_dict, datasets, epsilon, ITMAX=50, check_input=True):
-#     """
-#     Solves the unconstrained overdetermined problem to estimate the physical-property
-#     distribution on the equivalent layer via convolutional equivalent-layer method 
-#     proposed by Takahashi et al. (2020, 2022).
+def method_iterative_deconvolution_TOB20(L, Q, P, transposition_fator, ordering, data, epsilon, ITMAX=50, check_input=True):
+    """
+    Solves the unconstrained overdetermined problem to estimate the physical-property
+    distribution on the equivalent layer via convolutional equivalent-layer method
+    proposed by Takahashi et al. (2020, 2022).
 
-#     parameters
-#     ----------
-#     datasets : numpy arrays 2d
-#         Matrix containing one potential-field data per row.
-#     epsilon : float
-#         Tolerance for evaluating convergence criterion.
-#     ITMAX : int
-#         Maximum number of iterations. Default is 50.
-#     check_input : boolean
-#         If True, verify if the input is valid. Default is True.
+    parameters
+    ----------
+    L: numpy array 2D
+        Matrix formed by the eigenvalues of the embedding BCCB. This matrix
+        must have the ordering defined by the parameter 'ordering' (see its
+        description below).
+    Q: int
+        Number of blocks along a column/row of the BTTB.
+    P: int
+        Order of each block forming the BTTB.
+    ordering: string
+        If "row", the eigenvalues are arranged along the rows of a matrix L;
+        if "column", they are arranged along the columns of a matrix L.
+    data : numpy array 1d
+        Potential-field data.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
-#     returns
-#     -------
-#     delta_list : list of floats
-#         List of ratios of Euclidean norm of the residuals and number of data.
-#     parameters : numpy array 1d
-#         Physical property distribution on the equivalent layer.
-#     """
+    returns
+    -------
+    delta_list : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
     
-#     if check_input is True:
-#         # check if epsilon is a positive scalar
-#         check.scalar(x=epsilon, positive=True)
-#         # check if ITMAX is a positive integer
-#         check.integer(x=ITMAX, positive=True)
+    if check_input is True:
+        # check if G and data are consistent numpy arrays
+        check.sensibility_matrix_and_data(G=G, data=data)
+        # check if epsilon is a positive scalar
+        check.scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.integer(x=ITMAX, positive=True)
 
-#     # initializations
-#     D = datasets.size
-#     residuals = np.copy(datasets)
-#     delta_list = []
-#     delta = np.sum(np.sqrt(np.sum(residuals*residuals, axis=1))/D)/6
-#     delta_list.append(delta)
 
-#     # eigenvalues matrices
-#     L_matrices = []
-#     for (g0, symmetry) in zip(G0, symmetries):
-#         c0 = convolve.embedding_BCCB_first_column(b0=g0, Q=Q, P=P, symmetry=symmetry)
-#         L_matrices.append(convolve.eigenvalues_BCCB(c0=c0, Q=Q, P=P))
-#     vartheta = G.T@residuals
-#     rho0 = np.sum(vartheta*vartheta)
-    
-#     parameters = np.zeros(D)
-#     tau = 0
-#     eta = np.zeros_like(parameters)
-#     m = 1
-#     # updates
-#     while (delta > epsilon) and (m < ITMAX):
-#         eta = vartheta + tau*eta
-#         nu = G@eta
-#         upsilon = rho0/np.sum(nu*nu)
-#         parameters += upsilon*eta
-#         residuals -= upsilon*nu
-#         delta = np.sqrt(np.sum(residuals*residuals))/D
-#         delta_list.append(delta)
-#         vartheta = G.T@residuals
-#         rho = np.sum(vartheta*vartheta)
-#         tau = rho/rho0
-#         rho0 = rho
-#         m += 1
+    # initializations
+    D = data.size
+    residuals = np.copy(data)
+    delta_list = []
+    delta = np.sqrt(np.sum(residuals*residuals))/D
+    delta_list.append(delta)
+    vartheta = G.T@residuals
+    rho0 = np.sum(vartheta*vartheta)
+    parameters = np.zeros(G.shape[1])
+    tau = 0
+    eta = np.zeros_like(parameters)
+    m = 1
+    # updates
+    while (delta > epsilon) and (m < ITMAX):
+        eta = vartheta + tau*eta
+        nu = G@eta
+        upsilon = rho0/np.sum(nu*nu)
+        parameters += upsilon*eta
+        residuals -= upsilon*nu
+        delta = np.sqrt(np.sum(residuals*residuals))/D
+        delta_list.append(delta)
+        vartheta = G.T@residuals
+        rho = np.sum(vartheta*vartheta)
+        tau = rho/rho0
+        rho0 = rho
+        m += 1
 
-#     return delta_list, parameters
+    return delta_list, parameters
