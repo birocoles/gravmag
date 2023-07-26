@@ -189,22 +189,27 @@ def are_wavenumbers(wavenumbers):
         raise ValueError("all elements of key 'z' must be positive or zero")
 
 
-def sensibility_matrix_and_data(G, data):
+def sensibility_matrix_and_data(matrices, vectors):
     """
-    Check if G and data are consistent numpy arrays.
+    Check if the list of matrices and vectors are formed by consistent numpy arrays.
 
     parameters
     ----------
-    G , data : generic objects
-        Python objects to be verified.
+    matrices , vectors : lists of generic objects
+        Lists of Python objects to be verified.
     """
-    if type(G) != np.ndarray:
-        raise ValueError("G must be a numpy array")
-    if type(data) != np.ndarray:
-        raise ValueError("data must be a numpy array")
-    if G.ndim != 2:
-        raise ValueError("G must be a matrix")
-    if data.ndim != 1:
-        raise ValueError("data must be a vector")
-    if G.shape[0] != data.size:
-        raise ValueError("Sensibility matrix rows mismatch data size")
+    if (type(matrices) != list) or (type(vectors) != list):
+        raise ValueError("matrices and vectors must be lists")
+    if len(matrices) != len(vectors):
+        raise ValueError("matrices and vectors must have the same number of elements")
+    for i, (G, data) in enumerate(zip(matrices, vectors)):
+        if type(G) != np.ndarray:
+            raise ValueError("matrices[{}] must be a numpy array".format(i))
+        if type(data) != np.ndarray:
+            raise ValueError("vectors[{}] must be a numpy array".format(i))
+        if G.ndim != 2:
+            raise ValueError("matrices[{}] must be a matrix".format(i))
+        if data.ndim != 1:
+            raise ValueError("vectors[{}] must be a vector".format(i))
+        if G.shape[0] != data.size:
+            raise ValueError("matrices[{}] rows mismatch vectors[{}] size".format(i))
