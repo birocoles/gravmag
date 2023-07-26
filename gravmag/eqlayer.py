@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
+import warnings
 from . import inverse_distance as idist
 from . import check, utils, constants, convolve
 
@@ -31,8 +32,8 @@ def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=T
     if check_input is True:
         check.are_coordinates(data_points)
         check.are_coordinates(source_points)
-        if np.any(data_points['z'] >= source_points['z']):
-            raise ValueError("all data points must be above source points")
+        if np.max(data_points['z']) >= np.min(source_points['z']):
+            warnings.warn("verify if the surface containing data cross the equivalent layer")
         # check if field is valid
         if field not in [
             "potential",
@@ -105,8 +106,8 @@ def kernel_matrix_dipoles(
     if check_input is True:
         check.are_coordinates(data_points)
         check.are_coordinates(source_points)
-        if np.any(data_points['z'] >= source_points['z']):
-            raise ValueError("all data points must be above source points")
+        if np.max(data_points['z']) >= np.min(source_points['z']):
+            warnings.warn("verify if the surface containing data cross the equivalent layer")
         if type(inc) not in [float, int]:
             raise ValueError("inc must be a scalar")
         if type(dec) not in [float, int]:
@@ -182,7 +183,7 @@ def kernel_matrix_dipoles(
     return G
 
 
-def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
+def method_CGLS(sensibility_matrices, data_vectors, epsilon, ITMAX=50, check_input=True):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via conjugate gradient normal equation residual 
@@ -191,10 +192,10 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
 
     parameters
     ----------
-    G: numpy array 2d
-        N x M matrix defined by the kernel of the equivalent layer integral.
-    data : numpy array 1d
-        Potential-field data.
+    sensibility_matrices: list of numpy arrays 2d
+        List of matrices with same number of columns defining the kernel of the equivalent layer integral.
+    data_vectors : list of numpy arrays 1d
+        List of potential-field data.
     epsilon : float
         Tolerance for evaluating convergence criterion.
     ITMAX : int
@@ -212,7 +213,7 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     
     if check_input is True:
         # check if G and data are consistent numpy arrays
-        check.sensibility_matrix_and_data(G=G, data=data)
+        check.sensibility_matrix_and_data(matrices=sensibility_matrices, vectors=data_vectors)
         # check if epsilon is a positive scalar
         check.scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -367,81 +368,6 @@ def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True)
         residuals -= nu
         delta = np.sqrt(np.sum(residuals*residuals))/D
         delta_list.append(delta)
-        m += 1
-
-    return delta_list, parameters
-
-
-def method_iterative_deconvolution_TOB20(L, Q, P, transposition_fator, ordering, data, epsilon, ITMAX=50, check_input=True):
-    """
-    Solves the unconstrained overdetermined problem to estimate the physical-property
-    distribution on the equivalent layer via convolutional equivalent-layer method
-    proposed by Takahashi et al. (2020, 2022).
-
-    parameters
-    ----------
-    L: numpy array 2D
-        Matrix formed by the eigenvalues of the embedding BCCB. This matrix
-        must have the ordering defined by the parameter 'ordering' (see its
-        description below).
-    Q: int
-        Number of blocks along a column/row of the BTTB.
-    P: int
-        Order of each block forming the BTTB.
-    ordering: string
-        If "row", the eigenvalues are arranged along the rows of a matrix L;
-        if "column", they are arranged along the columns of a matrix L.
-    data : numpy array 1d
-        Potential-field data.
-    epsilon : float
-        Tolerance for evaluating convergence criterion.
-    ITMAX : int
-        Maximum number of iterations. Default is 50.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    delta_list : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
-    parameters : numpy array 1d
-        Physical property distribution on the equivalent layer.
-    """
-    
-    if check_input is True:
-        # check if G and data are consistent numpy arrays
-        check.sensibility_matrix_and_data(G=G, data=data)
-        # check if epsilon is a positive scalar
-        check.scalar(x=epsilon, positive=True)
-        # check if ITMAX is a positive integer
-        check.integer(x=ITMAX, positive=True)
-
-
-    # initializations
-    D = data.size
-    residuals = np.copy(data)
-    delta_list = []
-    delta = np.sqrt(np.sum(residuals*residuals))/D
-    delta_list.append(delta)
-    vartheta = G.T@residuals
-    rho0 = np.sum(vartheta*vartheta)
-    parameters = np.zeros(G.shape[1])
-    tau = 0
-    eta = np.zeros_like(parameters)
-    m = 1
-    # updates
-    while (delta > epsilon) and (m < ITMAX):
-        eta = vartheta + tau*eta
-        nu = G@eta
-        upsilon = rho0/np.sum(nu*nu)
-        parameters += upsilon*eta
-        residuals -= upsilon*nu
-        delta = np.sqrt(np.sum(residuals*residuals))/D
-        delta_list.append(delta)
-        vartheta = G.T@residuals
-        rho = np.sum(vartheta*vartheta)
-        tau = rho/rho0
-        rho0 = rho
         m += 1
 
     return delta_list, parameters

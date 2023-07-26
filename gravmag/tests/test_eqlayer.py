@@ -38,25 +38,6 @@ def test_kernel_matrix_monopoles_invalid_field():
         eqlayer.kernel_matrix_monopoles(data_points=P, source_points=S, field='X')
 
 
-def test_kernel_matrix_monopoles_layer_above_data():
-    "Verify if setting a layer above the data raises an error"
-    # single source
-    S = {
-        'x' : np.array([ 0.]), 
-        'y' : np.array([ 0.]), 
-        'z' : np.array([-10.])
-    }
-    # singe data point
-    P = {
-        'x' : np.array([0.]),
-        'y' : np.array([0.]),
-        'z' : np.array([0.])
-    }
-    # string
-    with raises(ValueError):
-        eqlayer.kernel_matrix_monopoles(data_points=P, source_points=S, field='y')
-
-
 def test_kernel_matrix_monopoles_shape():
     "Verify if returns the correct shape"
     # single source
