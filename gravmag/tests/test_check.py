@@ -170,6 +170,76 @@ def test_invalid_coordinates():
     with pytest.raises(ValueError):
         check.are_coordinates(coordinates)
 
+
+##### grid
+
+def test_grid_n_points():
+    "Check if return the correct number of points"
+    coordinates = {
+        'x' : np.arange(4),
+        'y' : np.ones(3),
+        'z' : 18.2
+        }
+    D = check.is_grid(coordinates)
+    assert D == 12
+
+
+def test_invalid_grid():
+    "Check if passing an invalid grid raises an error"
+    # array
+    coordinates = np.array([0, 0, 0])
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # array
+    coordinates = np.zeros((4, 3))
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # tuple
+    coordinates = (1, 5)
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # list
+    coordinates = [1,2,3.]
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # float
+    coordinates = 10.2
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # dictionary with one extra key
+    coordinates = {
+        'x' : np.arange(4),
+        'y' : np.ones(3),
+        'z' : 18.2,
+        'k' : np.array([-100, 100, -100, 100, 100, 200])
+        }
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # dictionary with one wrong key
+    coordinates = {
+        'x' : np.arange(4),
+        'Y' : np.ones(3),
+        'z' : 18.2
+        }
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    # dictionary with 'z' key not float or int
+    coordinates = {
+        'x' : np.arange(4),
+        'y' : np.ones(3),
+        'z' : 18.2+3j
+        }
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+    coordinates = {
+        'x' : np.arange(4),
+        'y' : np.ones(3),
+        'z' : np.array(18.2)
+        }
+    with pytest.raises(ValueError):
+        check.is_grid(coordinates)
+
+
 ##### is_scalar
 
 def test_invalid_scalar():

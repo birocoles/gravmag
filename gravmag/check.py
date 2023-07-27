@@ -50,7 +50,8 @@ def are_rectangular_prisms(prisms):
 
 def are_coordinates(coordinates):
     """
-    Check if coordinates is a dictionary formed by 3 numpy arrays 1d.
+    Check if coordinates is a dictionary formed by 3 numpy arrays 1d
+    forming a 3D set of points.
 
     parameters
     ----------
@@ -75,6 +76,39 @@ def are_coordinates(coordinates):
     D = coordinates['x'].size
     if (coordinates['y'].size != D) or (coordinates['z'].size != D):
         raise ValueError("all keys in coordinates must have the same number of elements")
+    
+    return D
+
+
+def is_grid(coordinates):
+    """
+    Check if coordinates is a dictionary formed by 2 numpy arrays 1d
+    and a scalar (float or int) defining a horizontal and regular grid of 
+    points.
+
+    parameters
+    ----------
+    coordinates : generic object 
+        Python object to be verified.
+
+    returns
+    -------
+    D : int
+        Total number of points forming the grid.
+    """
+    if type(coordinates) != dict:
+        raise ValueError("coordinates must be a dictionary")
+    if list(coordinates.keys()) != ['x', 'y', 'z']:
+        raise ValueError("coordinates must have the following 3 keys: 'x', 'y', 'z'")
+    for key in ['x', 'y']:
+        if type(coordinates[key]) != np.ndarray:
+            raise ValueError("'x' and 'y' keys in coordinates must be numpy arrays")
+    for key in ['x', 'y']:
+        if coordinates[key].ndim != 1:
+            raise ValueError("'x' and 'y' keys in coordinates must have ndim = 1")
+    if isinstance(coordinates['z'], (float, int)) is False:
+        raise ValueError("'z' key must be float or int")
+    D = (coordinates['x'].size)*(coordinates['y'].size)
     
     return D
 
