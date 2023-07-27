@@ -3,7 +3,11 @@ import numpy as np
 
 def are_rectangular_prisms(prisms):
     """
-    Check if prisms is a dictionary formed by 6 numpy arrays 1d.
+    Check if prisms is a dictionary containing the x, y and z coordinates of the 
+    corners of each prism in prisms.
+    The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+    prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
+    All keys must be numpy arrays 1d having the same number of elements.
 
     parameters
     ----------
@@ -50,8 +54,9 @@ def are_rectangular_prisms(prisms):
 
 def are_coordinates(coordinates):
     """
-    Check if coordinates is a dictionary formed by 3 numpy arrays 1d
-    forming a 3D set of points.
+    Check if coordinates is a dictionary containing the x, y and z 
+    coordinates at the keys 'x', 'y' and 'z', respectively. All keys 
+    must be numpy arrays 1d having the same number of elements.
 
     parameters
     ----------
@@ -82,9 +87,13 @@ def are_coordinates(coordinates):
 
 def is_grid(coordinates):
     """
-    Check if coordinates is a dictionary formed by 2 numpy arrays 1d
-    and a scalar (float or int) defining a horizontal and regular grid of 
-    points.
+    Check if coordinates is a dictionary containing the x, y and z 
+    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering' 
+    defining how the points are ordered after the first point (min x, min y). 
+    If 'ordering' = 'xy', the points vary first along x and then along y.
+    If 'ordering' = 'yx', the points vary first along y and then along x.
+    Keys 'x' and 'y' must be numpy arrays 1d.
+    Key 'z' must be a scalar (float or int).
 
     parameters
     ----------
@@ -98,8 +107,8 @@ def is_grid(coordinates):
     """
     if type(coordinates) != dict:
         raise ValueError("coordinates must be a dictionary")
-    if list(coordinates.keys()) != ['x', 'y', 'z']:
-        raise ValueError("coordinates must have the following 3 keys: 'x', 'y', 'z'")
+    if list(coordinates.keys()) != ['x', 'y', 'z', 'ordering']:
+        raise ValueError("coordinates must have the following 4 keys: 'x', 'y', 'z', 'ordering'")
     for key in ['x', 'y']:
         if type(coordinates[key]) != np.ndarray:
             raise ValueError("'x' and 'y' keys in coordinates must be numpy arrays")
@@ -108,6 +117,8 @@ def is_grid(coordinates):
             raise ValueError("'x' and 'y' keys in coordinates must have ndim = 1")
     if isinstance(coordinates['z'], (float, int)) is False:
         raise ValueError("'z' key must be float or int")
+    if coordinates['ordering'] not in ['xy', 'yx']:
+        raise ValueError("'ordering' key must be 'xy' or 'yx'")
     D = (coordinates['x'].size)*(coordinates['y'].size)
     
     return D
