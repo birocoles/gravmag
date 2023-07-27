@@ -1,7 +1,9 @@
 import numpy as np
 from numpy.testing import assert_almost_equal as aae
+from numpy.testing import assert_equal as ae
 from pytest import raises
 from .. import inverse_distance as idist
+from .. import convolve as conv
 
 ##### SEDM
 
@@ -74,6 +76,44 @@ def test_sedm_symmetric_points():
     SEDM_up = idist.sedm(P_up, S)
     SEDM_down = idist.sedm(P_down, S)
     aae(SEDM_up, SEDM_down, decimal=15)
+
+
+##### SEDM BTTB
+
+def test_sedm_BTTB_compare_sedm():
+    "verify if sedm_BTTB produces the same result as sedm"
+    # cordinates of the grid
+    x = np.linspace(1.3, 5.7, 5)
+    y = np.linspace(100., 104.3, 4)
+    Dz = 15.8
+    # test for 'ordering'='xy'
+    xp, yp = np.meshgrid(x, y, indexing='xy')
+    zp = np.zeros_like(xp)
+    data_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()
+    }
+    source_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()+Dz
+    }
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
+    grid = {
+        'x' : x,
+        'y' : y,
+        'z' : Dz,
+        'ordering' : 'xy'
+    }
+    SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB = conv.general_BTTB(
+        num_blocks=y.size, 
+        columns_blocks=np.reshape(a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)), 
+        rows_blocks=None)
+    ae(SEDM, SEDM_BTTB)
+
+
 
 
 #### grad

@@ -35,9 +35,6 @@ def sedm(data_points, source_points, check_input=True):
         check.are_coordinates(data_points)
         check.are_coordinates(source_points)
 
-    # compute the SEDM by using scipy.spatial.distance.cdist
-    #SEDM = distance.cdist(data_points.T, source_points.T, "sqeuclidean")
-
     # compute the SEDM using numpy
     D1 = (
         data_points['x']*data_points['x'] + data_points['y']*data_points['y'] + data_points['z']*data_points['z']
@@ -64,7 +61,9 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
     parameters
     ----------
     data_grid : dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z', respectively. 
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes) 
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the 
+        points at the key 'ordering'.
 
         Each key is a numpy array 1d containing only the non-repeating data 
         coordinates in ascending order along the axes x, y and z. The nodes
@@ -81,11 +80,19 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
         Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d) 
         with elements x_i and y_j, respectively, where i = 0, ..., Nx-1 and j = 0, ..., Ny-1.
-        
-        Then, the key:
-        'x' must contain a numpy array 1d with Nx elements;
-        'y' must contain a numpy array 1d with Ny elements and
-        'z' must contain a scalar (float or int).
+
+        It is also important noting that the nodes may be indexed by following two
+        different schemes:
+        (1) 0 - (x_0, y_0, z_0), 1 - (x_0, y_1, z_0), 2 - (x_1, y_0, z_0), ..., 5 - (x_2, y_1, z_0)
+        (2) 0 - (x_0, y_0, z_0), 1 - (x_1, y_0, z_0), 2 - (x_2, y_0, z_0), ..., 5 - (x_2, y_1, z_0)
+        In scheme (1), the nodes are indexed along the y-axis and then along the x-axis.
+        In scheme (2), the nodes are indexed along the x-axis and then along the y-axis.
+
+        Then, the data_grid dictionary must be formed by the following keys:
+        'x' - numpy array 1d with Nx elements containing the x coordinates of the grid points;
+        'y' - numpy array 1d with Ny elements containing the y coordinates of the grid points;
+        'z' - scalar (float or int) defining the constant vertical coordinates of the grid points and
+        'ordering' - string 'xy' or 'yx' defining how the grid points are indexed.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
@@ -101,27 +108,29 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     if check_input is True:
         # check shape and ndim of points
-        check.are_coordinates(data_points)
-        check.are_coordinates(source_points)
-
-    # compute the SEDM by using scipy.spatial.distance.cdist
-    #SEDM = distance.cdist(data_points.T, source_points.T, "sqeuclidean")
+        check.is_grid(coordinates=data_grid)
+        check.is_scalar(x=delta_z, positive=True)
 
     # compute the SEDM using numpy
-    D1 = (
-        data_points['x']*data_points['x'] + data_points['y']*data_points['y'] + data_points['z']*data_points['z']
-        )
-    D2 = (
-        source_points['x']*source_points['x'] + source_points['y']*source_points['y'] + source_points['z']*source_points['z']
-        )
-    D3 = 2*(
-        np.outer(data_points['x'], source_points['x']) + np.outer(data_points['y'], source_points['y']) + np.outer(data_points['z'], source_points['z'])
+    DX = (
+        data_grid['x']*(data_grid['x'] - 2*data_grid['x'][0]) +
+        data_grid['x'][0]*data_grid['x'][0]
         )
 
-    # use broadcasting rules to add D1, D2 and D3
-    D = D1[:,np.newaxis] + D2[np.newaxis,:] - D3
+    DY = (
+        data_grid['y']*(data_grid['y'] - 2*data_grid['y'][0]) +
+        data_grid['y'][0]*data_grid['y'][0]
+        )
 
-    return D
+    DZ = delta_z*delta_z
+
+    # use broadcasting rules to add DX, DY and DZ
+    D = DX[:,np.newaxis] + DY[np.newaxis,:] + DZ
+
+    if 'ordering' == 'xy':
+        return D.ravel()
+    else: # 'ordering' == 'yx'
+        return (D.T).ravel()
 
 
 def grad(
