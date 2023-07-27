@@ -55,6 +55,75 @@ def sedm(data_points, source_points, check_input=True):
     return D
 
 
+def sedm_BTTB(data_grid, delta_z, check_input=True):
+    """
+    Compute the first column of the Squared Euclidean Distance Matrix (SEDM) between 
+    a horizontal regular grid of Nx x Ny data points and a grid of source points having the 
+    same shape, but dislocated by a constant and positive vertical distance.
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z', respectively. 
+
+        Each key is a numpy array 1d containing only the non-repeating data 
+        coordinates in ascending order along the axes x, y and z. The nodes
+        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1 
+        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0. 
+        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there 
+        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and 
+        2 non-repeating coordinates (y_0, y_1) along the y-axis so that the coordinates
+        of the nodes are arranged in the following matrix:
+
+        (x_0, y_0, z_0) (x_0, y_1, z_0)
+        (x_1, y_0, z_0) (x_1, y_1, z_0)  .
+        (x_2, y_0, z_0) (x_2, y_1, z_0)
+
+        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d) 
+        with elements x_i and y_j, respectively, where i = 0, ..., Nx-1 and j = 0, ..., Ny-1.
+        
+        Then, the key:
+        'x' must contain a numpy array 1d with Nx elements;
+        'y' must contain a numpy array 1d with Ny elements and
+        'z' must contain a scalar (float or int).
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    SEDM: numpy array 1d
+        First column of the N x N SEDM between data points and source points,
+        where N = Nx x Ny is the total number of data (and source) points.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        check.are_coordinates(data_points)
+        check.are_coordinates(source_points)
+
+    # compute the SEDM by using scipy.spatial.distance.cdist
+    #SEDM = distance.cdist(data_points.T, source_points.T, "sqeuclidean")
+
+    # compute the SEDM using numpy
+    D1 = (
+        data_points['x']*data_points['x'] + data_points['y']*data_points['y'] + data_points['z']*data_points['z']
+        )
+    D2 = (
+        source_points['x']*source_points['x'] + source_points['y']*source_points['y'] + source_points['z']*source_points['z']
+        )
+    D3 = 2*(
+        np.outer(data_points['x'], source_points['x']) + np.outer(data_points['y'], source_points['y']) + np.outer(data_points['z'], source_points['z'])
+        )
+
+    # use broadcasting rules to add D1, D2 and D3
+    D = D1[:,np.newaxis] + D2[np.newaxis,:] - D3
+
+    return D
+
+
 def grad(
     data_points,
     source_points,
