@@ -88,7 +88,7 @@ def test_sedm_BTTB_compare_sedm():
     Dz = 15.8
     # test for 'ordering'='xy'
     xp, yp = np.meshgrid(x, y, indexing='xy')
-    zp = np.zeros_like(xp)
+    zp = np.zeros_like(xp)+30.
     data_points = {
         'x' : xp.ravel(),
         'y' : yp.ravel(),
@@ -103,7 +103,7 @@ def test_sedm_BTTB_compare_sedm():
     grid = {
         'x' : x,
         'y' : y,
-        'z' : Dz,
+        'z' : 30.,
         'ordering' : 'xy'
     }
     SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
@@ -111,7 +111,33 @@ def test_sedm_BTTB_compare_sedm():
         num_blocks=y.size, 
         columns_blocks=np.reshape(a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)), 
         rows_blocks=None)
-    ae(SEDM, SEDM_BTTB)
+    aae(SEDM, SEDM_BTTB, decimal=10)
+    # test for 'ordering'='yx'
+    xp, yp = np.meshgrid(x, y, indexing='ij')
+    zp = np.zeros_like(xp)+30.
+    data_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()
+    }
+    source_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()+Dz
+    }
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
+    grid = {
+        'x' : x,
+        'y' : y,
+        'z' : 30.,
+        'ordering' : 'yx'
+    }
+    SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB = conv.general_BTTB(
+        num_blocks=x.size, 
+        columns_blocks=np.reshape(a=SEDM_BTTB_1st_col, newshape=(x.size, y.size)), 
+        rows_blocks=None)
+    aae(SEDM, SEDM_BTTB, decimal=10)
 
 
 

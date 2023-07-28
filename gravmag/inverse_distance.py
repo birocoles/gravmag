@@ -127,10 +127,10 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
     # use broadcasting rules to add DX, DY and DZ
     D = DX[:,np.newaxis] + DY[np.newaxis,:] + DZ
 
-    if 'ordering' == 'xy':
-        return D.ravel()
-    else: # 'ordering' == 'yx'
+    if data_grid['ordering'] == 'xy':
         return (D.T).ravel()
+    else: # data_grid['ordering'] == 'yx'
+        return D.ravel()
 
 
 def grad(
