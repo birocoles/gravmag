@@ -287,33 +287,28 @@ def grad_BTTB(
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM * np.sqrt(SEDM)
 
+    # nested dictionary setting parameters for broadcast_to
+    broadcast_to_args = {
+        'x' : (data_grid['x'] - data_grid['x'][0])[:,np.newaxis],
+        'y' : (data_grid['y'] - data_grid['y'][0]),
+        'z' : delta_z,
+    }
+
     # compute the gradient components defined in components
     Ka = []
     if data_grid['ordering'] == 'xy':
         for component in components:
-            try:
-                delta = np.broadcast_to(
-                    array=(data_grid[component] - data_grid[component][0]), 
-                    shape=(data_grid['x'].size, data_grid['y'].size)
-                    )
-            except ValueError:
-                delta = np.broadcast_to(
-                    array=(data_grid[component] - data_grid[component][0])[:,np.newaxis], 
-                    shape=(data_grid['x'].size, data_grid['y'].size)
-                    )
+            delta = np.broadcast_to(
+                array=broadcast_to_args[component],
+                shape=(data_grid['x'].size, data_grid['y'].size)
+                )
             Ka.append(- (delta.T).ravel() / R3)
     else: # data_grid['ordering'] == 'yx'
         for component in components:
-            try:
-                delta = np.broadcast_to(
-                    array=(data_grid[component] - data_grid[component][0]), 
-                    shape=(data_grid['x'].size, data_grid['y'].size)
-                    )
-            except ValueError:
-                delta = np.broadcast_to(
-                    array=(data_grid[component] - data_grid[component][0])[:,np.newaxis], 
-                    shape=(data_grid['x'].size, data_grid['y'].size)
-                    )
+            delta = np.broadcast_to(
+                array=broadcast_to_args[component],
+                shape=(data_grid['x'].size, data_grid['y'].size)
+                )
             Ka.append(- delta.ravel() / R3)
 
     return Ka
