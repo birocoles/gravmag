@@ -330,6 +330,77 @@ def test_grad_known_points():
 #### grad tensor
 
 
+def test_grad_tensor_single_versus_joint_computation():
+    "verify if components computed separately are the same as that computed simultaneously"
+    # single source
+    S = {
+        'x' : np.array([0.]),
+        'y' : np.array([0.]),
+        'z' : np.array([0.])
+    }
+    # singe data point
+    P = {
+        'x' : np.array([  0.]),
+        'y' : np.array([  0.]),
+        'z' : np.array([-10.])
+    }
+    R2 = idist.sedm(P, S)
+    # compute separated components
+    XX0 = idist.grad_tensor(P, S, R2, ['xx'])[0]
+    XY0 = idist.grad_tensor(P, S, R2, ['xy'])[0]
+    XZ0 = idist.grad_tensor(P, S, R2, ['xz'])[0]
+    YY0 = idist.grad_tensor(P, S, R2, ['yy'])[0]
+    YZ0 = idist.grad_tensor(P, S, R2, ['yz'])[0]
+    ZZ0 = idist.grad_tensor(P, S, R2, ['zz'])[0]
+
+    # compute x, y and z components
+    XX, XY, XZ, YY, YZ, ZZ = idist.grad_tensor(P, S, R2, ['xx', 'xy', 'xz', 'yy', 'yz', 'zz'])
+    ae(XX0, XX)
+    ae(XY0, XY)
+    ae(XZ0, XZ)
+    ae(YY0, YY)
+    ae(YZ0, YZ)
+    ae(ZZ0, ZZ)
+    # compute xy and yz components
+    XY, YZ = idist.grad_tensor(P, S, R2, ['xy', 'yz'])
+    ae(XY0, XY)
+    ae(YZ0, YZ)
+    # compute yy and xz components
+    YY, XZ = idist.grad_tensor(P, S, R2, ['yy', 'xz'])
+    ae(YY0, YY)
+    ae(XZ0, XZ)
+
+
+def test_grad_tensor_repeated_components():
+    "verify if repeated are equal to each other"
+    # single source
+    S = {
+        'x' : np.array([0.]),
+        'y' : np.array([0.]),
+        'z' : np.array([0.])
+    }
+    # singe data point
+    P = {
+        'x' : np.array([  0.]),
+        'y' : np.array([  0.]),
+        'z' : np.array([-10.])
+    }
+    R2 = idist.sedm(P, S)
+
+    # repeat xx component
+    computed = idist.grad_tensor(P, S, R2, ['xx', 'xx'])
+    ae(computed[0], computed[1])
+    # repeat yz component
+    computed = idist.grad_tensor(P, S, R2, ['yz', 'yz'])
+    ae(computed[0], computed[1])
+    # repeat xy component
+    computed = idist.grad_tensor(P, S, R2, ['xy', 'xy'])
+    ae(computed[0], computed[1])
+    # repeat zz component
+    computed = idist.grad_tensor(P, S, R2, ['zz', 'zz'])
+    ae(computed[0], computed[1])
+
+
 def test_grad_tensor_invalid_component():
     "must raise ValueError for invalid components"
     # single source
