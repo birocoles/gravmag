@@ -80,13 +80,13 @@ def test_sedm_symmetric_points():
 
 ##### SEDM BTTB
 
-def test_sedm_BTTB_compare_sedm():
-    "verify if sedm_BTTB produces the same result as sedm"
+def test_sedm_BTTB_compare_sedm_xy():
+    "verify if sedm_BTTB produces the same result as sedm for a xy grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5)
     y = np.linspace(100., 104.3, 4)
     Dz = 15.8
-    # test for 'ordering'='xy'
+    # define points with 'ordering'='xy'
     xp, yp = np.meshgrid(x, y, indexing='xy')
     zp = np.zeros_like(xp)+30.
     data_points = {
@@ -99,20 +99,29 @@ def test_sedm_BTTB_compare_sedm():
         'y' : yp.ravel(),
         'z' : zp.ravel()+Dz
     }
-    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     grid = {
         'x' : x,
         'y' : y,
         'z' : 30.,
         'ordering' : 'xy'
     }
+    # compute the SEDM's
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
     SEDM_BTTB = conv.general_BTTB(
         num_blocks=y.size, 
         columns_blocks=np.reshape(a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)), 
         rows_blocks=None)
     aae(SEDM, SEDM_BTTB, decimal=10)
-    # test for 'ordering'='yx'
+
+
+def test_sedm_BTTB_compare_sedm_yx():
+    "verify if sedm_BTTB produces the same result as sedm for a yx grid"
+    # cordinates of the grid
+    x = np.linspace(1.3, 5.7, 5)
+    y = np.linspace(100., 104.3, 4)
+    Dz = 15.8
+    # define points with 'ordering'='yx'
     xp, yp = np.meshgrid(x, y, indexing='ij')
     zp = np.zeros_like(xp)+30.
     data_points = {
@@ -125,21 +134,20 @@ def test_sedm_BTTB_compare_sedm():
         'y' : yp.ravel(),
         'z' : zp.ravel()+Dz
     }
-    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     grid = {
         'x' : x,
         'y' : y,
         'z' : 30.,
         'ordering' : 'yx'
     }
+    # compute the SEDM's
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
     SEDM_BTTB = conv.general_BTTB(
         num_blocks=x.size, 
         columns_blocks=np.reshape(a=SEDM_BTTB_1st_col, newshape=(x.size, y.size)), 
         rows_blocks=None)
     aae(SEDM, SEDM_BTTB, decimal=10)
-
-
 
 
 #### grad
