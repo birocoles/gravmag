@@ -173,18 +173,8 @@ def grad(
         # check shape and ndim of points
         D = check.are_coordinates(data_points)
         P = check.are_coordinates(source_points)
-        # check number of elements in components
-        if len(components) > 3:
-            raise ValueError("components must have at most 3 elements")
-        # convert components to array of strings
-        # repeated components are ignored
-        # the code below removes possibly duplicated components in components
-        _, _indices = np.unique(
-            np.asarray(components, dtype=str), return_index=True
-        )
-        _components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in _components:
+        for component in components:
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -196,15 +186,13 @@ def grad(
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
-    else:
-        _components = components
 
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM * np.sqrt(SEDM)
 
     # compute the gradient components defined in _components
     Ka = []
-    for component in _components:
+    for component in components:
         delta = data_points[component][:, np.newaxis] - source_points[component]
         Ka.append(-delta / R3)
 
@@ -253,18 +241,8 @@ def grad_tensor(
         # check shape and ndim of points
         D = check.are_coordinates(data_points)
         P = check.are_coordinates(source_points)
-        # check number of elements in components
-        if len(components) > 6:
-            raise ValueError("components must have at most 6 elements")
-        # convert components to array of strings
-        # repeated components are ignored
-        # the code below removes possibly duplicated components in components
-        _, _indices = np.unique(
-            np.asarray(components, dtype=str), return_index=True
-        )
-        _components = np.array(components)[np.sort(_indices)]
         # check if components are valid
-        for component in _components:
+        for component in components:
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
@@ -276,8 +254,6 @@ def grad_tensor(
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
-    else:
-        _components = components
 
     # define a dictionary for component indices
     component_indices = {
@@ -295,11 +271,11 @@ def grad_tensor(
 
     # compute the gradient tensor components defined in components
     Kab = []
-    if ("xx" in _components) or ("yy" in _components) or ("zz" in _components):
+    if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
     else:
         aux = 0
-    for component in _components:
+    for component in components:
         delta1 = data_points[component[0]][:, np.newaxis] - source_points[component[0]]
         delta2 = data_points[component[1]][:, np.newaxis] - source_points[component[1]]
         if component in ["xx", "yy", "zz"]:

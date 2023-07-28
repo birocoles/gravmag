@@ -145,6 +145,69 @@ def test_sedm_BTTB_compare_sedm():
 #### grad
 
 
+def test_grad_single_versus_joint_computation():
+    "verify if components computed separately are the same as that computed simultaneously"
+    # single source
+    S = {
+        'x' : np.array([0.]),
+        'y' : np.array([0.]),
+        'z' : np.array([0.])
+    }
+    # singe data point
+    P = {
+        'x' : np.array([  0.]),
+        'y' : np.array([  0.]),
+        'z' : np.array([-10.])
+    }
+    R2 = idist.sedm(P, S)
+    # compute separated components
+    X0 = idist.grad(P, S, R2, ['x'])[0]
+    Y0 = idist.grad(P, S, R2, ['y'])[0]
+    Z0 = idist.grad(P, S, R2, ['z'])[0]
+
+    # compute x, y and z components
+    X, Y, Z = idist.grad(P, S, R2, ['x', 'y', 'z'])
+    ae(X0, X)
+    ae(Y0, Y)
+    ae(Z0, Z)
+    # compute x and z components
+    X, Z = idist.grad(P, S, R2, ['x', 'z'])
+    ae(X0, X)
+    ae(Z0, Z)
+    # compute y and z components
+    Y, Z = idist.grad(P, S, R2, ['y', 'z'])
+    ae(Y0, Y)
+    ae(Z0, Z)
+
+
+def test_grad_repeated_components():
+    "verify if repeated are equal to each other"
+    # single source
+    S = {
+        'x' : np.array([0.]),
+        'y' : np.array([0.]),
+        'z' : np.array([0.])
+    }
+    # singe data point
+    P = {
+        'x' : np.array([  0.]),
+        'y' : np.array([  0.]),
+        'z' : np.array([-10.])
+    }
+    R2 = idist.sedm(P, S)
+
+    # repeat x component
+    computed = idist.grad(P, S, R2, ['x', 'x'])
+    ae(computed[0], computed[1])
+    # repeat y component
+    computed = idist.grad(P, S, R2, ['y', 'y'])
+    ae(computed[0], computed[1])
+    # repeat z component
+    computed = idist.grad(P, S, R2, ['z', 'z'])
+    ae(computed[0], computed[1])
+    
+
+
 def test_grad_invalid_component():
     "must raise ValueError for invalid components"
     # single source
@@ -160,11 +223,11 @@ def test_grad_invalid_component():
         'z' : np.array([-10.])
     }
     R2 = idist.sedm(P, S)
-    # components with more than 3 elements
-    components = ["x", "y", "z", "z"]
+    # float
+    components = ["x", 13, "z"]
     with raises(ValueError):
         idist.grad(P, S, R2, components)
-    # invalid component
+    # invalid string
     components = ["x", "h"]
     with raises(ValueError):
         idist.grad(P, S, R2, components)
@@ -282,11 +345,11 @@ def test_grad_tensor_invalid_component():
         'z' : np.array([-10.])
     }
     R2 = idist.sedm(P, S)
-    # components with more than 6 elements
-    components = ["xx", "xy", "xz", "yy", "yz", "zz", "zz"]
+    # int
+    components = ["xx", "xy", "xz", "yy", 45, "zz"]
     with raises(ValueError):
         idist.grad_tensor(P, S, R2, components)
-    # invalid component
+    # invalid string
     components = ["xx", "xh"]
     with raises(ValueError):
         idist.grad_tensor(P, S, R2, components)
