@@ -409,8 +409,8 @@ def test_grad_BTTB_compare_grad_yx():
     GRAD_BTTB_1st_col = idist.grad_BTTB(data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["x", "y", "z"])
     for (element, element_BTTB_1st_col) in zip(GRAD, GRAD_BTTB_1st_col):
         element_BTTB = conv.general_BTTB(
-            num_blocks=y.size, 
-            columns_blocks=np.reshape(a=element_BTTB_1st_col, newshape=(y.size, x.size)), 
+            num_blocks=x.size, 
+            columns_blocks=np.reshape(a=element_BTTB_1st_col, newshape=(x.size, y.size)), 
             rows_blocks=None)
         aae(element, element_BTTB, decimal=8)
 
@@ -697,3 +697,84 @@ def test_grad_tensor_known_points():
     aae(Vxz, Vxz_ref, decimal=15)
     aae(Vyy, Vyy_ref, decimal=15)
     aae(Vyz, Vyz_ref, decimal=15)
+
+
+##### grad tensor BTTB
+
+
+def test_grad_tensor_BTTB_compare_grad_xy():
+    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a xy grid"
+    # cordinates of the grid
+    x = np.linspace(1.3, 5.7, 5)*1e3
+    y = np.linspace(100., 104.3, 4)*1e3
+    Dz = 15.8*1e3
+    # define points with 'ordering'='xy'
+    xp, yp = np.meshgrid(x, y, indexing='xy')
+    zp = np.zeros_like(xp)+30.
+    data_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()
+    }
+    source_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()+Dz
+    }
+    grid = {
+        'x' : x[:,np.newaxis],
+        'y' : y,
+        'z' : 30.,
+        'ordering' : 'xy'
+    }
+    # compute the SEDM's
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    # compute grad's
+    GRAD = idist.grad_tensor(data_points=data_points, source_points=source_points, SEDM=SEDM, components=["xx", "xy", "xz", "yy", "yz", "zz"])
+    GRAD_BTTB_1st_col = idist.grad_tensor_BTTB(data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["xx", "xy", "xz", "yy", "yz", "zz"])
+    for (element, element_BTTB_1st_col) in zip(GRAD, GRAD_BTTB_1st_col):
+        element_BTTB = conv.general_BTTB(
+            num_blocks=y.size, 
+            columns_blocks=np.reshape(a=element_BTTB_1st_col, newshape=(y.size, x.size)), 
+            rows_blocks=None)
+        aae(element, element_BTTB, decimal=8)
+
+
+def test_grad_tensor_BTTB_compare_grad_yx():
+    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a yx grid"
+    # cordinates of the grid
+    x = np.linspace(1.3, 5.7, 5)*1e3
+    y = np.linspace(100., 104.3, 4)*1e3
+    Dz = 15.8*1e3
+    # define points with 'ordering'='yx'
+    xp, yp = np.meshgrid(x, y, indexing='ij')
+    zp = np.zeros_like(xp)+30.
+    data_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()
+    }
+    source_points = {
+        'x' : xp.ravel(),
+        'y' : yp.ravel(),
+        'z' : zp.ravel()+Dz
+    }
+    grid = {
+        'x' : x[:,np.newaxis],
+        'y' : y,
+        'z' : 30.,
+        'ordering' : 'yx'
+    }
+    # compute the SEDM's
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    # compute grad's
+    GRAD = idist.grad_tensor(data_points=data_points, source_points=source_points, SEDM=SEDM, components=["xx", "xy", "xz", "yy", "yz", "zz"])
+    GRAD_BTTB_1st_col = idist.grad_tensor_BTTB(data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["xx", "xy", "xz", "yy", "yz", "zz"])
+    for (element, element_BTTB_1st_col) in zip(GRAD, GRAD_BTTB_1st_col):
+        element_BTTB = conv.general_BTTB(
+            num_blocks=x.size, 
+            columns_blocks=np.reshape(a=element_BTTB_1st_col, newshape=(x.size, y.size)), 
+            rows_blocks=None)
+        aae(element, element_BTTB, decimal=8)
