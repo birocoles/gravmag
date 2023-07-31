@@ -172,7 +172,7 @@ def general_BTTB(num_blocks, columns_blocks, rows_blocks=None):
         # Case SBTTB
         if columns_blocks.shape[0] == num_blocks:
             blocks = []
-            for (column, row) in zip(columns_blocks, rows_blocks):
+            for column, row in zip(columns_blocks, rows_blocks):
                 blocks.append(np.concatenate((row[::-1], column))[ind_blocks])
             concatenated_blocks = np.concatenate(
                 (np.stack(blocks)[-1:0:-1], np.stack(blocks))
@@ -181,14 +181,14 @@ def general_BTTB(num_blocks, columns_blocks, rows_blocks=None):
         # Case BTTB generalized
         if columns_blocks.shape[0] == (2 * num_blocks - 1):
             blocks_1j = []
-            for (column, row) in zip(
+            for column, row in zip(
                 columns_blocks[:num_blocks], rows_blocks[:num_blocks]
             ):
                 blocks_1j.append(
                     np.concatenate((row[::-1], column))[ind_blocks]
                 )
             blocks_i1 = []
-            for (column, row) in zip(
+            for column, row in zip(
                 columns_blocks[num_blocks:], rows_blocks[num_blocks:]
             ):
                 blocks_i1.append(
@@ -349,7 +349,7 @@ def BCCB_from_BTTB(num_blocks, columns_blocks, rows_blocks=None):
         ), 'the number of column in "columns_blocks must be equal that in "rows_blocks" + 1'
         T_block_size = columns_blocks.shape[1]
         nonull_blocks = []
-        for (column, rows) in zip(columns_blocks, rows_blocks):
+        for column, rows in zip(columns_blocks, rows_blocks):
             nonull_blocks.append(C_from_T(column, rows))
         C_block_size = 2 * T_block_size
 

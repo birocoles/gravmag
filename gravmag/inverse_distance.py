@@ -37,40 +37,46 @@ def sedm(data_points, source_points, check_input=True):
 
     # compute the SEDM using numpy
     D1 = (
-        data_points['x']*data_points['x'] + data_points['y']*data_points['y'] + data_points['z']*data_points['z']
-        )
+        data_points["x"] * data_points["x"]
+        + data_points["y"] * data_points["y"]
+        + data_points["z"] * data_points["z"]
+    )
     D2 = (
-        source_points['x']*source_points['x'] + source_points['y']*source_points['y'] + source_points['z']*source_points['z']
-        )
-    D3 = 2*(
-        np.outer(data_points['x'], source_points['x']) + np.outer(data_points['y'], source_points['y']) + np.outer(data_points['z'], source_points['z'])
-        )
+        source_points["x"] * source_points["x"]
+        + source_points["y"] * source_points["y"]
+        + source_points["z"] * source_points["z"]
+    )
+    D3 = 2 * (
+        np.outer(data_points["x"], source_points["x"])
+        + np.outer(data_points["y"], source_points["y"])
+        + np.outer(data_points["z"], source_points["z"])
+    )
 
     # use broadcasting rules to add D1, D2 and D3
-    D = D1[:,np.newaxis] + D2[np.newaxis,:] - D3
+    D = D1[:, np.newaxis] + D2[np.newaxis, :] - D3
 
     return D
 
 
 def sedm_BTTB(data_grid, delta_z, check_input=True):
     """
-    Compute the first column of the Squared Euclidean Distance Matrix (SEDM) between 
-    a horizontal regular grid of Nx x Ny data points and a grid of source points having the 
+    Compute the first column of the Squared Euclidean Distance Matrix (SEDM) between
+    a horizontal regular grid of Nx x Ny data points and a grid of source points having the
     same shape, but dislocated by a constant and positive vertical distance.
 
     parameters
     ----------
     data_grid : dictionary
-        Dictionary containing the x, y and z coordinates of the grid points (or nodes) 
-        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the 
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
         points at the key 'ordering'.
 
-        Each key is a numpy array 1d containing only the non-repeating data 
+        Each key is a numpy array 1d containing only the non-repeating data
         coordinates in ascending order along the axes x, y and z. The nodes
-        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1 
-        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0. 
-        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there 
-        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and 
+        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1
+        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0.
+        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there
+        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and
         2 non-repeating coordinates (y_0, y_1) along the y-axis so that the coordinates
         of the nodes are arranged in the following matrix:
 
@@ -78,7 +84,7 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
         (x_1, y_0, z_0) (x_1, y_1, z_0)  .
         (x_2, y_0, z_0) (x_2, y_1, z_0)
 
-        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d) 
+        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d)
         with elements x_i and y_j, respectively, where i = 0, ..., Nx-1 and j = 0, ..., Ny-1.
 
         It is also important noting that the nodes may be indexed by following two
@@ -113,23 +119,23 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     # compute the SEDM using numpy
     DX = (
-        data_grid['x']*(data_grid['x'] - 2*data_grid['x'][0]) +
-        data_grid['x'][0]*data_grid['x'][0]
-        )
+        data_grid["x"] * (data_grid["x"] - 2 * data_grid["x"][0])
+        + data_grid["x"][0] * data_grid["x"][0]
+    )
 
     DY = (
-        data_grid['y']*(data_grid['y'] - 2*data_grid['y'][0]) +
-        data_grid['y'][0]*data_grid['y'][0]
-        )
+        data_grid["y"] * (data_grid["y"] - 2 * data_grid["y"][0])
+        + data_grid["y"][0] * data_grid["y"][0]
+    )
 
-    DZ = delta_z*delta_z
+    DZ = delta_z * delta_z
 
     # use broadcasting rules to add DX, DY and DZ
-    D = DX + DY[np.newaxis,:] + DZ
+    D = DX + DY[np.newaxis, :] + DZ
 
-    if data_grid['ordering'] == 'xy':
+    if data_grid["ordering"] == "xy":
         return (D.T).ravel()
-    else: # data_grid['ordering'] == 'yx'
+    else:  # data_grid['ordering'] == 'yx'
         return D.ravel()
 
 
@@ -207,23 +213,23 @@ def grad_BTTB(
 ):
     """
     Compute the partial derivatives of first order of the inverse distance
-    function between a horizontal regular grid of Nx x Ny data points and a 
-    grid of source points having the same shape, but dislocated by a constant 
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
 
     parameters
     ----------
     data_grid : dictionary
-        Dictionary containing the x, y and z coordinates of the grid points (or nodes) 
-        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the 
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
         points at the key 'ordering'.
 
-        Each key is a numpy array 1d containing only the non-repeating data 
+        Each key is a numpy array 1d containing only the non-repeating data
         coordinates in ascending order along the axes x, y and z. The nodes
-        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1 
-        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0. 
-        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there 
-        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and 
+        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1
+        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0.
+        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there
+        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and
         2 non-repeating coordinates (y_0, y_1) along the y-axis so that the coordinates
         of the nodes are arranged in the following matrix:
 
@@ -231,7 +237,7 @@ def grad_BTTB(
         (x_1, y_0, z_0) (x_1, y_1, z_0)  .
         (x_2, y_0, z_0) (x_2, y_1, z_0)
 
-        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d) 
+        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d)
         with elements x_i and y_j, respectively, where i = 0, ..., Nx-1 and j = 0, ..., Ny-1.
 
         It is also important noting that the nodes may be indexed by following two
@@ -262,7 +268,7 @@ def grad_BTTB(
     returns
     -------
     Ka: list of numpy arrays 1d
-        List of vectors defining the first columns of N x M matrices containing the 
+        List of vectors defining the first columns of N x M matrices containing the
         partial derivatives of first order along x, y and z directions.
     """
 
@@ -280,36 +286,34 @@ def grad_BTTB(
         if SEDM.ndim != 1:
             raise ValueError("SEDM must be have ndim = 1")
         if SEDM.size != D:
-            raise ValueError(
-                "SEDM does not match data_points"
-            )
+            raise ValueError("SEDM does not match data_points")
 
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM * np.sqrt(SEDM)
 
     # dictionary setting parameters for broadcast_to
     broadcast_to_args = {
-        'x' : (data_grid['x'] - data_grid['x'][0]),
-        'y' : (data_grid['y'] - data_grid['y'][0]),
-        'z' : delta_z,
+        "x": (data_grid["x"] - data_grid["x"][0]),
+        "y": (data_grid["y"] - data_grid["y"][0]),
+        "z": delta_z,
     }
 
     # compute the gradient components defined in components
     Ka = []
-    if data_grid['ordering'] == 'xy':
+    if data_grid["ordering"] == "xy":
         for component in components:
             delta = np.broadcast_to(
                 array=broadcast_to_args[component],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
-            Ka.append(- (delta.T).ravel() / R3)
-    else: # data_grid['ordering'] == 'yx'
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
+            Ka.append(-(delta.T).ravel() / R3)
+    else:  # data_grid['ordering'] == 'yx'
         for component in components:
             delta = np.broadcast_to(
                 array=broadcast_to_args[component],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
-            Ka.append(- delta.ravel() / R3)
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
+            Ka.append(-delta.ravel() / R3)
 
     return Ka
 
@@ -381,8 +385,14 @@ def grad_tensor(
     else:
         aux = 0
     for component in components:
-        delta1 = data_points[component[0]][:, np.newaxis] - source_points[component[0]]
-        delta2 = data_points[component[1]][:, np.newaxis] - source_points[component[1]]
+        delta1 = (
+            data_points[component[0]][:, np.newaxis]
+            - source_points[component[0]]
+        )
+        delta2 = (
+            data_points[component[1]][:, np.newaxis]
+            - source_points[component[1]]
+        )
         if component in ["xx", "yy", "zz"]:
             Kab.append((3 * delta1 * delta2) / R5 - aux)
         else:
@@ -400,23 +410,23 @@ def grad_tensor_BTTB(
 ):
     """
     Compute the partial derivatives of second order of the inverse distance
-    function between a horizontal regular grid of Nx x Ny data points and a 
-    grid of source points having the same shape, but dislocated by a constant 
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
 
     parameters
     ----------
     data_grid : dictionary
-        Dictionary containing the x, y and z coordinates of the grid points (or nodes) 
-        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the 
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
         points at the key 'ordering'.
 
-        Each key is a numpy array 1d containing only the non-repeating data 
+        Each key is a numpy array 1d containing only the non-repeating data
         coordinates in ascending order along the axes x, y and z. The nodes
-        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1 
-        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0. 
-        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there 
-        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and 
+        of the Nx x Ny grid of data points have indices i = 0, 1, ..., Nx-1 and j = 0, ..., Ny-1
+        along the x and y axes, respectively, and all nodes have the same vertical coordinate z_0.
+        Consider for example, a grid formed by Nx = 3 and Ny = 2. In this case, there
+        are 3 non-repeating coordinates (x_0, x_1, x_2) along the x-axis and
         2 non-repeating coordinates (y_0, y_1) along the y-axis so that the coordinates
         of the nodes are arranged in the following matrix:
 
@@ -424,7 +434,7 @@ def grad_tensor_BTTB(
         (x_1, y_0, z_0) (x_1, y_1, z_0)  .
         (x_2, y_0, z_0) (x_2, y_1, z_0)
 
-        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d) 
+        Note that the non-repeating x and y coordinates form vectors (numpy arrays 1d)
         with elements x_i and y_j, respectively, where i = 0, ..., Nx-1 and j = 0, ..., Ny-1.
 
         It is also important noting that the nodes may be indexed by following two
@@ -475,33 +485,14 @@ def grad_tensor_BTTB(
         if SEDM.ndim != 1:
             raise ValueError("SEDM must be have ndim = 1")
         if SEDM.size != D:
-            raise ValueError(
-                "SEDM does not match data_points"
-            )
+            raise ValueError("SEDM does not match data_points")
 
     # dictionary setting parameters for broadcast_to
     broadcast_to_args = {
-        'x' : (data_grid['x'] - data_grid['x'][0]),
-        'y' : (data_grid['y'] - data_grid['y'][0]),
-        'z' : delta_z,
+        "x": (data_grid["x"] - data_grid["x"][0]),
+        "y": (data_grid["y"] - data_grid["y"][0]),
+        "z": delta_z,
     }
-
-    # # compute the gradient components defined in components
-    # Ka = []
-    # if data_grid['ordering'] == 'xy':
-    #     for component in components:
-    #         delta = np.broadcast_to(
-    #             array=broadcast_to_args[component],
-    #             shape=(data_grid['x'].size, data_grid['y'].size)
-    #             )
-    #         Ka.append(- (delta.T).ravel() / R3)
-    # else: # data_grid['ordering'] == 'yx'
-    #     for component in components:
-    #         delta = np.broadcast_to(
-    #             array=broadcast_to_args[component],
-    #             shape=(data_grid['x'].size, data_grid['y'].size)
-    #             )
-    #         Ka.append(- delta.ravel() / R3)
 
     # compute the inverse distance function to the powers 3 and 5
     R3 = SEDM * np.sqrt(SEDM)
@@ -513,30 +504,30 @@ def grad_tensor_BTTB(
         aux = 1 / R3  # compute this term only if it is necessary
     else:
         aux = 0
-    if data_grid['ordering'] == 'xy':
+    if data_grid["ordering"] == "xy":
         for component in components:
             delta1 = np.broadcast_to(
                 array=broadcast_to_args[component[0]],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
             delta2 = np.broadcast_to(
                 array=broadcast_to_args[component[1]],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
             if component in ["xx", "yy", "zz"]:
                 Kab.append((3 * (delta1 * delta2).T.ravel()) / R5 - aux)
             else:
                 Kab.append((3 * (delta1 * delta2).T.ravel()) / R5)
-    else: # data_grid['ordering'] == 'yx'
+    else:  # data_grid['ordering'] == 'yx'
         for component in components:
             delta1 = np.broadcast_to(
                 array=broadcast_to_args[component[0]],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
             delta2 = np.broadcast_to(
                 array=broadcast_to_args[component[1]],
-                shape=(data_grid['x'].size, data_grid['y'].size)
-                )
+                shape=(data_grid["x"].size, data_grid["y"].size),
+            )
             if component in ["xx", "yy", "zz"]:
                 Kab.append((3 * (delta1 * delta2).ravel()) / R5 - aux)
             else:

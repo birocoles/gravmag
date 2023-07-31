@@ -33,7 +33,6 @@ def plot_panels(
     npanels = len(Z)
 
     for i in range(npanels):
-
         plt.subplot(nrows, ncols, i + 1)
         plt.axis("scaled")
         plt.title(titles[i], fontsize=14)
@@ -242,12 +241,12 @@ def fields_list(computed, true, diffs):
 
 
 def prisms_to_pyvista(prisms, prop):
-    '''
+    """
     This function creates a pyvista.UnstructuredGrid of
     rectangular prisms from a Numpy array acoording to:
-    
+
     https://docs.pyvista.org/examples/00-load/create-unstructured-surface.html
-    
+
     parameters
     ----------
     prisms : 2d-array
@@ -261,24 +260,24 @@ def prisms_to_pyvista(prisms, prop):
     returns
     -------
     model_mesh: pyvista.UnstructuredGrid
-    '''
-    
+    """
+
     # Verify the input parameters
     check.rectangular_prisms(prisms)
     check.scalar_prop(prop, prisms)
-    
+
     # number of prisms
     nprisms = prisms.shape[0]
-    
+
     # define indices of the cells composing the pyvista.UnstructuredGrid
     cells = np.empty((nprisms, 9), dtype=int)
-    cells[:,0] = 8
-    cells[:,1:] = np.reshape(np.arange(8*nprisms), (nprisms, 8))
+    cells[:, 0] = 8
+    cells[:, 1:] = np.reshape(np.arange(8 * nprisms), (nprisms, 8))
     cells = cells.ravel()
-    
+
     # define cell types of the pyvista.UnstructuredGrid
     cell_type = np.tile(np.array([pv.CellType.HEXAHEDRON]), nprisms)
-    
+
     # define the cells forming the pyvista.UnstructuredGrid
     points = []
     for prism in prisms:
@@ -292,27 +291,27 @@ def prisms_to_pyvista(prisms, prop):
                     [prism[0], prism[2], prism[5]],
                     [prism[1], prism[2], prism[5]],
                     [prism[1], prism[3], prism[5]],
-                    [prism[0], prism[3], prism[5]]
-                ], 
-                dtype=float
+                    [prism[0], prism[3], prism[5]],
+                ],
+                dtype=float,
             )
         )
     points = np.vstack(points)
-    
+
     # create the model mesh (pyvista.UnstructuredGrid)
     model_mesh = pv.UnstructuredGrid(cells, cell_type, points)
-    
+
     # add physical property
-    model_mesh.cell_data['prop'] = prop.flatten(order="F")
+    model_mesh.cell_data["prop"] = prop.flatten(order="F")
 
     return model_mesh
 
 
 def data_to_surface_pyvista(coordinates, data):
-    '''
+    """
     This function creates a connected surface from a PyVista point cloud.
     The surface is created by using delaunay_2d triangulation.
-    
+
     parameters
     ----------
     coordinates : 2d-array
@@ -324,19 +323,20 @@ def data_to_surface_pyvista(coordinates, data):
     returns
     -------
     data_mesh: pyvista.PolyData
-    '''
+    """
     check.coordinates(coordinates)
-    assert data.ndim == 1, 'data must have ndim == 1'
-    assert data.size == coordinates.shape[1], 'data size and coordinates.shape[1] must match'
+    assert data.ndim == 1, "data must have ndim == 1"
+    assert (
+        data.size == coordinates.shape[1]
+    ), "data size and coordinates.shape[1] must match"
 
     # create a PyVista point cloud
     data_mesh = pv.PolyData(coordinates.T)
 
     # add point data to the point cloud
-    data_mesh.point_data['data'] = data
+    data_mesh.point_data["data"] = data
 
     # transform the point cloud in a connected surface
     _ = data_mesh.delaunay_2d(inplace=True)
 
     return data_mesh
-

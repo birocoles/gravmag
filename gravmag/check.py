@@ -3,15 +3,15 @@ import numpy as np
 
 def are_rectangular_prisms(prisms):
     """
-    Check if prisms is a dictionary containing the x, y and z coordinates of the 
+    Check if prisms is a dictionary containing the x, y and z coordinates of the
     corners of each prism in prisms.
-    The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+    The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
     prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
     All keys must be numpy arrays 1d having the same number of elements.
 
     parameters
     ----------
-    prisms : generic object 
+    prisms : generic object
         Python object to be verified.
 
     returns
@@ -21,46 +21,44 @@ def are_rectangular_prisms(prisms):
     """
     if type(prisms) != dict:
         raise ValueError("prisms must be a dictionary")
-    if list(prisms.keys()) != ['x1', 'x2', 'y1', 'y2', 'z1', 'z2']:
-        raise ValueError("prisms must have the following 6 keys: 'x1', 'x2', 'y1', 'y2', 'z1', 'z2'")
+    if list(prisms.keys()) != ["x1", "x2", "y1", "y2", "z1", "z2"]:
+        raise ValueError(
+            "prisms must have the following 6 keys: 'x1', 'x2', 'y1', 'y2', 'z1', 'z2'"
+        )
     for key in prisms.keys():
         if type(prisms[key]) != np.ndarray:
             raise ValueError("all keys in prisms must be numpy arrays")
     for key in prisms.keys():
         if prisms[key].ndim != 1:
             raise ValueError("all keys in prisms must be a numpy array 1d")
-    P = prisms['x1'].size
+    P = prisms["x1"].size
     for key in prisms.keys():
         if prisms[key].size != P:
-            raise ValueError("all keys in prisms must have the same number of elements")
+            raise ValueError(
+                "all keys in prisms must have the same number of elements"
+            )
     # check the x lower and upper limits
-    if np.any(prisms['x2'] <= prisms['x1']):
-        raise ValueError(
-            "all 'x2' values must be greater than 'x1' values."
-            )
+    if np.any(prisms["x2"] <= prisms["x1"]):
+        raise ValueError("all 'x2' values must be greater than 'x1' values.")
     # check the y lower and upper limits
-    if np.any(prisms['y2'] <= prisms['y1']):
-        raise ValueError(
-            "all 'y2' values must be greater than 'y1' values."
-            )
+    if np.any(prisms["y2"] <= prisms["y1"]):
+        raise ValueError("all 'y2' values must be greater than 'y1' values.")
     # check the z lower and upper limits
-    if np.any(prisms['z2'] <= prisms['z1']):
-        raise ValueError(
-            "all 'z2' values must be greater than 'z1' values."
-            )
+    if np.any(prisms["z2"] <= prisms["z1"]):
+        raise ValueError("all 'z2' values must be greater than 'z1' values.")
 
     return P
 
 
 def are_coordinates(coordinates):
     """
-    Check if coordinates is a dictionary containing the x, y and z 
-    coordinates at the keys 'x', 'y' and 'z', respectively. All keys 
+    Check if coordinates is a dictionary containing the x, y and z
+    coordinates at the keys 'x', 'y' and 'z', respectively. All keys
     must be numpy arrays 1d having the same number of elements.
 
     parameters
     ----------
-    coordinates : generic object 
+    coordinates : generic object
         Python object to be verified.
 
     returns
@@ -70,26 +68,30 @@ def are_coordinates(coordinates):
     """
     if type(coordinates) != dict:
         raise ValueError("coordinates must be a dictionary")
-    if list(coordinates.keys()) != ['x', 'y', 'z']:
-        raise ValueError("coordinates must have the following 3 keys: 'x', 'y', 'z'")
+    if list(coordinates.keys()) != ["x", "y", "z"]:
+        raise ValueError(
+            "coordinates must have the following 3 keys: 'x', 'y', 'z'"
+        )
     for key in coordinates.keys():
         if type(coordinates[key]) != np.ndarray:
             raise ValueError("all keys in coordinates must be numpy arrays")
     for key in coordinates.keys():
         if coordinates[key].ndim != 1:
             raise ValueError("all keys in coordinates must be a numpy array 1d")
-    D = coordinates['x'].size
-    if (coordinates['y'].size != D) or (coordinates['z'].size != D):
-        raise ValueError("all keys in coordinates must have the same number of elements")
-    
+    D = coordinates["x"].size
+    if (coordinates["y"].size != D) or (coordinates["z"].size != D):
+        raise ValueError(
+            "all keys in coordinates must have the same number of elements"
+        )
+
     return D
 
 
 def is_planar_grid(coordinates):
     """
-    Check if coordinates is a dictionary containing the x, y and z 
-    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering' 
-    defining how the points are ordered after the first point (min x, min y). 
+    Check if coordinates is a dictionary containing the x, y and z
+    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
+    defining how the points are ordered after the first point (min x, min y).
     If 'ordering' = 'xy', the points vary first along x and then along y.
     If 'ordering' = 'yx', the points vary first along y and then along x.
     Key 'x' must be a numpy arrays 2d with a single column, i.e., with shape = (N, 1),
@@ -100,7 +102,7 @@ def is_planar_grid(coordinates):
 
     parameters
     ----------
-    coordinates : generic object 
+    coordinates : generic object
         Python object to be verified.
 
     returns
@@ -110,23 +112,27 @@ def is_planar_grid(coordinates):
     """
     if type(coordinates) != dict:
         raise ValueError("coordinates must be a dictionary")
-    if list(coordinates.keys()) != ['x', 'y', 'z', 'ordering']:
-        raise ValueError("coordinates must have the following 4 keys: 'x', 'y', 'z', 'ordering'")
-    for key in ['x', 'y']:
+    if list(coordinates.keys()) != ["x", "y", "z", "ordering"]:
+        raise ValueError(
+            "coordinates must have the following 4 keys: 'x', 'y', 'z', 'ordering'"
+        )
+    for key in ["x", "y"]:
         if type(coordinates[key]) != np.ndarray:
-            raise ValueError("'x' and 'y' keys in coordinates must be numpy arrays")
-    if coordinates['x'].ndim != 2:
+            raise ValueError(
+                "'x' and 'y' keys in coordinates must be numpy arrays"
+            )
+    if coordinates["x"].ndim != 2:
         raise ValueError("'x' key must have ndim = 2")
-    if coordinates['x'].shape[1] != 1:
+    if coordinates["x"].shape[1] != 1:
         raise ValueError("'x' key must have shape[1] = 1")
-    if coordinates['y'].ndim != 1:
+    if coordinates["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
-    if isinstance(coordinates['z'], (float, int)) is False:
+    if isinstance(coordinates["z"], (float, int)) is False:
         raise ValueError("'z' key must be float or int")
-    if coordinates['ordering'] not in ['xy', 'yx']:
+    if coordinates["ordering"] not in ["xy", "yx"]:
         raise ValueError("'ordering' key must be 'xy' or 'yx'")
-    D = (coordinates['x'].size)*(coordinates['y'].size)
-    
+    D = (coordinates["x"].size) * (coordinates["y"].size)
+
     return D
 
 
@@ -142,14 +148,10 @@ def is_scalar(x, positive=True):
         If True, impose that x must be positive.
     """
     if isinstance(x, (float, int)) is False:
-        raise ValueError(
-            "x must be in float or int"
-        )
+        raise ValueError("x must be in float or int")
     if positive == True:
         if x <= 0:
-            raise ValueError(
-                "x must be positive"
-            )
+            raise ValueError("x must be positive")
 
 
 def is_integer(x, positive=True):
@@ -164,14 +166,10 @@ def is_integer(x, positive=True):
         If True, impose that x must be positive.
     """
     if isinstance(x, int) is False:
-        raise ValueError(
-            "x must be an int"
-        )
+        raise ValueError("x must be an int")
     if positive == True:
         if x <= 0:
-            raise ValueError(
-                "x must be positive"
-            )
+            raise ValueError("x must be positive")
 
 
 def is_array(x, ndim, shape):
@@ -180,7 +178,7 @@ def is_array(x, ndim, shape):
 
     parameters
     ----------
-    prop : generic object 
+    prop : generic object
         Python object to be verified.
     ndim : int
         Positive integer defining the dimension of x.
@@ -198,11 +196,13 @@ def is_array(x, ndim, shape):
         raise ValueError("x must be a numpy array")
     if x.ndim != ndim:
         raise ValueError(
-            "x.ndim ({}) ".format(x.ndim) + "not equal to the predefined ndim {}".format(ndim)
+            "x.ndim ({}) ".format(x.ndim)
+            + "not equal to the predefined ndim {}".format(ndim)
         )
     if x.shape != shape:
         raise ValueError(
-            "x.shape ({}) ".format(x.shape) + "not equal to the predefined shape {}".format(shape)
+            "x.shape ({}) ".format(x.shape)
+            + "not equal to the predefined shape {}".format(shape)
         )
 
 
@@ -211,7 +211,7 @@ def is_array(x, ndim, shape):
 
 def are_wavenumbers(wavenumbers):
     """
-    Check if wavenumbers is a dictionary formed by 3 numpy arrays 2d. 
+    Check if wavenumbers is a dictionary formed by 3 numpy arrays 2d.
     (See function 'gravmag.transforms.wavenumbers').
 
     parameters
@@ -221,22 +221,24 @@ def are_wavenumbers(wavenumbers):
     """
     if type(wavenumbers) != dict:
         raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != ['x', 'y', 'z']:
-        raise ValueError("wavenumbers must have the following 3 keys: 'x', 'y', 'z'")
+    if list(wavenumbers.keys()) != ["x", "y", "z"]:
+        raise ValueError(
+            "wavenumbers must have the following 3 keys: 'x', 'y', 'z'"
+        )
     for key in wavenumbers.keys():
         if type(wavenumbers[key]) != np.ndarray:
             raise ValueError("all keys in wavenumbers must be numpy arrays")
     for key in wavenumbers.keys():
         if wavenumbers[key].ndim != 2:
             raise ValueError("all keys in wavenumbers must be a numpy array 2d")
-    shape = wavenumbers['x'].shape
-    if (wavenumbers['y'].shape != shape) or (wavenumbers['z'].shape != shape):
+    shape = wavenumbers["x"].shape
+    if (wavenumbers["y"].shape != shape) or (wavenumbers["z"].shape != shape):
         raise ValueError("all keys in wavenumbers must have the same shape")
-    if np.any(wavenumbers['x'][0, :] != 0):
+    if np.any(wavenumbers["x"][0, :] != 0):
         raise ValueError("first line of key 'x' must be 0")
-    if np.any(wavenumbers['y'][:, 0] != 0):
+    if np.any(wavenumbers["y"][:, 0] != 0):
         raise ValueError("first column of key 'y' must be 0")
-    if np.any(wavenumbers['z'] < 0):
+    if np.any(wavenumbers["z"] < 0):
         raise ValueError("all elements of key 'z' must be positive or zero")
 
 
@@ -252,7 +254,9 @@ def sensibility_matrix_and_data(matrices, vectors):
     if (type(matrices) != list) or (type(vectors) != list):
         raise ValueError("matrices and vectors must be lists")
     if len(matrices) != len(vectors):
-        raise ValueError("matrices and vectors must have the same number of elements")
+        raise ValueError(
+            "matrices and vectors must have the same number of elements"
+        )
     for i, (G, data) in enumerate(zip(matrices, vectors)):
         if type(G) != np.ndarray:
             raise ValueError("matrices[{}] must be a numpy array".format(i))
@@ -263,9 +267,15 @@ def sensibility_matrix_and_data(matrices, vectors):
         if data.ndim != 1:
             raise ValueError("vectors[{}] must be a vector".format(i))
         if G.shape[0] != data.size:
-            raise ValueError("matrices[{}] rows mismatch vectors[{}] size".format(i))
+            raise ValueError(
+                "matrices[{}] rows mismatch vectors[{}] size".format(i,i)
+            )
     if len(matrices) > 1:
         common_n_of_columns = matrices[0].shape[1]
         for i, G in enumerate(matrices[1:]):
             if G.shape[1] != common_n_of_columns:
-                raise ValueError("matrices[{}] does not have the same number of columns of matrices[0]".format(i))
+                raise ValueError(
+                    "matrices[{}] does not have the same number of columns of matrices[0]".format(
+                        i
+                    )
+                )

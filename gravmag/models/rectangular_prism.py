@@ -30,7 +30,7 @@ def grav(coordinates, prisms, density, field, scale=True):
         All coordinates should be in meters.
     prisms : dictionary
         Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
-        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
         prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
         Each key is a numpy array 1d having the same number of elements.
     density : 1d-array
@@ -62,8 +62,8 @@ def grav(coordinates, prisms, density, field, scale=True):
     """
 
     # Verify the input parameters
-    D = check.are_coordinates(coordinates) # D = total number of data points
-    P = check.are_rectangular_prisms(prisms) # P = total number of prisms
+    D = check.are_coordinates(coordinates)  # D = total number of data points
+    P = check.are_rectangular_prisms(prisms)  # P = total number of prisms
     check.is_array(density, ndim=1, shape=(P,))
 
     # Available fields
@@ -118,7 +118,7 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
         All coordinates should be in meters.
     prisms : dictionary
         Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
-        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each 
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
         prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
         Each key is a numpy array 1d having the same number of elements.
     mx, my, mz : numpy arrays 1d
@@ -144,8 +144,8 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
     """
 
     # Verify the input parameters
-    D = check.are_coordinates(coordinates) # D = total number of data points
-    P = check.are_rectangular_prisms(prisms) # P = total number of prisms
+    D = check.are_coordinates(coordinates)  # D = total number of data points
+    P = check.are_rectangular_prisms(prisms)  # P = total number of prisms
     check.is_array(mx, ndim=1, shape=(P,))
     check.is_array(my, ndim=1, shape=(P,))
     check.is_array(mz, ndim=1, shape=(P,))
@@ -204,8 +204,8 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
 #                 # compute the SEDM between the coordinates and a vertex
 #                 R = np.sqrt(
 #                     idist.sedm(
-#                         data_points = coordinates, 
-#                         source_points = prisms[:,[i,j,k]].T, 
+#                         data_points = coordinates,
+#                         source_points = prisms[:,[i,j,k]].T,
 #                         check_input=False
 #                         )
 #                     )
@@ -302,14 +302,14 @@ def kernel_inverse_r(X, Y, Z):
     """
     Function for computing the inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = (
         Y * X * utils.safe_log(Z + R)
         + X * Z * utils.safe_log(Y + R)
         + Y * Z * utils.safe_log(X + R)
-        - 0.5 * Y ** 2 * utils.safe_atan2(Z * X, Y * R)
-        - 0.5 * X ** 2 * utils.safe_atan2(Z * Y, X * R)
-        - 0.5 * Z ** 2 * utils.safe_atan2(Y * X, Z * R)
+        - 0.5 * Y**2 * utils.safe_atan2(Z * X, Y * R)
+        - 0.5 * X**2 * utils.safe_atan2(Z * Y, X * R)
+        - 0.5 * Z**2 * utils.safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -322,9 +322,9 @@ def vectorized_kernel_inverse_r(X, Y, Z, R):
         Y * X * utils.numpy_safe_log(Z + R)
         + X * Z * utils.numpy_safe_log(Y + R)
         + Y * Z * utils.numpy_safe_log(X + R)
-        - 0.5 * Y ** 2 * utils.numpy_safe_atan2(Z * X, Y * R)
-        - 0.5 * X ** 2 * utils.numpy_safe_atan2(Z * Y, X * R)
-        - 0.5 * Z ** 2 * utils.numpy_safe_atan2(Y * X, Z * R)
+        - 0.5 * Y**2 * utils.numpy_safe_atan2(Z * X, Y * R)
+        - 0.5 * X**2 * utils.numpy_safe_atan2(Z * Y, X * R)
+        - 0.5 * Z**2 * utils.numpy_safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -334,7 +334,7 @@ def kernel_dz(X, Y, Z):
     """
     Function for computing the z-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
         Y * utils.safe_log(X + R)
         + X * utils.safe_log(Y + R)
@@ -348,7 +348,7 @@ def kernel_dy(X, Y, Z):
     """
     Function for computing the y-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
         X * utils.safe_log(Z + R)
         + Z * utils.safe_log(X + R)
@@ -362,7 +362,7 @@ def kernel_dx(X, Y, Z):
     """
     Function for computing the x-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
         Y * utils.safe_log(Z + R)
         + Z * utils.safe_log(Y + R)
@@ -376,7 +376,7 @@ def kernel_dzz(X, Y, Z):
     """
     Function for computing the zz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -utils.safe_atan2(Y * X, Z * R)
     return result
 
@@ -386,7 +386,7 @@ def kernel_dyz(X, Y, Z):
     """
     Function for computing the yz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = utils.safe_log(X + R)
     return result
 
@@ -396,7 +396,7 @@ def kernel_dxz(X, Y, Z):
     """
     Function for computing the xz-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = utils.safe_log(Y + R)
     return result
 
@@ -406,7 +406,7 @@ def kernel_dyy(X, Y, Z):
     """
     Function for computing the yy-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -utils.safe_atan2(X * Z, Y * R)
     return result
 
@@ -416,7 +416,7 @@ def kernel_dxy(X, Y, Z):
     """
     Function for computing the xy-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = utils.safe_log(Z + R)
     return result
 
@@ -426,6 +426,6 @@ def kernel_dxx(X, Y, Z):
     """
     Function for computing the xx-derivative of inverse distance kernel
     """
-    R = np.sqrt(X ** 2 + Y ** 2 + Z ** 2)
+    R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -utils.safe_atan2(Y * Z, X * R)
     return result

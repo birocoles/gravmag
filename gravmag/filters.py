@@ -25,7 +25,7 @@ def wavenumbers(shape, dx, dy, check_input=True):
         wavenumbers along 'x', 'y' and 'z' directions, respectively.
     """
 
-    if check_input is True:        
+    if check_input is True:
         assert isinstance(shape, tuple), "shape must be a tuple"
         assert len(shape) == 2, "shape must have 2 elements"
         assert isinstance(shape[0], int) and (
@@ -47,7 +47,7 @@ def wavenumbers(shape, dx, dy, check_input=True):
     ky, kx = np.meshgrid(ky, kx)
 
     # this is valid for potential fields on a plane
-    kz = np.sqrt(kx ** 2 + ky ** 2)
+    kz = np.sqrt(kx**2 + ky**2)
 
     return kx, ky, kz
 

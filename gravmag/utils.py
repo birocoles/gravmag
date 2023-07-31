@@ -37,7 +37,7 @@ def numpy_safe_atan2(y, x):
     Fukushima (2020, eq. 72).
     """
     result = np.zeros_like(y)
-    
+
     # x != 0
     indices_x = np.nonzero(x)
     result[indices_x] = np.arctan(y[indices_x] / x[indices_x])
@@ -69,7 +69,7 @@ def numpy_safe_log(x):
     """
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = (np.abs(x) >= 1e-10)
+    indices_x = np.abs(x) >= 1e-10
     result[indices_x] = np.log(x[indices_x])
 
     return result
@@ -270,6 +270,6 @@ def prisms_volume(prisms):
     # Verify the input parameters
     check.rectangular_prisms(prisms)
 
-    volume = np.prod(prisms[:,[1,3,5]] - prisms[:,[0,2,4]], axis=1)
+    volume = np.prod(prisms[:, [1, 3, 5]] - prisms[:, [0, 2, 4]], axis=1)
 
     return volume

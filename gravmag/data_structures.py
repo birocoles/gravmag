@@ -14,7 +14,7 @@ def regular_grid_xy(area, shape, ordering="xy", check_input=True):
     shape : tuple
         Tuple defining the total number of points along x and y directions, respectively.
     ordering : string
-        Defines how the points are ordered after the first point (min x, min y). 
+        Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
         Default is 'xy'.
@@ -23,5 +23,5 @@ def regular_grid_xy(area, shape, ordering="xy", check_input=True):
     -------
     x, y : numpy arrays 1d
         Numpy arrays 1d containing the coordinates x and y of the grid points.
-        These vectors are 
+        These vectors are
     """
