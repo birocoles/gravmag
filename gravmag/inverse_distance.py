@@ -89,7 +89,7 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
         In scheme (2), the nodes are indexed along the x-axis and then along the y-axis.
 
         Then, the data_grid dictionary must be formed by the following keys:
-        'x' - numpy array 1d with Nx elements containing the x coordinates of the grid points;
+        'x' - numpy array 2d with Nx elements containing the x coordinates of the grid points and a single column;
         'y' - numpy array 1d with Ny elements containing the y coordinates of the grid points;
         'z' - scalar (float or int) defining the constant vertical coordinates of the grid points and
         'ordering' - string 'xy' or 'yx' defining how the grid points are indexed.
@@ -108,7 +108,7 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     if check_input is True:
         # check shape and ndim of points
-        check.is_grid(coordinates=data_grid)
+        check.is_planar_grid(coordinates=data_grid)
         check.is_scalar(x=delta_z, positive=True)
 
     # compute the SEDM using numpy
@@ -125,7 +125,7 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
     DZ = delta_z*delta_z
 
     # use broadcasting rules to add DX, DY and DZ
-    D = DX[:,np.newaxis] + DY[np.newaxis,:] + DZ
+    D = DX + DY[np.newaxis,:] + DZ
 
     if data_grid['ordering'] == 'xy':
         return (D.T).ravel()
@@ -242,7 +242,7 @@ def grad_BTTB(
         In scheme (2), the nodes are indexed along the x-axis and then along the y-axis.
 
         Then, the data_grid dictionary must be formed by the following keys:
-        'x' - numpy array 1d with Nx elements containing the x coordinates of the grid points;
+        'x' - numpy array 2d with Nx elements containing the x coordinates of the grid points and a single column;
         'y' - numpy array 1d with Ny elements containing the y coordinates of the grid points;
         'z' - scalar (float or int) defining the constant vertical coordinates of the grid points and
         'ordering' - string 'xy' or 'yx' defining how the grid points are indexed.
@@ -268,7 +268,7 @@ def grad_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_grid(data_grid)
+        D = check.is_planar_grid(data_grid)
         check.is_scalar(x=delta_z, positive=True)        
         # check if components are valid
         for component in components:
@@ -289,7 +289,7 @@ def grad_BTTB(
 
     # nested dictionary setting parameters for broadcast_to
     broadcast_to_args = {
-        'x' : (data_grid['x'] - data_grid['x'][0])[:,np.newaxis],
+        'x' : (data_grid['x'] - data_grid['x'][0]),
         'y' : (data_grid['y'] - data_grid['y'][0]),
         'z' : delta_z,
     }
