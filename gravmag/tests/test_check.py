@@ -173,121 +173,215 @@ def test_invalid_coordinates():
 
 ##### grid
 
-def test_grid_n_points():
+def test_is_planar_grid_n_points():
     "Check if return the correct number of points"
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'xy'
         }
-    D = check.is_grid(coordinates)
+    D = check.is_planar_grid(coordinates)
     assert D == 12
 
 
-def test_non_dict_grid():
+def test_is_planar_grid_non_dict_input():
     "Check if passing a non-dictionary grid raises an error"
     # array
     coordinates = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # array
     coordinates = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # tuple
     coordinates = (1, 5)
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # list
     coordinates = [1,2,3.]
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # float
     coordinates = 10.2
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
 
 
-def test_invalid_keys_grid():
+def test_is_planar_grid_invalid_keys():
     "Check if passing a dictionary with invalid keys raises an error"
     # dictionary with one extra key
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'xy',
         'k' : np.array([-100, 100, -100, 100, 100, 200])
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # dictionary with one wrong key (y in uppercase)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'Y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'xy'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # dictionary with 'z' key not float or int
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2+3j,
         'ordering' : 'xy'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : np.array(18.2),
         'ordering' : 'xy'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     # dictionary with 'ordering' key neither 'xy' nor 'yx'
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'y'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'x'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : 'Xy'
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : ['xy']
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
     coordinates = {
-        'x' : np.arange(4),
+        'x' : np.arange(4)[:,np.newaxis],
         'y' : np.ones(3),
         'z' : 18.2,
         'ordering' : ('yx',)
         }
     with pytest.raises(ValueError):
-        check.is_grid(coordinates)
+        check.is_planar_grid(coordinates)
+
+
+def test_is_planar_grid_invalid_x_key():
+    "Check if passing an invalid x key raises an error"
+    # array 1d
+    coordinates = {
+        'x' : np.arange(4),
+        'y' : np.ones(3),
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # list
+    coordinates = {
+        'x' : [0, 1, 2, 3, 4],
+        'y' : np.ones(3),
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # tuple
+    coordinates = {
+        'x' : (0, 1, 2, 3, 4),
+        'y' : np.ones(3),
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+
+
+def test_is_planar_grid_invalid_y_key():
+    "Check if passing an invalid y key raises an error"
+    # array 2d
+    coordinates = {
+        'x' : np.arange(4)[:,np.newaxis],
+        'y' : np.ones(3)[np.newaxis,:],
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # list
+    coordinates = {
+        'x' : np.ones(3),
+        'y' : [0, 1, 2, 3, 4],
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # tuple
+    coordinates = {
+        'x' : np.ones(4),
+        'y' : (0, 1, 2, 3),
+        'z' : 18.2,
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+
+
+def test_is_planar_grid_invalid_z_key():
+    "Check if passing an invalid z key raises an error"
+    # array 2d
+    coordinates = {
+        'x' : np.arange(4)[:,np.newaxis],
+        'y' : np.ones(3),
+        'z' : np.array(18.2),
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # list
+    coordinates = {
+        'x' : np.ones(4),
+        'y' : np.ones(3),
+        'z' : [18.2],
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+    # tuple
+    coordinates = {
+        'x' : np.ones(4),
+        'y' : np.ones(3),
+        'z' : (18.2,),
+        'ordering' : 'xy'
+        }
+    with pytest.raises(ValueError):
+        check.is_planar_grid(coordinates)
+
 
 
 ##### is_scalar

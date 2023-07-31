@@ -85,15 +85,18 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_grid(coordinates):
+def is_planar_grid(coordinates):
     """
     Check if coordinates is a dictionary containing the x, y and z 
     coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering' 
     defining how the points are ordered after the first point (min x, min y). 
     If 'ordering' = 'xy', the points vary first along x and then along y.
     If 'ordering' = 'yx', the points vary first along y and then along x.
-    Keys 'x' and 'y' must be numpy arrays 1d.
-    Key 'z' must be a scalar (float or int).
+    Key 'x' must be a numpy arrays 2d with a single column, i.e., with shape = (N, 1),
+    where Nx is the number of data along x-axis.
+    Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of
+    data long y-axis.
+    Key 'z' must be a scalar (float or int) defining the constant vertical coordinate of the grid.
 
     parameters
     ----------
@@ -112,9 +115,12 @@ def is_grid(coordinates):
     for key in ['x', 'y']:
         if type(coordinates[key]) != np.ndarray:
             raise ValueError("'x' and 'y' keys in coordinates must be numpy arrays")
-    for key in ['x', 'y']:
-        if coordinates[key].ndim != 1:
-            raise ValueError("'x' and 'y' keys in coordinates must have ndim = 1")
+    if coordinates['x'].ndim != 2:
+        raise ValueError("'x' key must have ndim = 2")
+    if coordinates['x'].shape[1] != 1:
+        raise ValueError("'x' key must have shape[1] = 1")
+    if coordinates['y'].ndim != 1:
+        raise ValueError("'y' key must have ndim = 1")
     if isinstance(coordinates['z'], (float, int)) is False:
         raise ValueError("'z' key must be float or int")
     if coordinates['ordering'] not in ['xy', 'yx']:
