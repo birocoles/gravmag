@@ -256,33 +256,34 @@ def method_CGLS(
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
     for sensibility_matrix, res in zip(sensibility_matrices, residuals):
-        vartheta += sensibility_matrix.T @ res
+        vartheta[:] += sensibility_matrix.T @ res
     rho0 = np.sum(vartheta * vartheta)
-    tau = 0
+    tau = 0.
     eta = np.zeros_like(parameters)
     nus = []
     for ndata in number_of_data:
-        nus.append(np.empty(ndata, dtype=float))
+        nus.append(np.zeros_like(parameters))
     m = 1
 
     # updates
     while (delta > epsilon) and (m < ITMAX):
-        eta = vartheta + tau * eta
+        print(residuals[0])
+        eta[:] = vartheta + tau * eta
         aux = 0.0
         for sensibility_matrix, nu in zip(sensibility_matrices, nus):
-            nu = sensibility_matrix @ eta
+            nu[:] = sensibility_matrix @ eta
             aux += np.sum(nu * nu)
         upsilon = rho0 / aux
-        parameters += upsilon * eta
+        parameters[:] += upsilon * eta
         delta = 0.0
         for res, nu in zip(residuals, nus):
-            res -= upsilon * nu
+            res[:] -= upsilon * nu
             delta += np.sum(res * res)
         delta = np.sqrt(delta) / np.sum(number_of_data)
         deltas.append(delta)
-        vartheta = 0.0  # remember that vartheta in an array like parameters
+        vartheta[:] = 0.0  # remember that vartheta in an array like parameters
         for sensibility_matrix, res in zip(sensibility_matrices, residuals):
-            vartheta += sensibility_matrix.T @ res
+            vartheta[:] += sensibility_matrix.T @ res
         rho = np.sum(vartheta * vartheta)
         tau = rho / rho0
         rho0 = rho

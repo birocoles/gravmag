@@ -348,23 +348,54 @@ def test_method_CGLS_invalid_data_vectors():
         )
 
 
-# def test_method_CGLS_stop_criterion():
-#     "Check if passing an invalid list of data vectors raises an error"
-#     eps = 1e-3
-#     ITMAX = 10
-#     # define square matrices with order 5
-#     G = [
-#         np.toeplitz(np.arange(1,6)),
-#         np.circulant(np.linspace(3.1, 11., 5)),
-#         np.hankel([2, 3.5, 7., 1,. 9.3])
-#     ]
-#     # compute data vectors for null parameter vectors
+def test_method_CGLS_stop_criterion():
+    "Check if passing the true parameter vector the method stops at the first iteration"
+    eps = 1e-3
+    ITMAX = 10
+    # define square matrices with order 5
+    matrices = [
+        toeplitz(np.arange(1,6)),
+        circulant(np.linspace(3.1, 11., 5)),
+        hankel([2, 3.5, 7., 1, 9.3])
+    ]
+    # compute data vectors for null parameter vectors
+    data = []
+    parameters_true = np.zeros(5)
+    for G in matrices:
+        data.append(G@parameters_true)
+    # run the method CGLS
+    delta_list, parameters = eqlayer.method_CGLS(
+        sensibility_matrices=matrices,
+        data_vectors=data,
+        epsilon=eps,
+        ITMAX=ITMAX,
+        check_input=True,
+    )
+    ae(len(delta_list), 1)
+    ae(parameters, parameters_true)
 
-#     with raises(ValueError):
-#         eqlayer.method_CGLS(
-#             sensibility_matrices=G,
-#             data_vectors=data,
-#             epsilon=eps,
-#             ITMAX=ITMAX,
-#             check_input=True,
-#         )
+
+def test_method_CGLS_true_parameter_vector():
+    "Check if passing the method retrieves the true parameter vector"
+    eps = 1e-3
+    ITMAX = 10
+    # define square matrices with order 5
+    matrices = [
+        toeplitz(np.arange(1,6)),
+        circulant(np.linspace(3.1, 11., 5)),
+        hankel([2, 3.5, 7., 1, 9.3])
+    ]
+    # compute data vectors with a non-null parameter vector
+    data = []
+    parameters_true = np.array([2., 3.1, 7., 1., 4.5])
+    for G in matrices:
+        data.append(G@parameters_true)
+    # run the method CGLS
+    delta_list, parameters = eqlayer.method_CGLS(
+        sensibility_matrices=matrices,
+        data_vectors=data,
+        epsilon=eps,
+        ITMAX=ITMAX,
+        check_input=True,
+    )
+    aae(parameters, parameters_true, decimal=10)
