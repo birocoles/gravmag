@@ -227,6 +227,12 @@ def method_CGLS(
 
     if check_input == True:
         # check if G and data are consistent numpy arrays
+        if type(sensibility_matrices) != list:
+            raise ValueError("sensibility_matrices must be a list")
+        if type(data_vectors) != list:
+            raise ValueError("data_vectors must be a list")
+        if len(sensibility_matrices) != len(data_vectors):
+            raise ValueError("sensibility_matrices and data_vectors must have the same number of elements")
         for (G, data) in zip(sensibility_matrices, data_vectors):
             check.sensibility_matrix_and_data(
                 matrix=G, data=data
@@ -332,9 +338,10 @@ def method_column_action_C92(
         # check data points
         check.are_coordinates(coordinates=data_points)
         # check if zlayer result in a layer below the data points
-        if (type(zlayer) != float) and (np.any(zlayer <= data_points[2])):
+        check.is_scalar(x=zlayer, positive=False)
+        if np.any(zlayer <= data_points[2]):
             raise ValueError(
-                "zlayer must be a scalar greater than the z coordinate of all data points"
+                "zlayer must be greater than the z coordinate of all data points"
             )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
