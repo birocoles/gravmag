@@ -26,7 +26,7 @@ def safe_atan2(y, x):
     return result
 
 
-def numpy_safe_atan2(y, x):
+def safe_atan2_np(y, x):
     """
     Principal value of the arctangent expressed as a two variable function
 
@@ -62,7 +62,7 @@ def safe_log(x):
     return result
 
 
-def numpy_safe_log(x):
+def safe_log_np(x):
     """
     Modified log to return 0 for log(0).
     The limits in the formula terms tend to 0.

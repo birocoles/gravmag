@@ -184,36 +184,6 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
     return result
 
 
-# functions for computing the field produced by all prisms at all coordinates
-
-
-# def vectorized_grav(coordinates, prisms, density, field, out):
-#     """
-#     Compute the gravitational field of all 'prisms' at all 'coordinates'
-#     """
-
-#     # Iterate over x vertices
-#     for i in [0, 1]:
-#         X = coordinates[0][:, np.newaxis] - prisms[:,i]
-#         # Iterate over y vertices
-#         for j in [2, 3]:
-#             Y = coordinates[1][:, np.newaxis] - prisms[:,j]
-#             # Iterate over z vertices
-#             for k in [4, 5]:
-#                 Z = coordinates[2][:, np.newaxis] - prisms[:,k]
-#                 # compute the SEDM between the coordinates and a vertex
-#                 R = np.sqrt(
-#                     idist.sedm(
-#                         data_points = coordinates,
-#                         source_points = prisms[:,[i,j,k]].T,
-#                         check_input=False
-#                         )
-#                     )
-#                 PAREI AQUI
-
-#     return result
-
-
 @njit
 def jit_grav(coordinates, prisms, density, field, out):
     """
