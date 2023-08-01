@@ -242,40 +242,22 @@ def are_wavenumbers(wavenumbers):
         raise ValueError("all elements of key 'z' must be positive or zero")
 
 
-def sensibility_matrix_and_data(matrices, vectors):
+def sensibility_matrix_and_data(matrix, data):
     """
-    Check if the list of matrices and vectors are formed by consistent numpy arrays.
+    Check if the given matrix and data are formed by consistent numpy arrays.
 
     parameters
     ----------
-    matrices , vectors : lists of generic objects
+    matrix , vector : generic objects
         Lists of Python objects to be verified.
     """
-    if (type(matrices) != list) or (type(vectors) != list):
-        raise ValueError("matrices and vectors must be lists")
-    if len(matrices) != len(vectors):
-        raise ValueError(
-            "matrices and vectors must have the same number of elements"
-        )
-    for i, (G, data) in enumerate(zip(matrices, vectors)):
-        if type(G) != np.ndarray:
-            raise ValueError("matrices[{}] must be a numpy array".format(i))
-        if type(data) != np.ndarray:
-            raise ValueError("vectors[{}] must be a numpy array".format(i))
-        if G.ndim != 2:
-            raise ValueError("matrices[{}] must be a matrix".format(i))
-        if data.ndim != 1:
-            raise ValueError("vectors[{}] must be a vector".format(i))
-        if G.shape[0] != data.size:
-            raise ValueError(
-                "matrices[{}] rows mismatch vectors[{}] size".format(i,i)
-            )
-    if len(matrices) > 1:
-        common_n_of_columns = matrices[0].shape[1]
-        for i, G in enumerate(matrices[1:]):
-            if G.shape[1] != common_n_of_columns:
-                raise ValueError(
-                    "matrices[{}] does not have the same number of columns of matrices[0]".format(
-                        i
-                    )
-                )
+    if type(matrix) != np.ndarray:
+        raise ValueError("matrix must be a numpy array")
+    if type(data) != np.ndarray:
+        raise ValueError("data must be a numpy array")
+    if matrix.ndim != 2:
+        raise ValueError("matrix must be a matrix")
+    if data.ndim != 1:
+        raise ValueError("data must be a vector")
+    if matrix.shape[0] != data.size:
+        raise ValueError("matrix rows mismatch data size")

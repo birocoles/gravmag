@@ -227,9 +227,10 @@ def method_CGLS(
 
     if check_input == True:
         # check if G and data are consistent numpy arrays
-        check.sensibility_matrix_and_data(
-            matrices=sensibility_matrices, vectors=data_vectors
-        )
+        for (G, data) in zip(sensibility_matrices, data_vectors):
+            check.sensibility_matrix_and_data(
+                matrix=G, data=data
+            )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -352,7 +353,7 @@ def method_column_action_C92(
         while (rmax > epsilon) and (m < ITMAX):
             xmax, ymax, zmax = data_points[:, imax]
             parameters[imax] += rmax * scale * np.abs(zlayer - zmax)
-            residuals -= G[:, imax] * rmax
+            residuals[:] -= G[:, imax] * rmax
             imax = np.argmax(np.abs(residuals))
             rmax = residuals[imax]
             rmax_list.append(rmax)
@@ -407,13 +408,14 @@ def method_iterative_SOB17(
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
+    nu = np.zeros_like(parameters)
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
         dp = factor * residuals
-        parameters += dp
-        nu = G @ dp
-        residuals -= nu
+        parameters[:] += dp
+        nu[:] = G @ dp
+        residuals[:] -= nu
         delta = np.sqrt(np.sum(residuals * residuals)) / D
         delta_list.append(delta)
         m += 1
