@@ -12,6 +12,7 @@ from .. import utils
 from .. import constants as cts
 from .. import inverse_distance as idist
 
+
 def grav(coordinates, prisms, density, field, scale=True):
     """
     Gravitational potential, first and second derivatives
@@ -81,7 +82,11 @@ def grav(coordinates, prisms, density, field, scale=True):
     if field not in kernels:
         raise ValueError("Gravitational field {} not recognized".format(field))
 
-    result = iterate_over_vertices(coordinates, prisms, density, kernels[field])
+    # define kernel used to compute the potential field
+    kernel = kernels[field]
+
+    # compute the contribution of each vertex
+    result = iterate_over_vertices(coordinates, prisms, density, kernel)
 
     # multiply the computed field by the corresponding scale factors
     if scale is True:
@@ -98,7 +103,7 @@ def grav(coordinates, prisms, density, field, scale=True):
 
 # iterate over vertices
 def iterate_over_vertices(coordinates, prisms, sigma, kernel):
-    predicted_field = np.zeros(coordinates['x'].size, dtype='float')
+    predicted_field = np.zeros((coordinates['x'].size, prisms['x1'].size), dtype='float')
     # iterate over vertices
     for i in [1,2]:
         for j in [1, 2]:
@@ -113,25 +118,123 @@ def iterate_over_vertices(coordinates, prisms, sigma, kernel):
                     'z' : prisms[vertex_z]
                 }
                 # Squared Euclidean Distance Matrix (SEDM)
-                R = np.sqrt(idist.sedm(data_points=vertex, source_points=coordinates, check_input=False))
-                X = vertex['x'][:,np.newaxis] - coordinates['x'][np.newaxis,:]
-                Y = vertex['y'][:,np.newaxis] - coordinates['y'][np.newaxis,:]
-                Z = vertex['z'][:,np.newaxis] - coordinates['z'][np.newaxis,:]
+                R = np.sqrt(idist.sedm(data_points=coordinates, source_points=vertex, check_input=False))
+                X = - coordinates['x'][:,np.newaxis] + vertex['x'][np.newaxis,:]
+                Y = - coordinates['y'][:,np.newaxis] + vertex['y'][np.newaxis,:]
+                Z = - coordinates['z'][:,np.newaxis] + vertex['z'][np.newaxis,:]
                 # compute contribution of the current vertex
-                predicted_field[:] += np.sum(a = kernel(X, Y, Z, R) * sigma[:,np.newaxis], axis = 1)
+                predicted_field[:] += sign * kernel(X, Y, Z, R)
+    
+    predicted_field = np.sum(a = predicted_field * sigma[np.newaxis,:], axis = 1)
 
     return predicted_field
 
 
 # kernels
 def kernel_potential(X, Y, Z, R):
-    kernel = (
-        Y * X * utils.safe_log_np(Z + R) + 
-        X * Z * utils.safe_log_np(Y + R) + 
-        Y * Z * utils.safe_log_np(X + R) - 
-        0.5 * Y**2 * utils.safe_atan2_np(Z * X, Y * R) - 
-        0.5 * X**2 * utils.safe_atan2_np(Z * Y, X * R) - 
-        0.5 * Z**2 * utils.safe_atan2_np(Y * X, Z * R)
+    """
+    Function for computing the inverse distance kernel 
+    for a rectangular prism
+    """
+    result = (
+        Y * X * utils.safe_log_np(Z + R) 
+        + X * Z * utils.safe_log_np(Y + R) 
+        + Y * Z * utils.safe_log_np(X + R) 
+        - 0.5 * Y**2 * utils.safe_atan2_np(Z * X, Y * R)
+        - 0.5 * X**2 * utils.safe_atan2_np(Z * Y, X * R) 
+        - 0.5 * Z**2 * utils.safe_atan2_np(Y * X, Z * R)
         )
+    return result
 
-    return kernel
+
+def kernel_x(X, Y, Z, R):
+    """
+    Function for computing the x-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -(
+        Y * utils.safe_log_np(Z + R)
+        + Z * utils.safe_log_np(Y + R)
+        - X * utils.safe_atan2_np(Y * Z, X * R)
+    )
+    return result
+
+
+def kernel_y(X, Y, Z, R):
+    """
+    Function for computing the y-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -(
+        X * utils.safe_log_np(Z + R)
+        + Z * utils.safe_log_np(X + R)
+        - Y * utils.safe_atan2_np(X * Z, Y * R)
+    )
+    return result
+
+
+def kernel_z(X, Y, Z, R):
+    """
+    Function for computing the z-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -(
+        Y * utils.safe_log_np(X + R)
+        + X * utils.safe_log_np(Y + R)
+        - Z * utils.safe_atan2_np(Y * X, Z * R)
+    )
+    return result
+
+
+def kernel_xx(X, Y, Z, R):
+    """
+    Function for computing the xx-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -utils.safe_atan2_np(Y * Z, X * R)
+    return result
+
+
+def kernel_xy(X, Y, Z, R):
+    """
+    Function for computing the xy-derivativ of inverse distance kernel
+    for a rectangular prism
+    """
+    result = utils.safe_log_np(Z + R)
+    return result
+
+
+def kernel_xz(X, Y, Z, R):
+    """
+    Function for computing the xz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = utils.safe_log_np(Y + R)
+    return result
+
+
+def kernel_yy(X, Y, Z, R):
+    """
+    Function for computing the yy-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -utils.safe_atan2_np(X * Z, Y * R)
+    return result
+
+
+def kernel_yz(X, Y, Z, R):
+    """
+    Function for computing the yz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = utils.safe_log_np(X + R)
+    return result
+
+
+def kernel_zz(X, Y, Z, R):
+    """
+    Function for computing the zz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = -utils.safe_atan2_np(Y * X, Z * R)
+    return result
