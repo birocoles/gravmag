@@ -2,8 +2,8 @@ import numpy as np
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 import pytest
+from ..models import rectangular_prism_numba as rp_nb
 from ..models import rectangular_prism as rp
-from ..models import rectangular_prism_np as rp_np
 from .. import constants as cts
 
 
@@ -183,17 +183,17 @@ def test_kernel_potential_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_inverse_r(X2, Y2, Z2)
-                - rp.kernel_inverse_r(X2, Y2, Z1)
-                - rp.kernel_inverse_r(X1, Y2, Z2)
-                + rp.kernel_inverse_r(X1, Y2, Z1)
-                - rp.kernel_inverse_r(X2, Y1, Z2)
-                + rp.kernel_inverse_r(X2, Y1, Z1)
-                + rp.kernel_inverse_r(X1, Y1, Z2)
-                - rp.kernel_inverse_r(X1, Y1, Z1)
+                  rp_nb.kernel_inverse_r(X2, Y2, Z2)
+                - rp_nb.kernel_inverse_r(X2, Y2, Z1)
+                - rp_nb.kernel_inverse_r(X1, Y2, Z2)
+                + rp_nb.kernel_inverse_r(X1, Y2, Z1)
+                - rp_nb.kernel_inverse_r(X2, Y1, Z2)
+                + rp_nb.kernel_inverse_r(X2, Y1, Z1)
+                + rp_nb.kernel_inverse_r(X1, Y1, Z2)
+                - rp_nb.kernel_inverse_r(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_potential)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_potential)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -229,17 +229,17 @@ def test_kernel_x_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dx(X2, Y2, Z2)
-                - rp.kernel_dx(X2, Y2, Z1)
-                - rp.kernel_dx(X1, Y2, Z2)
-                + rp.kernel_dx(X1, Y2, Z1)
-                - rp.kernel_dx(X2, Y1, Z2)
-                + rp.kernel_dx(X2, Y1, Z1)
-                + rp.kernel_dx(X1, Y1, Z2)
-                - rp.kernel_dx(X1, Y1, Z1)
+                  rp_nb.kernel_dx(X2, Y2, Z2)
+                - rp_nb.kernel_dx(X2, Y2, Z1)
+                - rp_nb.kernel_dx(X1, Y2, Z2)
+                + rp_nb.kernel_dx(X1, Y2, Z1)
+                - rp_nb.kernel_dx(X2, Y1, Z2)
+                + rp_nb.kernel_dx(X2, Y1, Z1)
+                + rp_nb.kernel_dx(X1, Y1, Z2)
+                - rp_nb.kernel_dx(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_x)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_x)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -275,17 +275,17 @@ def test_kernel_y_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dy(X2, Y2, Z2)
-                - rp.kernel_dy(X2, Y2, Z1)
-                - rp.kernel_dy(X1, Y2, Z2)
-                + rp.kernel_dy(X1, Y2, Z1)
-                - rp.kernel_dy(X2, Y1, Z2)
-                + rp.kernel_dy(X2, Y1, Z1)
-                + rp.kernel_dy(X1, Y1, Z2)
-                - rp.kernel_dy(X1, Y1, Z1)
+                  rp_nb.kernel_dy(X2, Y2, Z2)
+                - rp_nb.kernel_dy(X2, Y2, Z1)
+                - rp_nb.kernel_dy(X1, Y2, Z2)
+                + rp_nb.kernel_dy(X1, Y2, Z1)
+                - rp_nb.kernel_dy(X2, Y1, Z2)
+                + rp_nb.kernel_dy(X2, Y1, Z1)
+                + rp_nb.kernel_dy(X1, Y1, Z2)
+                - rp_nb.kernel_dy(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_y)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_y)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -321,17 +321,17 @@ def test_kernel_z_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dz(X2, Y2, Z2)
-                - rp.kernel_dz(X2, Y2, Z1)
-                - rp.kernel_dz(X1, Y2, Z2)
-                + rp.kernel_dz(X1, Y2, Z1)
-                - rp.kernel_dz(X2, Y1, Z2)
-                + rp.kernel_dz(X2, Y1, Z1)
-                + rp.kernel_dz(X1, Y1, Z2)
-                - rp.kernel_dz(X1, Y1, Z1)
+                  rp_nb.kernel_dz(X2, Y2, Z2)
+                - rp_nb.kernel_dz(X2, Y2, Z1)
+                - rp_nb.kernel_dz(X1, Y2, Z2)
+                + rp_nb.kernel_dz(X1, Y2, Z1)
+                - rp_nb.kernel_dz(X2, Y1, Z2)
+                + rp_nb.kernel_dz(X2, Y1, Z1)
+                + rp_nb.kernel_dz(X1, Y1, Z2)
+                - rp_nb.kernel_dz(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_z)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_z)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -367,17 +367,17 @@ def test_kernel_xx_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dxx(X2, Y2, Z2)
-                - rp.kernel_dxx(X2, Y2, Z1)
-                - rp.kernel_dxx(X1, Y2, Z2)
-                + rp.kernel_dxx(X1, Y2, Z1)
-                - rp.kernel_dxx(X2, Y1, Z2)
-                + rp.kernel_dxx(X2, Y1, Z1)
-                + rp.kernel_dxx(X1, Y1, Z2)
-                - rp.kernel_dxx(X1, Y1, Z1)
+                  rp_nb.kernel_dxx(X2, Y2, Z2)
+                - rp_nb.kernel_dxx(X2, Y2, Z1)
+                - rp_nb.kernel_dxx(X1, Y2, Z2)
+                + rp_nb.kernel_dxx(X1, Y2, Z1)
+                - rp_nb.kernel_dxx(X2, Y1, Z2)
+                + rp_nb.kernel_dxx(X2, Y1, Z1)
+                + rp_nb.kernel_dxx(X1, Y1, Z2)
+                - rp_nb.kernel_dxx(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_xx)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_xx)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -413,17 +413,17 @@ def test_kernel_xy_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dxy(X2, Y2, Z2)
-                - rp.kernel_dxy(X2, Y2, Z1)
-                - rp.kernel_dxy(X1, Y2, Z2)
-                + rp.kernel_dxy(X1, Y2, Z1)
-                - rp.kernel_dxy(X2, Y1, Z2)
-                + rp.kernel_dxy(X2, Y1, Z1)
-                + rp.kernel_dxy(X1, Y1, Z2)
-                - rp.kernel_dxy(X1, Y1, Z1)
+                  rp_nb.kernel_dxy(X2, Y2, Z2)
+                - rp_nb.kernel_dxy(X2, Y2, Z1)
+                - rp_nb.kernel_dxy(X1, Y2, Z2)
+                + rp_nb.kernel_dxy(X1, Y2, Z1)
+                - rp_nb.kernel_dxy(X2, Y1, Z2)
+                + rp_nb.kernel_dxy(X2, Y1, Z1)
+                + rp_nb.kernel_dxy(X1, Y1, Z2)
+                - rp_nb.kernel_dxy(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_xy)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_xy)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -459,17 +459,17 @@ def test_kernel_xz_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dxz(X2, Y2, Z2)
-                - rp.kernel_dxz(X2, Y2, Z1)
-                - rp.kernel_dxz(X1, Y2, Z2)
-                + rp.kernel_dxz(X1, Y2, Z1)
-                - rp.kernel_dxz(X2, Y1, Z2)
-                + rp.kernel_dxz(X2, Y1, Z1)
-                + rp.kernel_dxz(X1, Y1, Z2)
-                - rp.kernel_dxz(X1, Y1, Z1)
+                  rp_nb.kernel_dxz(X2, Y2, Z2)
+                - rp_nb.kernel_dxz(X2, Y2, Z1)
+                - rp_nb.kernel_dxz(X1, Y2, Z2)
+                + rp_nb.kernel_dxz(X1, Y2, Z1)
+                - rp_nb.kernel_dxz(X2, Y1, Z2)
+                + rp_nb.kernel_dxz(X2, Y1, Z1)
+                + rp_nb.kernel_dxz(X1, Y1, Z2)
+                - rp_nb.kernel_dxz(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_xz)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_xz)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -505,17 +505,17 @@ def test_kernel_yy_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dyy(X2, Y2, Z2)
-                - rp.kernel_dyy(X2, Y2, Z1)
-                - rp.kernel_dyy(X1, Y2, Z2)
-                + rp.kernel_dyy(X1, Y2, Z1)
-                - rp.kernel_dyy(X2, Y1, Z2)
-                + rp.kernel_dyy(X2, Y1, Z1)
-                + rp.kernel_dyy(X1, Y1, Z2)
-                - rp.kernel_dyy(X1, Y1, Z1)
+                  rp_nb.kernel_dyy(X2, Y2, Z2)
+                - rp_nb.kernel_dyy(X2, Y2, Z1)
+                - rp_nb.kernel_dyy(X1, Y2, Z2)
+                + rp_nb.kernel_dyy(X1, Y2, Z1)
+                - rp_nb.kernel_dyy(X2, Y1, Z2)
+                + rp_nb.kernel_dyy(X2, Y1, Z1)
+                + rp_nb.kernel_dyy(X1, Y1, Z2)
+                - rp_nb.kernel_dyy(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_yy)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_yy)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -551,17 +551,17 @@ def test_kernel_yz_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dyz(X2, Y2, Z2)
-                - rp.kernel_dyz(X2, Y2, Z1)
-                - rp.kernel_dyz(X1, Y2, Z2)
-                + rp.kernel_dyz(X1, Y2, Z1)
-                - rp.kernel_dyz(X2, Y1, Z2)
-                + rp.kernel_dyz(X2, Y1, Z1)
-                + rp.kernel_dyz(X1, Y1, Z2)
-                - rp.kernel_dyz(X1, Y1, Z1)
+                  rp_nb.kernel_dyz(X2, Y2, Z2)
+                - rp_nb.kernel_dyz(X2, Y2, Z1)
+                - rp_nb.kernel_dyz(X1, Y2, Z2)
+                + rp_nb.kernel_dyz(X1, Y2, Z1)
+                - rp_nb.kernel_dyz(X2, Y1, Z2)
+                + rp_nb.kernel_dyz(X2, Y1, Z1)
+                + rp_nb.kernel_dyz(X1, Y1, Z2)
+                - rp_nb.kernel_dyz(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_yz)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_yz)
     aae(result_numba, result_numpy, decimal=8)
 
 
@@ -597,15 +597,15 @@ def test_kernel_zz_numbaXnumpy():
             Z2 = model['z2'][p] - coords['z'][d]
             # Compute the field
             result_numba[d] += rho[p] * (
-                  rp.kernel_dzz(X2, Y2, Z2)
-                - rp.kernel_dzz(X2, Y2, Z1)
-                - rp.kernel_dzz(X1, Y2, Z2)
-                + rp.kernel_dzz(X1, Y2, Z1)
-                - rp.kernel_dzz(X2, Y1, Z2)
-                + rp.kernel_dzz(X2, Y1, Z1)
-                + rp.kernel_dzz(X1, Y1, Z2)
-                - rp.kernel_dzz(X1, Y1, Z1)
+                  rp_nb.kernel_dzz(X2, Y2, Z2)
+                - rp_nb.kernel_dzz(X2, Y2, Z1)
+                - rp_nb.kernel_dzz(X1, Y2, Z2)
+                + rp_nb.kernel_dzz(X1, Y2, Z1)
+                - rp_nb.kernel_dzz(X2, Y1, Z2)
+                + rp_nb.kernel_dzz(X2, Y1, Z1)
+                + rp_nb.kernel_dzz(X1, Y1, Z2)
+                - rp_nb.kernel_dzz(X1, Y1, Z1)
             )
     # compute with numpy
-    result_numpy = rp_np.iterate_over_vertices(coords, model, rho, rp_np.kernel_zz)
+    result_numpy = rp.iterate_over_vertices(coords, model, rho, rp.kernel_zz)
     aae(result_numba, result_numpy, decimal=8)
