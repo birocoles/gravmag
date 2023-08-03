@@ -4,34 +4,6 @@ from . import check
 
 
 @njit
-def safe_atan2_numba(y, x):
-    """
-    Principal value of the arctangent expressed as a two variable function
-
-    This modification has to be made to the arctangent function so the
-    gravitational field of the prism satisfies the Poisson's equation.
-    Therefore, it guarantees that the fields satisfies the symmetry properties
-    of the prism. This modified function has been defined according to
-    Fukushima (2020, eq. 72).
-    """
-
-    out = np.zeros_like(x)
-    N, M = np.shape(x)
-    for i in range(N):
-        for j in range(M):
-            if x[i, j] != 0.0:
-                out[i, j] = np.arctan(y[i, j] / x[i, j])
-            else:
-                if y[i, j] > 0.0:
-                    out[i, j] = np.pi / 2
-                elif y[i, j] < 0.0:
-                    out[i, j] = -np.pi / 2
-                else:
-                    out[i, j] = 0.0
-    return out
-
-
-@njit
 def safe_atan2(y, x):
     """
     Principal value of the arctangent expressed as a two variable function
@@ -42,15 +14,18 @@ def safe_atan2(y, x):
     of the prism. This modified function has been defined according to
     Fukushima (2020, eq. 72).
     """
-    if x != 0.0:
-        result = np.arctan(y / x)
-    else:
-        if y > 0.0:
-            result = np.pi / 2
-        elif y < 0.0:
-            result = -np.pi / 2
-        else:
-            result = 0.0
+    result = np.empty_like(x)
+    for i in range(result.shape[0]):
+        for j in range(result.shape[1]):
+            if x[i,j] != 0.0:
+                result[i,j] = np.arctan(y[i,j] / x[i,j])
+            else:
+                if y[i,j] > 0.0:
+                    result[i,j] = np.pi / 2
+                elif y[i,j] < 0.0:
+                    result[i,j] = -np.pi / 2
+                else:
+                    result[i,j] = 0.0
     return result
 
 
@@ -79,33 +54,18 @@ def safe_atan2_np(y, x):
 
 
 @njit
-def safe_log_numba(x):
-    """
-    Modified log to return 0 for log(0).
-    The limits in the formula terms tend to 0.
-    """
-    out = np.zeros_like(x)
-    N = x.shape[0]
-    M = x.shape[1]
-    for i in range(N):
-        for j in range(M):
-            if np.abs(x[i, j]) < 1e-10:
-                out[i, j] = 0.0
-            else:
-                out[i, j] = np.log(x[i, j])
-    return out
-
-
-@njit
 def safe_log(x):
     """
     Modified log to return 0 for log(0).
     The limits in the formula terms tend to 0.
     """
-    if np.abs(x) < 1e-10:
-        result = 0.0
-    else:
-        result = np.log(x)
+    result = np.empty_like(x)
+    for i in range(result.shape[0]):
+        for j in range(result.shape[1]):
+            if np.abs(x[i,j]) < 1e-10:
+                result[i,j] = 0.0
+            else:
+                result[i,j] = np.log(x[i,j])
     return result
 
 

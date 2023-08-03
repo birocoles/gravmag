@@ -63,36 +63,34 @@ def test_rotation_matrix_orthonormal():
         aae(np.dot(R, R.T), np.identity(3), decimal=15)
 
 
-def test_safe_atan2_numba():
+def test_safe_atan2():
     "Test the safe_atan2 function"
     # Test safe_atan2 for one point per quadrant
-    # First quadrant
-    x, y = 1, 1
-    aae(utils.safe_atan2_numba(y, x), np.pi / 4, decimal=15)
-    # Second quadrant
-    x, y = -1, 1
-    aae(utils.safe_atan2_numba(y, x), -np.pi / 4, decimal=15)
-    # Third quadrant
-    x, y = -1, -1
-    aae(utils.safe_atan2_numba(y, x), np.pi / 4, decimal=15)
-    # Forth quadrant
-    x, y = 1, -1
-    aae(utils.safe_atan2_numba(y, x), -np.pi / 4, decimal=15)
+    x = np.array([[1.,-1.],[-1.,1.]])
+    y = np.array([[1.,1.],[-1.,-1.]])
+    reference = np.array([[np.pi / 4, -np.pi / 4],[np.pi / 4, -np.pi / 4]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
     # Test safe_atan2 if the denominator is equal to zero
-    aae(utils.safe_atan2_numba(1, 0), np.pi / 2, decimal=15)
-    aae(utils.safe_atan2_numba(-1, 0), -np.pi / 2, decimal=15)
+    x = np.array([[0.,0.]])
+    y = np.array([[1.,-1.]])
+    reference = np.array([[np.pi / 2, -np.pi / 2]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
     # Test safe_atan2 if both numerator and denominator are equal to zero
-    aae(utils.safe_atan2_numba(0, 0), 0, decimal=15)
+    x = np.array([[0.,0.]])
+    y = np.array([[0.,0.]])
+    reference = np.array([[0, 0]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
 
 
-def test_safe_log_numba():
+def test_safe_log():
     "Test the safe_log function"
     # Check if safe_log function satisfies safe_log(0) == 0
-    aae(utils.safe_log_numba(0), 0, decimal=15)
+    x = np.array([[0., 0.]])
+    reference = np.zeros((1,2))
+    aae(utils.safe_log(x), reference, decimal=15)
     # Check if safe_log behaves like the natural logarithm in case that x != 0
-    x = np.linspace(1, 100, 101)
-    for x_i in x:
-        aae(utils.safe_log_numba(x_i), np.log(x_i), decimal=15)
+    x = np.linspace(1, 100, 100).reshape((4,25))
+    aae(utils.safe_log(x), np.log(x), decimal=15)
 
 
 def test_magnetization_components():
