@@ -107,5 +107,3 @@ def test_magnetization_components():
     aae(mx, mx_ref, decimal=13)
     aae(my, my_ref, decimal=13)
     aae(mz, mz_ref, decimal=13)
-
-

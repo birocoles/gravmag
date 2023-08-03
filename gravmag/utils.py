@@ -19,15 +19,15 @@ def safe_atan2_numba(y, x):
     N, M = np.shape(x)
     for i in range(N):
         for j in range(M):
-            if x[i,j] != 0.:
-                out[i,j] = np.arctan(y[i,j] / x[i,j])
+            if x[i, j] != 0.0:
+                out[i, j] = np.arctan(y[i, j] / x[i, j])
             else:
-                if y[i,j] > 0.:
-                     out[i,j] = np.pi / 2
-                elif y[i,j] < 0.:
-                     out[i,j] = -np.pi / 2
+                if y[i, j] > 0.0:
+                    out[i, j] = np.pi / 2
+                elif y[i, j] < 0.0:
+                    out[i, j] = -np.pi / 2
                 else:
-                    out[i,j] = 0.
+                    out[i, j] = 0.0
     return out
 
 
@@ -42,15 +42,15 @@ def safe_atan2(y, x):
     of the prism. This modified function has been defined according to
     Fukushima (2020, eq. 72).
     """
-    if x != 0.:
+    if x != 0.0:
         result = np.arctan(y / x)
     else:
-        if y > 0.:
+        if y > 0.0:
             result = np.pi / 2
-        elif y < 0.:
+        elif y < 0.0:
             result = -np.pi / 2
         else:
-            result = 0.
+            result = 0.0
     return result
 
 
@@ -69,11 +69,11 @@ def safe_atan2_np(y, x):
     result = np.zeros_like(y)
 
     # x != 0
-    nonzero_x = (x != 0)
+    nonzero_x = x != 0
     result[nonzero_x] = np.arctan(y[nonzero_x] / x[nonzero_x])
 
     # x == 0
-    zero_x = (x == 0)
+    zero_x = x == 0
     result[zero_x] = np.sign(y[zero_x]) * np.pi / 2
     return result
 
@@ -89,11 +89,12 @@ def safe_log_numba(x):
     M = x.shape[1]
     for i in range(N):
         for j in range(M):
-            if np.abs(x[i,j]) < 1e-10:
-                out[i,j] = 0.
+            if np.abs(x[i, j]) < 1e-10:
+                out[i, j] = 0.0
             else:
-                out[i,j] = np.log(x[i,j])
+                out[i, j] = np.log(x[i, j])
     return out
+
 
 @njit
 def safe_log(x):
@@ -102,7 +103,7 @@ def safe_log(x):
     The limits in the formula terms tend to 0.
     """
     if np.abs(x) < 1e-10:
-        result = 0.
+        result = 0.0
     else:
         result = np.log(x)
     return result
@@ -116,7 +117,7 @@ def safe_log_np(x):
     x = np.asarray(x, dtype=float)
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = (np.abs(x) >= 1e-10)
+    indices_x = np.abs(x) >= 1e-10
     result[indices_x] = np.log(x[indices_x])
     return result
 

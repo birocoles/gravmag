@@ -107,10 +107,10 @@ def model_boundaries(model, m2km=True):
     """
     P = check.are_rectangular_prisms(model)
     for i in range(P):
-        x1 = model['x1'][i]
-        x2 = model['x2'][i]
-        y1 = model['y1'][i]
-        y2 = model['y2'][i]
+        x1 = model["x1"][i]
+        x2 = model["x2"][i]
+        y1 = model["y1"][i]
+        y2 = model["y2"][i]
         x = np.array([x1, x2, x2, x1, x1])
         y = np.array([y1, y1, y2, y2, y1])
         if m2km is True:
@@ -214,14 +214,14 @@ def prisms_to_pyvista(prisms, prop):
         points.append(
             np.array(
                 [
-                    [prisms['x1'][i], prisms['y1'][i], prisms['z1'][i]],
-                    [prisms['x2'][i], prisms['y1'][i], prisms['z1'][i]],
-                    [prisms['x2'][i], prisms['y2'][i], prisms['z1'][i]],
-                    [prisms['x1'][i], prisms['y2'][i], prisms['z1'][i]],
-                    [prisms['x1'][i], prisms['y1'][i], prisms['z2'][i]],
-                    [prisms['x2'][i], prisms['y1'][i], prisms['z2'][i]],
-                    [prisms['x2'][i], prisms['y2'][i], prisms['z2'][i]],
-                    [prisms['x1'][i], prisms['y2'][i], prisms['z2'][i]],
+                    [prisms["x1"][i], prisms["y1"][i], prisms["z1"][i]],
+                    [prisms["x2"][i], prisms["y1"][i], prisms["z1"][i]],
+                    [prisms["x2"][i], prisms["y2"][i], prisms["z1"][i]],
+                    [prisms["x1"][i], prisms["y2"][i], prisms["z1"][i]],
+                    [prisms["x1"][i], prisms["y1"][i], prisms["z2"][i]],
+                    [prisms["x2"][i], prisms["y1"][i], prisms["z2"][i]],
+                    [prisms["x2"][i], prisms["y2"][i], prisms["z2"][i]],
+                    [prisms["x1"][i], prisms["y2"][i], prisms["z2"][i]],
                 ],
                 dtype=float,
             )
@@ -255,20 +255,12 @@ def data_to_surface_pyvista(coordinates, data):
     data_mesh: pyvista.PolyData
     """
     D = check.are_coordinates(coordinates)
-    assert (
-        data.size == D
-    ), "data size and coordinates must match"
+    assert data.size == D, "data size and coordinates must match"
 
     # create a PyVista point cloud
     data_mesh = pv.PolyData(
-        np.vstack(
-            [
-            coordinates['x'],
-            coordinates['y'],
-            coordinates['z']
-            ]
-            ).T
-        )
+        np.vstack([coordinates["x"], coordinates["y"], coordinates["z"]]).T
+    )
 
     # add point data to the point cloud
     data_mesh.point_data["data"] = data

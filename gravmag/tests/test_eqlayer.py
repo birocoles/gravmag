@@ -317,7 +317,7 @@ def test_method_CGLS_invalid_data_vectors():
     eps = 1e-3
     ITMAX = 10
     # not array 1d
-    data = [np.zeros(4), ['invalid-data-vector'], np.ones(3)]
+    data = [np.zeros(4), ["invalid-data-vector"], np.ones(3)]
     with raises(ValueError):
         eqlayer.method_CGLS(
             sensibility_matrices=G,
@@ -354,15 +354,15 @@ def test_method_CGLS_stop_criterion():
     ITMAX = 10
     # define square matrices with order 5
     matrices = [
-        toeplitz(np.arange(1,6)),
-        circulant(np.linspace(3.1, 11., 5)),
-        hankel([2, 3.5, 7., 1, 9.3])
+        toeplitz(np.arange(1, 6)),
+        circulant(np.linspace(3.1, 11.0, 5)),
+        hankel([2, 3.5, 7.0, 1, 9.3]),
     ]
     # compute data vectors for null parameter vectors
     data = []
     parameters_true = np.zeros(5)
     for G in matrices:
-        data.append(G@parameters_true)
+        data.append(G @ parameters_true)
     # run the method CGLS
     delta_list, parameters = eqlayer.method_CGLS(
         sensibility_matrices=matrices,
@@ -381,15 +381,15 @@ def test_method_CGLS_true_parameter_vector():
     ITMAX = 10
     # define square matrices with order 5
     matrices = [
-        toeplitz(np.arange(1,6)),
-        circulant(np.linspace(3.1, 11., 5)),
-        hankel([2, 3.5, 7., 1, 9.3])
+        toeplitz(np.arange(1, 6)),
+        circulant(np.linspace(3.1, 11.0, 5)),
+        hankel([2, 3.5, 7.0, 1, 9.3]),
     ]
     # compute data vectors with a non-null parameter vector
     data = []
-    parameters_true = np.array([2., 3.1, 7., 1., 4.5])
+    parameters_true = np.array([2.0, 3.1, 7.0, 1.0, 4.5])
     for G in matrices:
-        data.append(G@parameters_true)
+        data.append(G @ parameters_true)
     # run the method CGLS
     delta_list, parameters = eqlayer.method_CGLS(
         sensibility_matrices=matrices,

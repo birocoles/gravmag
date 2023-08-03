@@ -232,11 +232,11 @@ def method_CGLS(
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
         if len(sensibility_matrices) != len(data_vectors):
-            raise ValueError("sensibility_matrices and data_vectors must have the same number of elements")
-        for (G, data) in zip(sensibility_matrices, data_vectors):
-            check.sensibility_matrix_and_data(
-                matrix=G, data=data
+            raise ValueError(
+                "sensibility_matrices and data_vectors must have the same number of elements"
             )
+        for G, data in zip(sensibility_matrices, data_vectors):
+            check.sensibility_matrix_and_data(matrix=G, data=data)
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -265,7 +265,7 @@ def method_CGLS(
     for sensibility_matrix, res in zip(sensibility_matrices, residuals):
         vartheta[:] += sensibility_matrix.T @ res
     rho0 = np.sum(vartheta * vartheta)
-    tau = 0.
+    tau = 0.0
     eta = np.zeros_like(parameters)
     nus = []
     for ndata in number_of_data:

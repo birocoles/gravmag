@@ -75,7 +75,7 @@ def grav(coordinates, prisms, density, field, scale=True):
         "xz": kernel_xz,
         "yy": kernel_yy,
         "yz": kernel_yz,
-        "zz": kernel_zz
+        "zz": kernel_zz,
     }
 
     # Verify the field
@@ -104,29 +104,46 @@ def iterate_over_vertices(coordinates, prisms, sigma, kernel):
     Function for iterating over the vertices of the rectangular prisms
     by using numpy with broadcasting
     """
-    predicted_field = np.zeros((coordinates['x'].size, prisms['x1'].size), dtype='float')
+    predicted_field = np.zeros(
+        (coordinates["x"].size, prisms["x1"].size), dtype="float"
+    )
     # iterate over vertices
-    for i in [1,2]:
+    for i in [1, 2]:
         for j in [1, 2]:
             for k in [1, 2]:
-                sign = (-1)**(i+j+k)
-                vertex_x = 'x'+'{}'.format(i)
-                vertex_y = 'y'+'{}'.format(j)
-                vertex_z = 'z'+'{}'.format(k)
+                sign = (-1) ** (i + j + k)
+                vertex_x = "x" + "{}".format(i)
+                vertex_y = "y" + "{}".format(j)
+                vertex_z = "z" + "{}".format(k)
                 vertex = {
-                    'x' : prisms[vertex_x],
-                    'y' : prisms[vertex_y],
-                    'z' : prisms[vertex_z]
+                    "x": prisms[vertex_x],
+                    "y": prisms[vertex_y],
+                    "z": prisms[vertex_z],
                 }
                 # Squared Euclidean Distance Matrix (SEDM)
-                R = np.sqrt(idist.sedm(data_points=coordinates, source_points=vertex, check_input=False))
-                X = - coordinates['x'][:,np.newaxis] + vertex['x'][np.newaxis,:]
-                Y = - coordinates['y'][:,np.newaxis] + vertex['y'][np.newaxis,:]
-                Z = - coordinates['z'][:,np.newaxis] + vertex['z'][np.newaxis,:]
+                R = np.sqrt(
+                    idist.sedm(
+                        data_points=coordinates,
+                        source_points=vertex,
+                        check_input=False,
+                    )
+                )
+                X = (
+                    -coordinates["x"][:, np.newaxis]
+                    + vertex["x"][np.newaxis, :]
+                )
+                Y = (
+                    -coordinates["y"][:, np.newaxis]
+                    + vertex["y"][np.newaxis, :]
+                )
+                Z = (
+                    -coordinates["z"][:, np.newaxis]
+                    + vertex["z"][np.newaxis, :]
+                )
                 # compute contribution of the current vertex
                 predicted_field[:] += sign * kernel(X, Y, Z, R)
-    
-    predicted_field = np.sum(a = predicted_field * sigma[np.newaxis,:], axis = 1)
+
+    predicted_field = np.sum(a=predicted_field * sigma[np.newaxis, :], axis=1)
 
     return predicted_field
 
@@ -134,17 +151,17 @@ def iterate_over_vertices(coordinates, prisms, sigma, kernel):
 # kernels
 def kernel_potential(X, Y, Z, R):
     """
-    Function for computing the inverse distance kernel 
+    Function for computing the inverse distance kernel
     for a rectangular prism
     """
     result = (
-        Y * X * utils.safe_log_numba(Z + R) 
-        + X * Z * utils.safe_log_numba(Y + R) 
-        + Y * Z * utils.safe_log_numba(X + R) 
+        Y * X * utils.safe_log_numba(Z + R)
+        + X * Z * utils.safe_log_numba(Y + R)
+        + Y * Z * utils.safe_log_numba(X + R)
         - 0.5 * Y**2 * utils.safe_atan2_numba(Z * X, Y * R)
-        - 0.5 * X**2 * utils.safe_atan2_numba(Z * Y, X * R) 
+        - 0.5 * X**2 * utils.safe_atan2_numba(Z * Y, X * R)
         - 0.5 * Z**2 * utils.safe_atan2_numba(Y * X, Z * R)
-        )
+    )
     return result
 
 

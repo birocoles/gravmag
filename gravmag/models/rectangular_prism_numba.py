@@ -88,7 +88,7 @@ def grav(coordinates, prisms, density, field, scale=True):
     result = np.zeros(D, dtype="float64")
 
     # Compute gravitational field
-    
+
     jit_grav(coordinates, prisms, density, fields[field], result)
 
     # multiply the computed field by the corresponding scale factors
