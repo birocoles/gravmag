@@ -155,12 +155,12 @@ def kernel_potential(X, Y, Z, R):
     for a rectangular prism
     """
     result = (
-        Y * X * utils.safe_log_numba(Z + R)
-        + X * Z * utils.safe_log_numba(Y + R)
-        + Y * Z * utils.safe_log_numba(X + R)
-        - 0.5 * Y**2 * utils.safe_atan2_numba(Z * X, Y * R)
-        - 0.5 * X**2 * utils.safe_atan2_numba(Z * Y, X * R)
-        - 0.5 * Z**2 * utils.safe_atan2_numba(Y * X, Z * R)
+        Y * X * utils.safe_log(Z + R)
+        + X * Z * utils.safe_log(Y + R)
+        + Y * Z * utils.safe_log(X + R)
+        - 0.5 * Y**2 * utils.safe_atan2(Z * X, Y * R)
+        - 0.5 * X**2 * utils.safe_atan2(Z * Y, X * R)
+        - 0.5 * Z**2 * utils.safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -171,9 +171,9 @@ def kernel_x(X, Y, Z, R):
     for a rectangular prism
     """
     result = -(
-        Y * utils.safe_log_numba(Z + R)
-        + Z * utils.safe_log_numba(Y + R)
-        - X * utils.safe_atan2_numba(Y * Z, X * R)
+        Y * utils.safe_log(Z + R)
+        + Z * utils.safe_log(Y + R)
+        - X * utils.safe_atan2(Y * Z, X * R)
     )
     return result
 
@@ -184,9 +184,9 @@ def kernel_y(X, Y, Z, R):
     for a rectangular prism
     """
     result = -(
-        X * utils.safe_log_numba(Z + R)
-        + Z * utils.safe_log_numba(X + R)
-        - Y * utils.safe_atan2_numba(X * Z, Y * R)
+        X * utils.safe_log(Z + R)
+        + Z * utils.safe_log(X + R)
+        - Y * utils.safe_atan2(X * Z, Y * R)
     )
     return result
 
@@ -197,9 +197,9 @@ def kernel_z(X, Y, Z, R):
     for a rectangular prism
     """
     result = -(
-        Y * utils.safe_log_numba(X + R)
-        + X * utils.safe_log_numba(Y + R)
-        - Z * utils.safe_atan2_numba(Y * X, Z * R)
+        Y * utils.safe_log(X + R)
+        + X * utils.safe_log(Y + R)
+        - Z * utils.safe_atan2(Y * X, Z * R)
     )
     return result
 
@@ -209,7 +209,7 @@ def kernel_xx(X, Y, Z, R):
     Function for computing the xx-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = -utils.safe_atan2_numba(Y * Z, X * R)
+    result = -utils.safe_atan2(Y * Z, X * R)
     return result
 
 
@@ -218,7 +218,7 @@ def kernel_xy(X, Y, Z, R):
     Function for computing the xy-derivativ of inverse distance kernel
     for a rectangular prism
     """
-    result = utils.safe_log_numba(Z + R)
+    result = utils.safe_log(Z + R)
     return result
 
 
@@ -227,7 +227,7 @@ def kernel_xz(X, Y, Z, R):
     Function for computing the xz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = utils.safe_log_numba(Y + R)
+    result = utils.safe_log(Y + R)
     return result
 
 
@@ -236,7 +236,7 @@ def kernel_yy(X, Y, Z, R):
     Function for computing the yy-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = -utils.safe_atan2_numba(X * Z, Y * R)
+    result = -utils.safe_atan2(X * Z, Y * R)
     return result
 
 
@@ -245,7 +245,7 @@ def kernel_yz(X, Y, Z, R):
     Function for computing the yz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = utils.safe_log_numba(X + R)
+    result = utils.safe_log(X + R)
     return result
 
 
@@ -254,5 +254,5 @@ def kernel_zz(X, Y, Z, R):
     Function for computing the zz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = -utils.safe_atan2_numba(Y * X, Z * R)
+    result = -utils.safe_atan2(Y * X, Z * R)
     return result

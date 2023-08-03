@@ -285,21 +285,6 @@ def kernel_inverse_r(X, Y, Z):
     return result
 
 
-def vectorized_kernel_inverse_r(X, Y, Z, R):
-    """
-    Function for computing the inverse distance kernel
-    """
-    result = (
-        Y * X * utils.numpy_safe_log(Z + R)
-        + X * Z * utils.numpy_safe_log(Y + R)
-        + Y * Z * utils.numpy_safe_log(X + R)
-        - 0.5 * Y**2 * utils.numpy_safe_atan2(Z * X, Y * R)
-        - 0.5 * X**2 * utils.numpy_safe_atan2(Z * Y, X * R)
-        - 0.5 * Z**2 * utils.numpy_safe_atan2(Y * X, Z * R)
-    )
-    return result
-
-
 @njit
 def kernel_dz(X, Y, Z):
     """
