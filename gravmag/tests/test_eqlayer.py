@@ -349,7 +349,7 @@ def test_method_CGLS_invalid_data_vectors():
 
 
 def test_method_CGLS_stop_criterion():
-    "Check if passing the true parameter vector the method stops at the first iteration"
+    "Check if specific input stops algorithm at the first iteration"
     eps = 1e-3
     ITMAX = 10
     # define square matrices with order 5
@@ -399,3 +399,116 @@ def test_method_CGLS_true_parameter_vector():
         check_input=True,
     )
     aae(parameters, parameters_true, decimal=10)
+
+
+#### method_column_action_C92
+
+def test_method_column_action_C92_invalid_sensibility_matrices():
+    "Check if passing a invalid sensibility matrix raises an error"
+    data = np.empty(6)
+    coords = {
+        'x' : np.zeros(6),
+        'y' : np.zeros(6),
+        'z' : np.ones(6),
+    }
+    eps = 1e-3
+    ITMAX = 10
+    z_layer = 300.
+   # sensibility not array 2d
+    G = ["invalid-matrix"]
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )
+    # matrix with number of columns smaller than number of data
+    G = np.empty((7,5))
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )
+
+
+def test_method_column_action_C92_invalid_data_vectors():
+    "Check if passing an invalid data vector raises an error"
+    G = np.empty((7,5))
+    coords = {
+        'x' : np.zeros(6),
+        'y' : np.zeros(6),
+        'z' : np.ones(6),
+    }
+    eps = 1e-3
+    ITMAX = 10
+    z_layer = 300.
+    # data not array 1d
+    data = ["invalid-vector"]
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )
+    # vector with more elements than columns of sensibilit matrix
+    data = np.empty(6)
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )
+
+
+def test_method_column_action_C92_invalid_layer_depth():
+    "Check if passing an invalid layer depth raises an error"
+    G = np.empty((7,6))
+    data = np.empty(6)
+    coords = {
+        'x' : np.zeros(6),
+        'y' : np.zeros(6),
+        'z' : np.ones(6),
+    }
+    eps = 1e-3
+    ITMAX = 10
+    # layer depth not scalar
+    z_layer = 'invalid-layer-depth'
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )
+    # layer above data
+    z_layer = 0.5
+    with raises(ValueError):
+        eqlayer.method_column_action_C92(
+            G=G, 
+            data=data, 
+            data_points=coords, 
+            zlayer=z_layer, 
+            epsilon=eps, 
+            ITMAX=ITMAX,
+            check_input=True,
+        )

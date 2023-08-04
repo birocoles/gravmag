@@ -300,7 +300,7 @@ def method_CGLS(
 
 
 def method_column_action_C92(
-    G, data, data_points, zlayer, scale, epsilon, ITMAX, check_input=True
+    G, data, data_points, zlayer, epsilon, ITMAX, check_input=True
 ):
     """
     Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
@@ -311,10 +311,9 @@ def method_column_action_C92(
         N x M matrix defined by the kernel of the equivalent layer integral.
     data : numpy array 1d
         Potential-field data.
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     zlayer : float
         Constant defining the vertical position for all equivalent sources.
     epsilon : float
@@ -334,12 +333,12 @@ def method_column_action_C92(
 
     if check_input == True:
         # check if data and G are consistent numpy arrays
-        check.sensibility_matrix_and_data(G=G, data=data)
+        check.sensibility_matrix_and_data(matrix=G, data=data)
         # check data points
         check.are_coordinates(coordinates=data_points)
         # check if zlayer result in a layer below the data points
         check.is_scalar(x=zlayer, positive=False)
-        if np.any(zlayer <= data_points[2]):
+        if np.any(zlayer <= data_points['z']):
             raise ValueError(
                 "zlayer must be greater than the z coordinate of all data points"
             )
@@ -349,28 +348,34 @@ def method_column_action_C92(
         check.is_integer(x=ITMAX, positive=True)
 
         # initializations
-        residuals = np.copy(data)
+        data_aux = G@data
+        scale = (data_aux@data)/(data_aux@data_aux)
         parameters = data * scale
+        residuals = data - G@parameters
         imax = np.argmax(np.abs(residuals))
         rmax = residuals[imax]
         rmax_list = []
-        rmax_list.append(rmax)
+        rmax_list.append(abs(rmax))
         m = 1
         # updates
-        while (rmax > epsilon) and (m < ITMAX):
-            xmax, ymax, zmax = data_points[:, imax]
-            parameters[imax] += rmax * scale * np.abs(zlayer - zmax)
-            residuals[:] -= G[:, imax] * rmax
+        while (abs(rmax) > epsilon) and (m < ITMAX):
+            xmax = data_points['x'][imax]
+            ymax = data_points['y'][imax]
+            zmax = data_points['z'][imax]
+            #dp = rmax * scale * np.abs(zlayer - zmax)
+            dp = rmax * scale
+            parameters[imax] += dp
+            residuals[:] -= G[:, imax] * dp
             imax = np.argmax(np.abs(residuals))
             rmax = residuals[imax]
-            rmax_list.append(rmax)
+            rmax_list.append(abs(rmax))
             m += 1
 
         return rmax_list, parameters
 
 
 def method_iterative_SOB17(
-    G, data, factor, epsilon, ITMAX=50, check_input=True
+    G, data, epsilon, ITMAX=50, check_input=True
 ):
     """
     Solves the unconstrained problem to estimate the physical-property
@@ -382,8 +387,6 @@ def method_iterative_SOB17(
         N x M matrix defined by the kernel of the equivalent layer integral.
     data : numpy array 1d
         Potential-field data.
-    factor : float
-        Positive scalar controlling the convergence.
     epsilon : float
         Tolerance for evaluating convergence criterion.
     ITMAX : int
@@ -401,17 +404,18 @@ def method_iterative_SOB17(
 
     if check_input == True:
         # check if data and G are consistent numpy arrays
-        check.sensibility_matrix_and_data(G=G, data=data)
-        # check if factor and epsilon are positive scalars
-        check.is_scalar(x=factor, positive=True)
+        check.sensibility_matrix_and_data(matrix=G, data=data)
+        # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
 
     # initializations
     D = data.size
-    parameters = np.zeros_like(data)
-    residuals = np.copy(data)
+    data_aux = G@data
+    scale = (data_aux@data)/(data_aux@data_aux)
+    parameters = data * scale
+    residuals = data - G@parameters
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
@@ -419,7 +423,7 @@ def method_iterative_SOB17(
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
-        dp = factor * residuals
+        dp = scale * residuals
         parameters[:] += dp
         nu[:] = G @ dp
         residuals[:] -= nu
