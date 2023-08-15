@@ -94,7 +94,7 @@ def is_planar_grid(coordinates):
     defining how the points are ordered after the first point (min x, min y).
     If 'ordering' = 'xy', the points vary first along x and then along y.
     If 'ordering' = 'yx', the points vary first along y and then along x.
-    Key 'x' must be a numpy arrays 2d with a single column, i.e., with shape = (N, 1),
+    Key 'x' must be a numpy array 2d with a single column, i.e., with shape = (N, 1),
     where Nx is the number of data along x-axis.
     Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of
     data long y-axis.
@@ -172,7 +172,7 @@ def is_integer(x, positive=True):
             raise ValueError("x must be positive")
 
 
-def is_array(x, ndim, shape):
+def is_array(x, ndim=None, shape=None):
     """
     Check if x is a numpy array having specific ndim and shape.
 
@@ -181,29 +181,33 @@ def is_array(x, ndim, shape):
     prop : generic object
         Python object to be verified.
     ndim : int
-        Positive integer defining the dimension of x.
+        Positive integer defining the dimension of x. 
+        If None, ndim is ignored. Default is None.
     shape : tuple
         Tuple defining the shape of x.
+        If None, shape is ignored. Default is None.
     """
-    if (type(ndim) != int) and (ndim <= 0):
-        raise ValueError("'ndim' must be a positive integer")
-    if (type(shape) != tuple) or (len(shape) != ndim):
-        raise ValueError("'shape' must be a tuple of 'ndim' elements")
-    for item in shape:
-        if (type(item) != int) and (item <= 0):
-            raise ValueError("'shape' must be formed by positive integers")
     if type(x) != np.ndarray:
         raise ValueError("x must be a numpy array")
-    if x.ndim != ndim:
-        raise ValueError(
-            "x.ndim ({}) ".format(x.ndim)
-            + "not equal to the predefined ndim {}".format(ndim)
-        )
-    if x.shape != shape:
-        raise ValueError(
-            "x.shape ({}) ".format(x.shape)
-            + "not equal to the predefined shape {}".format(shape)
-        )
+    if ndim != None:
+        if (type(ndim) != int) and (ndim <= 0):
+            raise ValueError("'ndim' must be a positive integer")
+        if x.ndim != ndim:
+            raise ValueError(
+                "x.ndim ({}) ".format(x.ndim)
+                + "not equal to the predefined ndim {}".format(ndim)
+            )
+    if shape != None:
+        if (type(shape) != tuple) or (len(shape) != ndim):
+            raise ValueError("'shape' must be a tuple of 'ndim' elements")
+        for item in shape:
+            if (type(item) != int) and (item <= 0):
+                raise ValueError("'shape' must be formed by positive integers")
+        if x.shape != shape:
+            raise ValueError(
+                "x.shape ({}) ".format(x.shape)
+                + "not equal to the predefined shape {}".format(shape)
+            )
 
 
 # wavenumbers

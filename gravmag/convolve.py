@@ -28,27 +28,22 @@ def compute(FT_data, filters, check_input=True):
     convolved_data : numpy array 2D or flattened array 1D
         Convolved data as a grid or a flattened array 1D, depending on
         the parameter "grid".
-    """
-
-    # convert FT_data to numpy array
-    FT_data = np.asarray(FT_data)
-
-    assert isinstance(filters, list), "filters must be a list"
+    """    
 
     if check_input is True:
-        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
-        assert FT_data.ndim == 2, "FT_data must be a matrix"
+        check.is_array(x=FT_data, ndim=2)
         shape_data = FT_data.shape
-        assert len(filters) > 0, "filters must have at least one element"
+        if np.iscomplexobj(FT_data) == False:
+            raise ValueError("FT_data must be a complex array")
+        if type(filters) != list:
+            raise ValueError("filters must be a list")
+        if len(filters) == 0:
+            raise ValueError("filters must have at least one element")
         for filter in filters:
-            # convert filters elements into numpy arrays
-            filter = np.asarray(filter)
-            # verify filter ndim
-            assert filter.ndim == 2, "filter must be a matrix"
-            # verify filter shape
-            assert (
-                filter.shape == shape_data
-            ), "filter must have the same shape as data"
+            check.is_array(x=filter, ndim=2)
+            shape_filter = filter.shape
+            if shape_filter != shape_data:
+                raise ValueError("filter must have the same shape as data")
 
     # create a single filter by multiplying all those
     # defined in filters
@@ -543,7 +538,7 @@ def eigenvalues_BCCB(c0, Q, P, ordering="row"):
     return L
 
 
-def product_BCCB_vector(L, Q, P, v, ordering="row"):
+def product_BCCB_vector(L, Q, P, v, ordering="row", check_input=True):
     """
     Compute the product of a BCCB matrix and a vector
     v by using the eigenvalues of the BCCB. This BCCB embeds
@@ -565,6 +560,8 @@ def product_BCCB_vector(L, Q, P, v, ordering="row"):
     ordering: string
         If "row", the eigenvalues are arranged along the rows of a matrix L;
         if "column", they are arranged along the columns of a matrix L.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
@@ -573,23 +570,26 @@ def product_BCCB_vector(L, Q, P, v, ordering="row"):
         matrix and vector v.
     """
 
-    L = np.asarray(L)
-    assert L.ndim == 2, "L must be an array 2d"
-    assert (isinstance(Q, int)) and (Q > 0), "Q must be a positive integer"
-    assert (isinstance(P, int)) and (P > 0), "P must be a positive integer"
-    v = np.asarray(v)
-    assert v.ndim == 1, "v must be an array 1d"
-    assert v.size == Q * P, "v must have Q*P elements"
-    assert ordering in ["row", "column"], "invalid ordering"
+    if check_input == True:
+        L = np.asarray(L)
+        assert L.ndim == 2, "L must be an array 2d"
+        assert (isinstance(Q, int)) and (Q > 0), "Q must be a positive integer"
+        assert (isinstance(P, int)) and (P > 0), "P must be a positive integer"
+        v = np.asarray(v)
+        assert v.ndim == 1, "v must be an array 1d"
+        assert v.size == Q * P, "v must have Q*P elements"
+        assert ordering in ["row", "column"], "invalid ordering"
+        if ordering == "row":
+            assert L.shape == (2 * Q, 2 * P), "L must have shape (2*Q, 2*P)"
+        else:  # if ordering == 'column':
+            assert L.shape == (2 * P, 2 * Q), "L must have shape (2*P, 2*Q)"
 
     if ordering == "row":
-        assert L.shape == (2 * Q, 2 * P), "L must have shape (2*Q, 2*P)"
         # matrix containing the elements of vector a arranged along its rows
         V = np.reshape(v, (Q, P))
         V = np.hstack([V, np.zeros((Q, P))])
         V = np.vstack([V, np.zeros((Q, 2 * P))])
     else:  # if ordering == 'column':
-        assert L.shape == (2 * P, 2 * Q), "L must have shape (2*P, 2*Q)"
         # matrix containing the elements of vector a arranged along its columns
         V = np.reshape(v, (Q, P)).T
         V = np.hstack([V, np.zeros((P, Q))])

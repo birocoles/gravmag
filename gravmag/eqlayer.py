@@ -243,42 +243,43 @@ def method_CGLS(
         check.is_integer(x=ITMAX, positive=True)
 
     # get number of data for each dataset and initialize residuals list
-    number_of_data = []
+    ndatasets = len(data_vectors)
+    ndata_per_dataset = []
     residuals = []
     for data in data_vectors:
-        number_of_data.append(data.size)
+        ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
+    ndata = np.sum(ndata_per_dataset)
 
     # compute the first delta and initialize the deltas list
     deltas = []
     delta = 0.0
     for res in residuals:
         delta += np.sum(res * res)
-    delta = np.sqrt(delta) / np.sum(number_of_data)
+    delta = np.sqrt(delta) / ndata
     deltas.append(delta)
 
     # initialize the parameter vector
-    parameters = np.zeros(sensibility_matrices[0].shape[1])
+    parameters = np.zeros(ndata_per_dataset, dtype=float)
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for sensibility_matrix, res in zip(sensibility_matrices, residuals):
-        vartheta[:] += sensibility_matrix.T @ res
+    for G, res in zip(sensibility_matrices, residuals):
+        vartheta[:] += G.T @ res
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
     eta = np.zeros_like(parameters)
     nus = []
-    for ndata in number_of_data:
+    for i in range(ndatasets):
         nus.append(np.zeros_like(parameters))
     m = 1
 
     # updates
     while (delta > epsilon) and (m < ITMAX):
-        print(residuals[0])
         eta[:] = vartheta + tau * eta
         aux = 0.0
-        for sensibility_matrix, nu in zip(sensibility_matrices, nus):
-            nu[:] = sensibility_matrix @ eta
+        for G, nu in zip(sensibility_matrices, nus):
+            nu[:] = G @ eta
             aux += np.sum(nu * nu)
         upsilon = rho0 / aux
         parameters[:] += upsilon * eta
@@ -286,7 +287,7 @@ def method_CGLS(
         for res, nu in zip(residuals, nus):
             res[:] -= upsilon * nu
             delta += np.sum(res * res)
-        delta = np.sqrt(delta) / np.sum(number_of_data)
+        delta = np.sqrt(delta) / ndata
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
         for sensibility_matrix, res in zip(sensibility_matrices, residuals):
@@ -432,3 +433,137 @@ def method_iterative_SOB17(
         m += 1
 
     return delta_list, parameters
+
+
+def method_iterative_deconvolution_TOB20(
+    eigenvalues_matrices, Q, P, ordering, transposition_factors, data_vectors, epsilon, ITMAX=50, check_input=True
+):
+    """
+    Solves the unconstrained overdetermined problem to estimate the physical-property
+    distribution on the equivalent layer via convolutional equivalent-layer method
+    proposed by Takahashi et al. (2020, 2022).
+
+    parameters
+    ----------
+    eigenvalues_matrices : list of numpy arrays 2d
+        List of matrices containing the eigenvalues of kernel matrices.
+    Q: int
+        Number of blocks along a column/row of the BTTB.
+    P: int
+        Number of rows/columns of each block forming the BTTB.
+    ordering: string
+        If "row", the eigenvalues are arranged along the rows of a matrix L;
+        if "column", they are arranged along the columns of a matrix L.
+    transposition_factors : list of ints
+        List of ints defining the transposition factors of eigenvalues matrices.
+    data_vectors : list of numpy arrays 1d
+        List of potential-field data.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    deltas : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
+
+    if check_input == True:
+        if type(eigenvalues_matrices) != list:
+            raise ValueError("eigenvalues_matrices must be a list")
+        check.is_integer(x=Q, positive=True)
+        check.is_integer(x=P, positive=True)
+        if ordering not in ["row", "column"]:
+            raise ValueError("invalid ordering")
+        for L in eigenvalues_matrices:
+            if ordering == "row":
+                if L.shape != (2 * Q, 2 * P):
+                    raise ValueError("L must have shape (2*Q, 2*P)")
+            else: # if ordering == 'column':
+                if L.shape != (2 * P, 2 * Q):
+                    raise ValueError("L must have shape (2*P, 2*Q)")
+        if type(transposition_factors) != list:
+            raise ValueError("transposition_factors must be a list")
+        for factor in transposition_factors:
+            if (factor != 1) and (factor != -1):
+                raise ValueError("transposition_factors must contain only 1 or -1 elements")
+        if type(data_vectors) != list:
+            raise ValueError("data_vectors must be a list")
+        if len(eigenvalues_matrices) != len(data_vectors):
+            raise ValueError(
+                "eigenvalues_matrices and data_vectors must have the same number of elements"
+            )
+        if len(eigenvalues_matrices) != len(transposition_factors):
+            raise ValueError(
+                "eigenvalues_matrices and transposition_factors must have the same number of elements"
+            )
+        for data in data_vectors:
+            check.is_array(x=data, ndim=1, shape=(Q*P,))
+        # check if epsilon is a positive scalar
+        check.is_scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.is_integer(x=ITMAX, positive=True)
+
+    ndatasets = len(data_vectors)
+    ndata_per_dataset = Q*P
+    ndata = ndatasets*ndata_per_dataset
+    residuals = []
+    for data in data_vectors:
+        residuals.append(np.copy(data))
+
+    # compute the first delta and initialize the deltas list
+    deltas = []
+    delta = 0.0
+    for res in residuals:
+        delta += np.sum(res * res)
+    delta = np.sqrt(delta) / ndata
+    deltas.append(delta)
+
+    # initialize the parameter vector
+    parameters = np.zeros(ndata_per_dataset, dtype=float)
+
+    # initialize auxiliary variables
+    vartheta = np.zeros_like(parameters)
+    for L, res, factor in zip(eigenvalues_matrices, residuals, transposition_factors):
+        vartheta[:] += convolve.product_BCCB_vector(
+            L=factor*L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
+            )
+    rho0 = np.sum(vartheta * vartheta)
+    tau = 0.0
+    eta = np.zeros_like(parameters)
+    nus = []
+    for i in range(ndatasets):
+        nus.append(np.zeros_like(parameters))
+    m = 1
+
+    # updates
+    while (delta > epsilon) and (m < ITMAX):
+        eta[:] = vartheta + tau * eta
+        aux = 0.0
+        for L, nu in zip(eigenvalues_matrices, nus):
+            nu[:] = convolve.product_BCCB_vector(L=L, Q=Q, P=P, v=eta, ordering=ordering, check_input=False)
+            aux += np.sum(nu * nu)
+        upsilon = rho0 / aux
+        parameters[:] += upsilon * eta
+        delta = 0.0
+        for res, nu in zip(residuals, nus):
+            res[:] -= upsilon * nu
+            delta += np.sum(res * res)
+        delta = np.sqrt(delta) / ndata
+        deltas.append(delta)
+        vartheta[:] = 0.0  # remember that vartheta in an array like parameters
+        for L, res, factor in zip(eigenvalues_matrices, residuals, transposition_factors):
+            vartheta[:] += convolve.product_BCCB_vector(
+                L=factor*L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
+                )
+        rho = np.sum(vartheta * vartheta)
+        tau = rho / rho0
+        rho0 = rho
+        m += 1
+
+    return deltas, parameters
