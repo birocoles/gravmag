@@ -4,6 +4,29 @@ from . import check
 
 
 @njit
+def safe_atan2_entrywise(y, x):
+    """
+    Principal value of the arctangent expressed as a two variable function
+
+    This modification has to be made to the arctangent function so the
+    gravitational field of the prism satisfies the Poisson's equation.
+    Therefore, it guarantees that the fields satisfies the symmetry properties
+    of the prism. This modified function has been defined according to
+    Fukushima (2020, eq. 72).
+    """
+    if x != 0.0:
+        result = np.arctan(y / x)
+    else:
+        if y > 0.0:
+            result = np.pi / 2
+        elif y < 0.0:
+            result = -np.pi / 2
+        else:
+            result = 0.0
+    return result
+
+
+@njit
 def safe_atan2(y, x):
     """
     Principal value of the arctangent expressed as a two variable function
@@ -50,6 +73,19 @@ def safe_atan2_np(y, x):
     # x == 0
     zero_x = x == 0
     result[zero_x] = np.sign(y[zero_x]) * np.pi / 2
+    return result
+
+
+@njit
+def safe_log_entrywise(x):
+    """
+    Modified log to return 0 for log(0).
+    The limits in the formula terms tend to 0.
+    """
+    if np.abs(x) < 1e-10:
+        result = 0.0
+    else:
+        result = np.log(x)
     return result
 
 
