@@ -275,12 +275,12 @@ def kernel_inverse_r(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = (
-        Y * X * utils.safe_log(Z + R)
-        + X * Z * utils.safe_log(Y + R)
-        + Y * Z * utils.safe_log(X + R)
-        - 0.5 * Y**2 * utils.safe_atan2(Z * X, Y * R)
-        - 0.5 * X**2 * utils.safe_atan2(Z * Y, X * R)
-        - 0.5 * Z**2 * utils.safe_atan2(Y * X, Z * R)
+        Y * X * utils.safe_log_entrywise(Z + R)
+        + X * Z * utils.safe_log_entrywise(Y + R)
+        + Y * Z * utils.safe_log_entrywise(X + R)
+        - 0.5 * Y**2 * utils.safe_atan2_entrywise(Z * X, Y * R)
+        - 0.5 * X**2 * utils.safe_atan2_entrywise(Z * Y, X * R)
+        - 0.5 * Z**2 * utils.safe_atan2_entrywise(Y * X, Z * R)
     )
     return result
 
@@ -292,9 +292,9 @@ def kernel_dz(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        Y * utils.safe_log(X + R)
-        + X * utils.safe_log(Y + R)
-        - Z * utils.safe_atan2(Y * X, Z * R)
+        Y * utils.safe_log_entrywise(X + R)
+        + X * utils.safe_log_entrywise(Y + R)
+        - Z * utils.safe_atan2_entrywise(Y * X, Z * R)
     )
     return result
 
@@ -306,9 +306,9 @@ def kernel_dy(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        X * utils.safe_log(Z + R)
-        + Z * utils.safe_log(X + R)
-        - Y * utils.safe_atan2(X * Z, Y * R)
+        X * utils.safe_log_entrywise(Z + R)
+        + Z * utils.safe_log_entrywise(X + R)
+        - Y * utils.safe_atan2_entrywise(X * Z, Y * R)
     )
     return result
 
@@ -320,9 +320,9 @@ def kernel_dx(X, Y, Z):
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
     result = -(
-        Y * utils.safe_log(Z + R)
-        + Z * utils.safe_log(Y + R)
-        - X * utils.safe_atan2(Y * Z, X * R)
+        Y * utils.safe_log_entrywise(Z + R)
+        + Z * utils.safe_log_entrywise(Y + R)
+        - X * utils.safe_atan2_entrywise(Y * Z, X * R)
     )
     return result
 
@@ -333,7 +333,7 @@ def kernel_dzz(X, Y, Z):
     Function for computing the zz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = -utils.safe_atan2(Y * X, Z * R)
+    result = -utils.safe_atan2_entrywise(Y * X, Z * R)
     return result
 
 
@@ -343,7 +343,7 @@ def kernel_dyz(X, Y, Z):
     Function for computing the yz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = utils.safe_log(X + R)
+    result = utils.safe_log_entrywise(X + R)
     return result
 
 
@@ -353,7 +353,7 @@ def kernel_dxz(X, Y, Z):
     Function for computing the xz-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = utils.safe_log(Y + R)
+    result = utils.safe_log_entrywise(Y + R)
     return result
 
 
@@ -363,7 +363,7 @@ def kernel_dyy(X, Y, Z):
     Function for computing the yy-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = -utils.safe_atan2(X * Z, Y * R)
+    result = -utils.safe_atan2_entrywise(X * Z, Y * R)
     return result
 
 
@@ -373,7 +373,7 @@ def kernel_dxy(X, Y, Z):
     Function for computing the xy-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = utils.safe_log(Z + R)
+    result = utils.safe_log_entrywise(Z + R)
     return result
 
 
@@ -383,5 +383,5 @@ def kernel_dxx(X, Y, Z):
     Function for computing the xx-derivative of inverse distance kernel
     """
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    result = -utils.safe_atan2(Y * Z, X * R)
+    result = -utils.safe_atan2_entrywise(Y * Z, X * R)
     return result
