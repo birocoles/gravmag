@@ -40,15 +40,15 @@ def safe_atan2(y, x):
     result = np.empty_like(x)
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            if x[i,j] != 0.0:
-                result[i,j] = np.arctan(y[i,j] / x[i,j])
+            if x[i, j] != 0.0:
+                result[i, j] = np.arctan(y[i, j] / x[i, j])
             else:
-                if y[i,j] > 0.0:
-                    result[i,j] = np.pi / 2
-                elif y[i,j] < 0.0:
-                    result[i,j] = -np.pi / 2
+                if y[i, j] > 0.0:
+                    result[i, j] = np.pi / 2
+                elif y[i, j] < 0.0:
+                    result[i, j] = -np.pi / 2
                 else:
-                    result[i,j] = 0.0
+                    result[i, j] = 0.0
     return result
 
 
@@ -98,10 +98,10 @@ def safe_log(x):
     result = np.empty_like(x)
     for i in range(result.shape[0]):
         for j in range(result.shape[1]):
-            if np.abs(x[i,j]) < 1e-10:
-                result[i,j] = 0.0
+            if np.abs(x[i, j]) < 1e-10:
+                result[i, j] = 0.0
             else:
-                result[i,j] = np.log(x[i,j])
+                result[i, j] = np.log(x[i, j])
     return result
 
 
