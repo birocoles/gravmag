@@ -181,7 +181,7 @@ def is_array(x, ndim=None, shape=None):
     prop : generic object
         Python object to be verified.
     ndim : int
-        Positive integer defining the dimension of x. 
+        Positive integer defining the dimension of x.
         If None, ndim is ignored. Default is None.
     shape : tuple
         Tuple defining the shape of x.

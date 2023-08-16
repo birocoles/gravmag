@@ -137,23 +137,23 @@ def test_rectangular_prism_incompatible_density_prisms():
 def test_field_decreases_with_distance():
     "Check if field decreases with distance"
     model = {
-        'x1' : np.array([-100]),
-        'x2' : np.array([ 100]), 
-        'y1' : np.array([-100]), 
-        'y2' : np.array([ 100]), 
-        'z1' : np.array([ 100]), 
-        'z2' : np.array([ 200])
+        "x1": np.array([-100]),
+        "x2": np.array([100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([200]),
     }
     density = np.array([1000])
     close = {
-        'x' : np.array([20]),
-        'y' : np.array([ 0]),
-        'z' : np.array([ 0]),
+        "x": np.array([20]),
+        "y": np.array([0]),
+        "z": np.array([0]),
     }
     far = {
-        'x' : np.array([  20]),
-        'y' : np.array([   0]),
-        'z' : np.array([-100]),
+        "x": np.array([20]),
+        "y": np.array([0]),
+        "z": np.array([-100]),
     }
     # potentia
     potential_close = rp.grav(close, model, density, field="potential")
@@ -167,7 +167,7 @@ def test_field_decreases_with_distance():
     diffs = [
         np.abs(potential_far) < np.abs(potential_close),
         np.abs(gz_far) < np.abs(gz_close),
-        np.abs(gx_far) < np.abs(gx_close)
+        np.abs(gx_far) < np.abs(gx_close),
     ]
     ae(diffs, [True, True, True])
 
@@ -183,10 +183,10 @@ def test_Laplace_equation():
         "z2": np.array([213]),
     }
     coords = {
-        'x' : np.array([0, -130, 100, 50, 400]),
-        'y' : np.array([0, -100, 100, -100, 400]),
-        'z' : np.array([0, -100, -100, -100, -100])
-        }
+        "x": np.array([0, -130, 100, 50, 400]),
+        "y": np.array([0, -100, 100, -100, 400]),
+        "z": np.array([0, -100, -100, -100, -100]),
+    }
     rho = np.array([1300])
     gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="xx")
     gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="yy")
@@ -205,10 +205,10 @@ def test_Poisson_equation():
         "z2": np.array([213]),
     }
     coords = {
-        'x' : np.array([0, 30, -62.1]),
-        'y' : np.array([0, -10, 80]),
-        'z' : np.array([150, 110, 200])
-        }
+        "x": np.array([0, 30, -62.1]),
+        "y": np.array([0, -10, 80]),
+        "z": np.array([150, 110, 200]),
+    }
     rho = np.array([1300])
     gxx = rp.grav(coordinates=coords, prisms=model, density=rho, field="xx")
     gyy = rp.grav(coordinates=coords, prisms=model, density=rho, field="yy")
@@ -222,18 +222,18 @@ def test_Poisson_equation():
 def test_rectangular_prism_symmetric_points():
     "Check if computed values are consisten with literature"
     model = {
-        "x1": np.array([-10.]),
-        "x2": np.array([ 10.]),
-        "y1": np.array([-10.]),
-        "y2": np.array([ 10.]),
-        "z1": np.array([-10.]),
-        "z2": np.array([ 10.]),
+        "x1": np.array([-10.0]),
+        "x2": np.array([10.0]),
+        "y1": np.array([-10.0]),
+        "y2": np.array([10.0]),
+        "z1": np.array([-10.0]),
+        "z2": np.array([10.0]),
     }
     coords = {
-        'x' : np.array([ 0.,  0.,-10., 10.,   0.,  0.]),
-        'y' : np.array([ 0.,  0.,  0.,  0., -10., 10.]),
-        'z' : np.array([10.,-10.,  0.,  0.,   0.,  0.])
-        }
+        "x": np.array([0.0, 0.0, -10.0, 10.0, 0.0, 0.0]),
+        "y": np.array([0.0, 0.0, 0.0, 0.0, -10.0, 10.0]),
+        "z": np.array([10.0, -10.0, 0.0, 0.0, 0.0, 0.0]),
+    }
     rho = np.array([1000])
     computed = rp.grav(coordinates=coords, prisms=model, density=rho, field="z")
     # symmmetry along z
@@ -246,23 +246,25 @@ def test_rectangular_prism_symmetric_points():
 def test_rectangular_prism_compare_reference_values():
     "Check if computed values are consisten with literature"
     model = {
-        "x1": np.array([-10.]),
-        "x2": np.array([ 10.]),
-        "y1": np.array([-10.]),
-        "y2": np.array([ 10.]),
-        "z1": np.array([-10.]),
-        "z2": np.array([ 10.]),
+        "x1": np.array([-10.0]),
+        "x2": np.array([10.0]),
+        "y1": np.array([-10.0]),
+        "y2": np.array([10.0]),
+        "z1": np.array([-10.0]),
+        "z2": np.array([10.0]),
     }
     coords = {
-        'x' : np.array([ 0.,  0.,  0., 10.,   0.,    0., 100.]),
-        'y' : np.array([ 0.,  0.,  0., 10.,   0.,    0.,  10.]),
-        'z' : np.array([10.,-10.,  0., 10., 100., 1000.,  10.])
-        }
+        "x": np.array([0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 100.0]),
+        "y": np.array([0.0, 0.0, 0.0, 10.0, 0.0, 0.0, 10.0]),
+        "z": np.array([10.0, -10.0, 0.0, 10.0, 100.0, 1000.0, 10.0]),
+    }
     rho = np.array([1000])
     # reference values presented by Li and Chouteau (1998), Three-dimensional gravity modeling in all space
-    reference = np.array([-0.346426, 0.346426, 0., -0.129316, -0.005335, -0.000053, -0.000518])
+    reference = np.array(
+        [-0.346426, 0.346426, 0.0, -0.129316, -0.005335, -0.000053, -0.000518]
+    )
     computed = rp.grav(coordinates=coords, prisms=model, density=rho, field="z")
-    aae(reference, computed, decimal=3) # 
+    aae(reference, computed, decimal=3)  #
 
 
 ##### kernels

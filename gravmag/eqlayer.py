@@ -339,7 +339,7 @@ def method_column_action_C92(
         check.are_coordinates(coordinates=data_points)
         # check if zlayer result in a layer below the data points
         check.is_scalar(x=zlayer, positive=False)
-        if np.any(zlayer <= data_points['z']):
+        if np.any(zlayer <= data_points["z"]):
             raise ValueError(
                 "zlayer must be greater than the z coordinate of all data points"
             )
@@ -349,10 +349,10 @@ def method_column_action_C92(
         check.is_integer(x=ITMAX, positive=True)
 
         # initializations
-        data_aux = G@data
-        scale = (data_aux@data)/(data_aux@data_aux)
+        data_aux = G @ data
+        scale = (data_aux @ data) / (data_aux @ data_aux)
         parameters = data * scale
-        residuals = data - G@parameters
+        residuals = data - G @ parameters
         imax = np.argmax(np.abs(residuals))
         rmax = residuals[imax]
         rmax_list = []
@@ -360,10 +360,10 @@ def method_column_action_C92(
         m = 1
         # updates
         while (abs(rmax) > epsilon) and (m < ITMAX):
-            xmax = data_points['x'][imax]
-            ymax = data_points['y'][imax]
-            zmax = data_points['z'][imax]
-            #dp = rmax * scale * np.abs(zlayer - zmax)
+            xmax = data_points["x"][imax]
+            ymax = data_points["y"][imax]
+            zmax = data_points["z"][imax]
+            # dp = rmax * scale * np.abs(zlayer - zmax)
             dp = rmax * scale
             parameters[imax] += dp
             residuals[:] -= G[:, imax] * dp
@@ -375,9 +375,7 @@ def method_column_action_C92(
         return rmax_list, parameters
 
 
-def method_iterative_SOB17(
-    G, data, epsilon, ITMAX=50, check_input=True
-):
+def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
     """
     Solves the unconstrained problem to estimate the physical-property
     distribution on the equivalent layer via iterative method.
@@ -413,10 +411,10 @@ def method_iterative_SOB17(
 
     # initializations
     D = data.size
-    data_aux = G@data
-    scale = (data_aux@data)/(data_aux@data_aux)
+    data_aux = G @ data
+    scale = (data_aux @ data) / (data_aux @ data_aux)
     parameters = data * scale
-    residuals = data - G@parameters
+    residuals = data - G @ parameters
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
@@ -436,7 +434,15 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    eigenvalues_matrices, Q, P, ordering, transposition_factors, data_vectors, epsilon, ITMAX=50, check_input=True
+    eigenvalues_matrices,
+    Q,
+    P,
+    ordering,
+    transposition_factors,
+    data_vectors,
+    epsilon,
+    ITMAX=50,
+    check_input=True,
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -484,14 +490,16 @@ def method_iterative_deconvolution_TOB20(
             if ordering == "row":
                 if L.shape != (2 * Q, 2 * P):
                     raise ValueError("L must have shape (2*Q, 2*P)")
-            else: # if ordering == 'column':
+            else:  # if ordering == 'column':
                 if L.shape != (2 * P, 2 * Q):
                     raise ValueError("L must have shape (2*P, 2*Q)")
         if type(transposition_factors) != list:
             raise ValueError("transposition_factors must be a list")
         for factor in transposition_factors:
             if (factor != 1) and (factor != -1):
-                raise ValueError("transposition_factors must contain only 1 or -1 elements")
+                raise ValueError(
+                    "transposition_factors must contain only 1 or -1 elements"
+                )
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
         if len(eigenvalues_matrices) != len(data_vectors):
@@ -503,15 +511,15 @@ def method_iterative_deconvolution_TOB20(
                 "eigenvalues_matrices and transposition_factors must have the same number of elements"
             )
         for data in data_vectors:
-            check.is_array(x=data, ndim=1, shape=(Q*P,))
+            check.is_array(x=data, ndim=1, shape=(Q * P,))
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
 
     ndatasets = len(data_vectors)
-    ndata_per_dataset = Q*P
-    ndata = ndatasets*ndata_per_dataset
+    ndata_per_dataset = Q * P
+    ndata = ndatasets * ndata_per_dataset
     residuals = []
     for data in data_vectors:
         residuals.append(np.copy(data))
@@ -529,10 +537,12 @@ def method_iterative_deconvolution_TOB20(
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for L, res, factor in zip(eigenvalues_matrices, residuals, transposition_factors):
+    for L, res, factor in zip(
+        eigenvalues_matrices, residuals, transposition_factors
+    ):
         vartheta[:] += convolve.product_BCCB_vector(
-            L=factor*L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
-            )
+            L=factor * L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
+        )
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
     eta = np.zeros_like(parameters)
@@ -546,7 +556,9 @@ def method_iterative_deconvolution_TOB20(
         eta[:] = vartheta + tau * eta
         aux = 0.0
         for L, nu in zip(eigenvalues_matrices, nus):
-            nu[:] = convolve.product_BCCB_vector(L=L, Q=Q, P=P, v=eta, ordering=ordering, check_input=False)
+            nu[:] = convolve.product_BCCB_vector(
+                L=L, Q=Q, P=P, v=eta, ordering=ordering, check_input=False
+            )
             aux += np.sum(nu * nu)
         upsilon = rho0 / aux
         parameters[:] += upsilon * eta
@@ -557,10 +569,17 @@ def method_iterative_deconvolution_TOB20(
         delta = np.sqrt(delta) / ndata
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
-        for L, res, factor in zip(eigenvalues_matrices, residuals, transposition_factors):
+        for L, res, factor in zip(
+            eigenvalues_matrices, residuals, transposition_factors
+        ):
             vartheta[:] += convolve.product_BCCB_vector(
-                L=factor*L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
-                )
+                L=factor * L,
+                Q=Q,
+                P=P,
+                v=res,
+                ordering=ordering,
+                check_input=False,
+            )
         rho = np.sum(vartheta * vartheta)
         tau = rho / rho0
         rho0 = rho
