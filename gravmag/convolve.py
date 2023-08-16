@@ -332,12 +332,10 @@ def BCCB_from_BTTB(num_blocks, columns_blocks, rows_blocks=None):
 
     else:
         rows_blocks = np.asarray(rows_blocks)
-        assert (
-            columns_blocks.shape[0] == rows_blocks.shape[0]
-        ), 'the number of rows in "rows_and" and columns_blocks" must be equal to each other'
-        assert columns_blocks.shape[1] == (
-            rows_blocks.shape[1] + 1
-        ), 'the number of column in "columns_blocks must be equal that in "rows_blocks" + 1'
+        if (columns_blocks.shape[0] != rows_blocks.shape[0]):
+            raise ValueError("the number of rows in 'rows_blocks' and 'columns_blocks' must be equal to each other")
+        if (columns_blocks.shape[1] != (rows_blocks.shape[1] + 1)):
+            raise ValueError("the number of columns in 'columns_blocks' must be equal that in 'rows_blocks' + 1")
         T_block_size = columns_blocks.shape[1]
         nonull_blocks = []
         for column, rows in zip(columns_blocks, rows_blocks):
