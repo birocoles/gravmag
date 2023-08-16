@@ -5,6 +5,7 @@ This file contains Python codes for dealing with 2D discrete convolutions.
 import numpy as np
 from scipy.linalg import toeplitz, circulant
 from scipy.fft import fft2, ifft2
+from . import check
 
 
 def compute(FT_data, filters, check_input=True):
@@ -28,7 +29,7 @@ def compute(FT_data, filters, check_input=True):
     convolved_data : numpy array 2D or flattened array 1D
         Convolved data as a grid or a flattened array 1D, depending on
         the parameter "grid".
-    """    
+    """
 
     if check_input is True:
         check.is_array(x=FT_data, ndim=2)
@@ -111,15 +112,14 @@ def general_BTTB(num_blocks, columns_blocks, rows_blocks=None):
         BTTB matrix.
     """
 
-    assert (isinstance(num_blocks, int)) and (
-        num_blocks > 1
-    ), "num_blocks must be a positive integer greater than 1"
-
-    columns_blocks = np.asarray(columns_blocks)
-    assert columns_blocks.ndim == 2, "columns_blocks must be a matrix"
-    assert (columns_blocks.shape[0] == num_blocks) or (
-        columns_blocks.shape[0] == (2 * num_blocks - 1)
-    ), 'the number of rows in "columns_blocks" must be equal to "num_blocks" or equal to (2 * "num_blocks") - 1'
+    check.is_integer(x=num_blocks, positive=True)
+    check.is_array(x=columns_blocks, ndim=2)
+    if (columns_blocks.shape[0] != num_blocks) and (
+        columns_blocks.shape[0] != (2 * num_blocks - 1)
+    ):
+        raise ValueError(
+            "the number of rows in 'columns_blocks' must be equal to 'num_blocks' or equal to (2 * 'num_blocks') - 1"
+        )
 
     block_size = columns_blocks.shape[1]
     ind_col_blocks, ind_row_blocks = np.ogrid[
@@ -225,8 +225,7 @@ def C_from_T(T_column, T_row=None):
         Full 2P x 2P circulant matrix.
     """
 
-    T_column = np.asarray(T_column)
-    assert T_column.ndim == 1, "T_column must be an array 1D"
+    check.is_array(x=T_column, ndim=1)
 
     if T_row is None:
         # The first column of C (C_column) is formed by stacking the first
@@ -243,11 +242,9 @@ def C_from_T(T_column, T_row=None):
         # column of T (T_column), a zero and the vector "T_row[::-1]",
         # which is the reversed first row of matrix T without the first element
         # that lies on the main diagonal of matrix T.
-        T_row = np.asarray(T_row)
-        assert T_row.ndim == 1, "T_row must be an array 1D"
-        assert T_column.size == (
-            T_row.size + 1
-        ), "T_column size must be equal to T_row size + 1"
+        check.is_array(x=T_row, ndim=1)
+        if T_column.size != (T_row.size + 1):
+            raise ValueError("T_column size must be equal to T_row size + 1")
         C_column = np.hstack([T_column, 0, T_row[::-1]])
         ind_col, ind_row = np.ogrid[0 : len(C_column), 0 : -len(C_column) : -1]
         indices = ind_col + ind_row
@@ -287,15 +284,14 @@ def BCCB_from_BTTB(num_blocks, columns_blocks, rows_blocks=None):
         BCCB matrix.
     """
 
-    assert (isinstance(num_blocks, int)) and (
-        num_blocks > 1
-    ), "num_blocks must be a positive integer greater than 1"
-
-    columns_blocks = np.asarray(columns_blocks)
-    assert columns_blocks.ndim == 2, "columns_blocks must be a matrix"
-    assert (columns_blocks.shape[0] == num_blocks) or (
-        columns_blocks.shape[0] == (2 * num_blocks - 1)
-    ), 'the number of rows in "columns_blocks" must be equal to "num_blocks" or equal to (2 * "num_blocks") - 1'
+    check.is_integer(x=num_blocks, positive=True)
+    check.is_array(x=columns_blocks, ndim=2)
+    if (columns_blocks.shape[0] != num_blocks) and (
+        columns_blocks.shape[0] != (2 * num_blocks - 1)
+    ):
+        raise ValueError(
+            "the number of rows in 'columns_blocks' must be equal to 'num_blocks' or equal to (2 * 'num_blocks') - 1"
+        )
 
     if rows_blocks is None:
         T_block_size = columns_blocks.shape[1]
