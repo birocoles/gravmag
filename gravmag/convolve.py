@@ -56,7 +56,7 @@ def compute(FT_data, filters, check_input=True):
     return convolved_data
 
 
-def general_BTTB(num_blocks, columns_blocks, rows_blocks=None):
+def generic_BTTB(num_blocks, columns_blocks, rows_blocks=None):
     """
     Generate a Block Toeplitz formed by Toeplitz Blocks (BTTB)
     matrix T from the first columns and first rows of its non-repeating
@@ -272,11 +272,11 @@ def BCCB_from_BTTB(num_blocks, columns_blocks, rows_blocks=None):
     Block Circulant formed by Symmetric Circulant Blocks (BCSCB);
     4) A Symmetric Block Toeplitz formed by Toeplitz Blocks (SBTTB) produces a
     Symmetric Block Circulant formed by Circulant Blocks (SBCCB).
-    For details, see function 'general_BTTB'.
+    For details, see function 'generic_BTTB'.
 
     parameters
     ----------
-    See function 'general_BTTB' for a description of the input parameters.
+    See function 'generic_BTTB' for a description of the input parameters.
 
     returns
     -------
@@ -380,6 +380,9 @@ def BCCB_from_BTTB(num_blocks, columns_blocks, rows_blocks=None):
 
     return C
 
+# try to use the same input as generic_BTTB(num_blocks, columns_blocks, rows_blocks=None)
+# the input above allows defining generic BTTB matrices and not only those
+# with symmetry "skew-skew", "skew-symm", "symm-skew" or "symm-symm"
 
 def embedding_BCCB_first_column(b0, nblocks, npoints_per_block, symmetry):
     """
@@ -499,7 +502,7 @@ def eigenvalues_BCCB(BCCB0, ordering="row"):
     parameters
     ----------
     BCCB0 : dictionary
-        See the definition at the function "embedding_BCCB_first_column"
+        See the definition at the function "embedding_BCCB_first_column". 
     ordering: string
         If "row", the eigenvalues will be arranged along the rows of a matrix L;
         if "column", they will be arranged along the columns of a matrix L.
@@ -514,7 +517,13 @@ def eigenvalues_BCCB(BCCB0, ordering="row"):
         "ordering" : ordering (input variable)
         "nblocks" : nblocks (key forming the input dictionary BCCB0)
         "npoints_per_block" : npoints_per_block (key forming the input dictionary BCCB0)
-        "symmetry" : symmetry (key forming the input dictionary BCCB0)
+        "symmetry" : string
+            Define the symmetry of the BTTB matrix. We consider five types:
+                "skew-skew" - skew-symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
+                "skew-symm" - skew-symmetric block Toeplitz formed by symmetric Toeplitz blocks
+                "symm-skew" - symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
+                "symm-symm" - symmetric block Toeplitz formed by symmetric Toeplitz blocks
+                "generic" - generic block Toeplitz formed by generic Toeplitz blocks
     """
 
     if type(BCCB0) != dict:
@@ -540,7 +549,7 @@ def eigenvalues_BCCB(BCCB0, ordering="row"):
     if c0.size != 4 * nblocks * npoints_per_block:
         raise ValueError("c0 must have 4*nblocks*npoints_per_block elements")
     # check if symmetry is valid
-    if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
+    if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm", "gene-symm", "symm-gene", "gene-skew", "skew-gene", "gene-gene"]:
         raise ValueError("invalid {} symmetry".format(symmetry))
     # check if ordering is valid
     if ordering not in ["row", "column"]:

@@ -48,15 +48,15 @@ def test_general_BTTB_bad_num_blocks():
     # num_blocks negative integer
     num_blocks = -5
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
     # num_blocks float
     num_blocks = 4.2
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
     # num_blocks equal to 1
     num_blocks = 1
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
 
 
 def test_general_BTTB_columns_blocks_not_matrix():
@@ -65,11 +65,11 @@ def test_general_BTTB_columns_blocks_not_matrix():
     # columns_blocks a float
     columns_blocks = 2.9
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
     # columns_blocks a vector
     columns_blocks = np.ones(5)
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
 
 
 def test_general_BTTB_bad_columns_blocks_without_rows_blocks():
@@ -79,7 +79,7 @@ def test_general_BTTB_bad_columns_blocks_without_rows_blocks():
     # (num_blocks) and (2*num_blocks - 1)
     columns_blocks = np.ones((7, 3))
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
 
 
 def test_general_BTTB_arbitrary():
@@ -89,7 +89,7 @@ def test_general_BTTB_arbitrary():
     # matrix containing the columns of each block
     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-    BTTB = cv.general_BTTB(Q, columns, rows)
+    BTTB = cv.generic_BTTB(Q, columns, rows)
     # split matrix in blocks
     blocks = []
     for i in range(0, Q * P, P):
@@ -119,7 +119,7 @@ def test_general_BTTB_SBTSTB():
     P = 3  # number of rows/columns in each block
     # matrix containing the columns of each block
     columns = np.arange(Q * P).reshape((Q, P))
-    BTTB = cv.general_BTTB(Q, columns)
+    BTTB = cv.generic_BTTB(Q, columns)
     # split matrix in blocks
     blocks = []
     for i in range(0, Q * P, P):
@@ -143,7 +143,7 @@ def test_general_BTTB_BTSTB():
     P = 3  # number of rows/columns in each block
     # matrix containing the columns of each block
     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    BTTB = cv.general_BTTB(Q, columns)
+    BTTB = cv.generic_BTTB(Q, columns)
     # split matrix in blocks
     blocks = []
     for i in range(0, Q * P, P):
@@ -168,7 +168,7 @@ def test_general_BTTB_SBTTB():
     # matrix containing the columns of each block
     columns = np.arange(Q * P).reshape((Q, P))
     rows = np.arange(Q * (P - 1)).reshape((Q, P - 1)) + 100
-    BTTB = cv.general_BTTB(Q, columns, rows)
+    BTTB = cv.generic_BTTB(Q, columns, rows)
     # split matrix in blocks
     blocks = []
     for i in range(0, Q * P, P):
@@ -199,12 +199,12 @@ def test_general_BTTB_bad_columns_blocks_with_rows_blocks():
     columns_blocks = np.ones((7, 3))
     row_blocks = np.ones((6, 3))
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
     # columns_blocks.shape[1] different from (rows_blocks.shape[1]+1
     columns_blocks = np.ones((7, 3))
     row_blocks = np.ones((7, 3))
     with raises(ValueError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+        cv.generic_BTTB(num_blocks, columns_blocks)
 
 
 def test_C_from_T_T_column_not_vector():
@@ -650,95 +650,155 @@ def test_embedding_BCCB_first_column_symmetry_symm_symm():
     ae(BCCB0['symmetry'], symmetry)
 
 
-# def test_eigenvalues_BCCB_bad_c0():
-#     "must raise ValueError for invalid c0"
-#     Q = 4
-#     P = 3
-#     ordering = "row"
-#     # set c0 as a float
-#     c0 = 3.5
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
-#     # set c0 as a matrix
-#     c0 = np.ones((3, 3))
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_eigenvalues_BCCB_bad_c0():
+    "must raise ValueError for invalid c0"
+    Q = 4
+    P = 3
+    ordering = "row"
+    # set c0 as a float
+    c0 = 3.5
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
+    # set c0 as a matrix
+    c0 = np.ones((3, 3))
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
 
 
-# def test_eigenvalues_BCCB_bad_QP():
-#     "must raise AssertionError for invalids Q and P"
-#     c0 = np.zeros(4)
-#     ordering = "row"
-#     # set Q negative
-#     Q = -4
-#     P = 3
-#     with raises(AssertionError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
-#     # set P negative
-#     Q = 4
-#     P = -3
-#     with raises(AssertionError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
-#     # set Q as a float
-#     Q = 4.1
-#     P = 3
-#     with raises(AssertionError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
-#     # set P as a float
-#     Q = 4
-#     P = 3.2
-#     with raises(AssertionError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_eigenvalues_BCCB_bad_QP():
+    "must raise AssertionError for invalids Q and P"
+    c0 = np.zeros(4)
+    ordering = "row"
+    # set Q negative
+    Q = -4
+    P = 3
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
+    # set P negative
+    Q = 4
+    P = -3
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
+    # set Q as a float
+    Q = 4.1
+    P = 3
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
+    # set P as a float
+    Q = 4
+    P = 3.2
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
 
 
-# def test_eigenvalues_BCCB_bad_c0_QP():
-#     "must raise ValueError if c0.size is not 4*Q*P"
-#     Q = 4
-#     P = 3
-#     ordering = "row"
-#     # set c0.size greater than 4*Q*P
-#     c0 = np.zeros(4 * Q * P + 2)
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
-#     # set c0.size smaller than 4*Q*P
-#     c0 = np.zeros(4 * Q * P - 1)
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_eigenvalues_BCCB_bad_c0_QP():
+    "must raise ValueError if c0.size is not 4*Q*P"
+    Q = 4
+    P = 3
+    ordering = "row"
+    # set c0.size greater than 4*Q*P
+    c0 = np.zeros(4 * Q * P + 2)
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
+    # set c0.size smaller than 4*Q*P
+    c0 = np.zeros(4 * Q * P - 1)
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
 
 
-# def test_eigenvalues_BCCB_bad_ordering():
-#     "must raise ValueError for invalid symmetry"
-#     Q = 4
-#     P = 3
-#     c0 = np.zeros(4 * Q * P)
-#     ordering = "invalid-ordering"
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_eigenvalues_BCCB_bad_ordering():
+    "must raise ValueError for invalid symmetry"
+    Q = 4
+    P = 3
+    c0 = np.zeros(4 * Q * P)
+    ordering = "invalid-ordering"
+    BCCB0 = {
+        "first_column": c0,
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BCCB0, ordering)
 
 
-# def test_eigenvalues_BCCB_known_values():
-#     "compare result with reference"
-#     Q = 4  # number of blocks along rows/columns of BTTB matrix
-#     P = 3  # number of rows/columns in each block of BTTB matrix
-#     # matrix containing the columns of each block  of BTTB matrix
-#     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-#     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-#     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-#     # define unitaty DFT matrices
-#     F2Q = dft(n=2 * Q, scale="sqrtn")
-#     F2P = dft(n=2 * P, scale="sqrtn")
-#     # compute the Kronecker product between them
-#     F2Q_kron_F2P = np.kron(F2Q, F2P)
-#     # compute the reference eigenvalues of BCCB from its first column
-#     lambda_ref = np.sqrt(4 * Q * P) * np.dot(F2Q_kron_F2P, BCCB[:, 0])
-#     # compute eigenvalues with ordering='row'
-#     L_row = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
-#     lambda_row = L_row.ravel()
-#     aae(lambda_row, lambda_ref, decimal=10)
-#     # compute eigenvalues with ordering='column'
-#     L_col = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
-#     lambda_col = L_col.T.ravel()
-#     aae(lambda_col, lambda_ref, decimal=10)
+def test_eigenvalues_BCCB_known_values():
+    "compare result with reference"
+    Q = 4  # number of blocks along rows/columns of BTTB matrix
+    P = 3  # number of rows/columns in each block of BTTB matrix
+    # matrix containing the columns of each block  of BTTB matrix
+    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
+    rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
+    BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
+    # define unitaty DFT matrices
+    F2Q = dft(n=2 * Q, scale="sqrtn")
+    F2P = dft(n=2 * P, scale="sqrtn")
+    # compute the Kronecker product between them
+    F2Q_kron_F2P = np.kron(F2Q, F2P)
+    # compute the reference eigenvalues of BCCB from its first column
+    lambda_ref = np.sqrt(4 * Q * P) * np.dot(F2Q_kron_F2P, BCCB[:, 0])
+    # compute eigenvalues with ordering='row'
+    BCCB0 = {
+        "first_column": BCCB[:, 0],
+        "nblocks": Q,
+        "npoints_per_block": P,
+        "symmetry": 'symm-symm',
+    }
+    L_row = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
+    lambda_row = L_row.ravel()
+    aae(lambda_row, lambda_ref, decimal=10)
+    # compute eigenvalues with ordering='column'
+    L_col = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
+    lambda_col = L_col.T.ravel()
+    aae(lambda_col, lambda_ref, decimal=10)
 
 
 # def test_product_BCCB_vector_bad_L():
@@ -832,7 +892,7 @@ def test_embedding_BCCB_first_column_symmetry_symm_symm():
 #     # matrix containing the columns of each block  of BTTB matrix
 #     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
 #     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-#     BTTB = cv.general_BTTB(Q, columns, rows)
+#     BTTB = cv.generic_BTTB(Q, columns, rows)
 #     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
 #     # define a vector v
 #     np.random.seed(5)
