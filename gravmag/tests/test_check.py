@@ -583,3 +583,320 @@ def test_sensibility_matrix_and_data_mismatch():
     data = np.empty(4)
     with pytest.raises(ValueError):
         check.sensibility_matrix_and_data(matrix=G, data=data)
+
+
+##### BTTB_metadata
+
+
+def test_BTTB_metadata_bad_symmetries():
+    "must raise an error for bad symmetries"
+    num_blocks = 5
+    columns = np.ones((5, 4))
+    # wrong upercase
+    structure = "Symm"
+    blocks = "symm"
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # invalid string
+    structure = "symm"
+    blocks = "invalid-symmetry"
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # not string
+    structure = 4.5
+    blocks = "symm"
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+
+
+def test_BTTB_metadata_bad_nblocks():
+    "must raise an error for bad number of blocks"
+    columns = np.ones((5, 4))
+    structure = "symm"
+    blocks = "symm"
+    # negative integer
+    num_blocks = -5
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # not integer
+    num_blocks = 5.0
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+
+
+def test_BTTB_metadata_columns_not_array_2d():
+    "must raise an error if columns is not a numpy array 2D"
+    num_blocks = 5
+    structure = "symm"
+    blocks = "symm"
+    # array 1d
+    columns = np.ones(5)
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # list of lists
+    columns = [
+        [1, 1, 1, 1],
+        [2, 2, 2, 2],
+        [3, 3, 3, 3],
+        [4, 4, 4, 4],
+        [5, 5, 5, 5],
+    ]
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+
+
+def test_BTTB_metadata_consistency_symmetry_structure_symm():
+    "must raise an error for inconsistent symmetries, nblocks and columns"
+    num_blocks = 5
+    structure = "symm"
+    # columns.shape[0] not equal to nblocks
+    blocks = "symm"
+    columns = np.ones((4, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    blocks = "skew"
+    columns = np.ones((6, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # symmetry_blocks is skew, rows not None
+    blocks = "skew"
+    columns = np.ones((5, 5))
+    rows = np.zeros((5, 4))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+    # symmetry_blocks is skew, num rows in rows is not equal to nblocks
+    blocks = "skew"
+    columns = np.ones((5, 5))
+    rows = np.zeros((9, 4))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+    # symmetry_structure is symm, symmetry_blocks is gene, num columns in rows is not equal to that in columns - 1
+    blocks = "gene"
+    columns = np.ones((5, 5))
+    rows = np.zeros((5, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+
+
+def test_BTTB_metadata_consistency_symmetry_structure_skew():
+    "must raise an error for inconsistent symmetries, nblocks and columns"
+    num_blocks = 5
+    structure = "skew"
+    # columns.shape[0] not equal to nblocks
+    blocks = "symm"
+    columns = np.ones((4, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    blocks = "skew"
+    columns = np.ones((6, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # symmetry_blocks is skew, rows not None
+    blocks = "skew"
+    columns = np.ones((5, 5))
+    rows = np.zeros((5, 4))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+    # symmetry_blocks is skew, num rows in rows is not equal to nblocks
+    blocks = "skew"
+    columns = np.ones((5, 5))
+    rows = np.zeros((9, 4))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+    # symmetry_structure is symm, symmetry_blocks is gene, num columns in rows is not equal to that in columns - 1
+    blocks = "gene"
+    columns = np.ones((5, 5))
+    rows = np.zeros((5, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+
+
+def test_BTTB_metadata_consistency_symmetry_structure_gene():
+    "must raise an error for inconsistent symmetries, nblocks and columns"
+    num_blocks = 5
+    structure = "gene"
+    # columns.shape[0] not equal to 2*nblocks - 1
+    blocks = "symm"
+    columns = np.ones((5, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    blocks = "skew"
+    columns = np.ones((10, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=None,
+        )
+    # symmetry_structure is gene, symmetry_blocks is gene, num columns in rows is not equal to that in columns - 1
+    blocks = "gene"
+    columns = np.ones((5, 5))
+    rows = np.zeros((9, 5))
+    with pytest.raises(ValueError):
+        check.BTTB_metadata(
+            symmetry_structure=structure,
+            symmetry_blocks=blocks,
+            nblocks=num_blocks,
+            columns=columns,
+            rows=rows,
+        )
+
+
+##### Toeplitz_metadata
+
+
+def test_Toeplitz_metadata_bad_symmetry():
+    "must raise an error for bad symmetry"
+    column = np.ones(5)
+    # wrong upercase
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(symmetry="Symm", column=column, row=None)
+    # invalid string
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(
+            symmetry="invalid-symmetry", column=column, row=None
+        )
+    # not string
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(symmetry=5.1, column=column, row=None)
+
+
+def test_Toeplitz_metadata_bad_column():
+    "must raise an error if column is not a numpy array 1D"
+    # array 2D
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(
+            symmetry="symm", column=np.ones((5, 4)), row=None
+        )
+    # list
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(symmetry="symm", column=[1, 2, 3, 4], row=None)
+    # float
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(symmetry="symm", column=5.4, row=None)
+
+
+def test_Toeplitz_metadata_consistency_symmetry_column_row():
+    "must raise an error for inconsistent symmetry, column and row"
+    # symmetry symm or skew and row not None
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(
+            symmetry="symm", column=np.ones(5), row=np.zeros(4)
+        )
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(
+            symmetry="skew", column=np.ones(5), row=np.zeros(4)
+        )
+    # symmetry gene and row None
+    with pytest.raises(ValueError):
+        check.Toeplitz_metadata(symmetry="gene", column=np.ones(5), row=None)

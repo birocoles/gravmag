@@ -265,3 +265,154 @@ def sensibility_matrix_and_data(matrix, data):
         raise ValueError("data must be a vector")
     if matrix.shape[0] != data.size:
         raise ValueError("matrix rows mismatch data size")
+
+
+def BTTB_metadata(symmetry_structure, symmetry_blocks, nblocks, columns, rows):
+    """
+    All information required to generate a Block Toeplitz formed by Toeplitz Blocks (BTTB)
+    matrix T from the first columns and first rows of its non-repeating blocks.
+
+    The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
+
+    The first column and row of blocks forming the BTTB matrix T are
+    represented as follows:
+
+        |T11 T12 ... T1Q|
+        |T21            |
+    T = |.              | .
+        |:              |
+        |TQ1            |
+
+
+    There are two symmetries:
+    * symmetry_structure - between all blocks above and below the main block diagonal.
+    * symmetry_blocks    - between all elements above and below the main diagonal within each block.
+    Each symmetry pattern have three possible types:
+    * gene - it denotes 'generic' and it means that there is no symmetry.
+    * symm - it denotes 'symmetric' and it means that there is a perfect symmetry.
+    * skew - it denotes 'skew-symmetric' and it means that the elements above the main diagonal
+        have opposite signal with respect to those below the main diagonal.
+    Hence, we consider that the BTTB matrix T has nine possible symmetry patterns:
+    * 'symm-symm' - Symmetric Block Toeplitz formed by Symmetric Toeplitz Blocks
+    * 'symm-skew' - Symmetric Block Toeplitz formed by Skew-Symmetric Toeplitz Blocks
+    * 'symm-gene' - Symmetric Block Toeplitz formed by Generic Toeplitz Blocks
+    * 'skew-symm' - Skew-Symmetric Block Toeplitz formed by Symmetric Toeplitz Blocks
+    * 'skew-skew' - Skew-Symmetric Block Toeplitz formed by Skew-Symmetric Toeplitz Blocks
+    * 'skew-gene' - Skew-Symmetric Block Toeplitz formed by Generic Toeplitz Blocks
+    * 'gene-symm' - Generic Block Toeplitz formed by Symmetric Toeplitz Blocks
+    * 'gene-skew' - Generic Block Toeplitz formed by Skew-Symmetric Toeplitz Blocks
+    * 'gene-gene' - Generic Block Toeplitz formed by Generic Toeplitz Blocks
+
+    parameters
+    ----------
+    symmetry_structure : string
+        Defines the type of symmetry between all blocks above and below the main block diagonal.
+        It can be 'gene', 'symm' or 'skew' (see the explanation above).
+    symmetry_blocks : string
+        Defines the type of symmetry between elements above and below the main diagonal within all blocks.
+        It can be 'gene', 'symm' or 'skew' (see the explanation above).
+    nblocks : int
+        Number of blocks (nblocks) of T along column and row.
+    columns : numpy array
+        Matrix whose rows are the first columns cij of the non-repeating blocks
+        Tij of T. They must be ordered as follows: c11, c21, ..., cQ1,
+        c12, ..., c1Q.
+    rows : None or numpy array 2D
+        If not None, it is a matrix whose rows are the first rows rij of the
+        non-repeating blocks Tij of T, without the diagonal term. They must
+        be ordered as follows: r11, r21, ..., rM1, r12, ..., r1M.
+    """
+    if symmetry_structure not in ["symm", "skew", "gene"]:
+        raise ValueError("invalid {} symmetry".format(symmetry_structure))
+    if symmetry_blocks not in ["symm", "skew", "gene"]:
+        raise ValueError("invalid {} symmetry".format(symmetry_blocks))
+    is_integer(x=nblocks, positive=True)
+    is_array(x=columns, ndim=2)
+
+    # verify symmetry between blocks
+    if (symmetry_structure == "symm") or (symmetry_structure == "skew"):
+        # check consistency between 'symmetry_structure', 'nblocks' and number of rows in 'columns'
+        if columns.shape[0] != nblocks:
+            raise ValueError(
+                "'symmetry_structure' ({}) requires the number of rows in 'columns' ({}) to be equal to 'nblocks' ({})".format(
+                    symmetry_structure, columns.shape[0], nblocks
+                )
+            )
+    else:  # symmetry_structure == 'gene'
+        # check consistency between 'symmetry_structure', 'nblocks' and number of rows in 'columns'
+        if columns.shape[0] != (2 * nblocks - 1):
+            raise ValueError(
+                "'symmetry_structure' ({}) requires the number of rows in 'columns' ({}) to be equal to 2*'nblocks'-1 ({})".format(
+                    symmetry_structure, columns.shape[0], 2 * nblocks - 1
+                )
+            )
+
+    # verify symmetry between elements within blocks
+    if (symmetry_blocks == "symm") or (symmetry_blocks == "skew"):
+        # check consistency between 'symmetry_blocks', 'nblocks' and number of rows in 'rows'
+        if rows is not None:
+            raise ValueError(
+                "'symmetry_blocks' ({}) requires 'rows' to be None".format(
+                    symmetry_blocks
+                )
+            )
+    else:  # symmetry_blocks == 'gene'
+        # check consistency between 'symmetry_blocks', 'nblocks' and number of rows in 'rows'
+        is_array(x=rows, ndim=2)
+        if rows.shape[0] != columns.shape[0]:
+            raise ValueError(
+                "'symmetry_blocks' ({}) requires number of rows in 'rows' ({}) to be equal to that in 'columns' ({})".format(
+                    symmetry_blocks, rows.shape[0], columns.shape[0]
+                )
+            )
+        if rows.shape[1] != (columns.shape[1] - 1):
+            raise ValueError(
+                "'symmetry_blocks' ({}) requires number of columns in 'rows' ({}) to be equal to that in 'columns' minus 1 ({})".format(
+                    symmetry_blocks, rows.shape[1], columns.shape[1] - 1
+                )
+            )
+
+
+def Toeplitz_metadata(symmetry, column, row):
+    """
+    All information to generate the circulant Circulant matrix C which embbeds a Toeplitz matrix T.
+
+    The Toeplitz matrix T has P x P elements. The embedding circulant matrix C has 2P x 2P elements.
+
+    Matrix T is represented as follows:
+
+        |t11 t12 ... t1P|
+        |t21            |
+    T = |.              | .
+        |:              |
+        |tP1            |
+
+
+    We consider that matrix T may have three symmetry types:
+    * gene - it denotes 'generic' and it means that there is no symmetry.
+    * symm - it denotes 'symmetric' and it means that there is a perfect symmetry.
+    * skew - it denotes 'skew-symmetric' and it means that the elements above the main diagonal
+        have opposite signal with respect to those below the main diagonal.
+
+    parameters
+    ----------
+    symmetry : string
+        Defines the type of symmetry between elements above and below the main diagonal.
+        It can be 'gene', 'symm' or 'skew' (see the explanation above).
+    column : numpy array 1D
+        First column of T.
+    row : None or numpy array 1D
+        If not None, it is the first row of T, without the diagonal element. In
+        this case, T does not have the assumed symmetries (see the text above).
+        If None, matrix T is symmetric or skew-symmetric. Default is None.
+    """
+    if symmetry not in ["symm", "skew", "gene"]:
+        raise ValueError("invalid {} symmetry".format(symmetry))
+    is_array(x=column, ndim=1)
+    if symmetry == "gene":
+        is_array(x=row, ndim=1, shape=(column.size - 1,))
+    else:  # symmetry in ["symm", "skew"]
+        if row is not None:
+            raise ValueError(
+                "symmetry {} requires row to be None".format(symmetry)
+            )
