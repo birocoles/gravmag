@@ -56,6 +56,97 @@ def compute(FT_data, filters, check_input=True):
     return convolved_data
 
 
+def Circulant_from_Toeplitz(symmetry, column, row, full=True, check_input=True):
+    """
+    Generate the Circulant matrix C which embbeds a Toeplitz matrix T.
+
+    The Toeplitz matrix T has P x P elements. The embedding circulant matrix C has 2P x 2P elements.
+
+    Matrix T is represented as follows:
+
+        |t11 t12 ... t1P|
+        |t21            |
+    T = |.              | .
+        |:              |
+        |tP1            |
+
+
+    We consider that matrix T may have three symmetry types:
+    * gene - it denotes 'generic' and it means that there is no symmetry.
+    * symm - it denotes 'symmetric' and it means that there is a perfect symmetry.
+    * skew - it denotes 'skew-symmetric' and it means that the elements above the main diagonal
+        have opposite signal with respect to those below the main diagonal.
+
+    parameters
+    ----------
+    symmetry : string
+        Defines the type of symmetry between elements above and below the main diagonal.
+        It can be 'gene', 'symm' or 'skew' (see the explanation above).
+    column : numpy array 1D
+        First column of T.
+    row : None or numpy array 1D
+        If not None, it is the first row of T, without the diagonal element. In
+        this case, T does not have the assumed symmetries (see the text above).
+        If None, matrix T is symmetric or skew-symmetric. Default is None.
+    full : boolean
+        If True, returns the full Circulant matrix C. Otherwise, returns only its first column.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    C: numpy array 1D or 2D
+        The full 2P x 2P circulant matrix or only its first column (see parameter 'full').
+    """
+
+    if check_input == True:
+        check.Toeplitz_metadata(symmetry, column, row)
+        if full not in [True, False]:
+            raise ValueError("invalid parameter full ({})".format(full))
+
+    # order of the Toeplitz matrix T
+    P = column.size
+
+    # define the first column of the BCCB matrix C by
+    # concatenating (i) column in the correct order, (ii) a zero and (iii) row in the reversed order
+    # 'row' is defined in terms of 'column' if symmetry is 'symm' or 'skew'
+    if symmetry == "symm":
+        C = np.hstack([column, 0, column[-1:0:-1]])
+    elif symmetry == "skew":
+        C = np.hstack([column, 0, -column[-1:0:-1]])
+    else:  # symmetry == "gene"
+        C = np.hstack([column, 0, row[::-1]])
+
+    if full == True:
+        # auxiliary variable used to create full Circulant matrices
+        # P = 4
+        # ind_col =
+        # [[0]
+        #  [1]
+        #  [2]
+        #  [3]
+        #  [4]
+        #  [5]
+        #  [6]
+        #  [7]]
+        # ind_row =
+        # [[ 0 -1 -2 -3 -4 -5 -6 -7]]
+        # indices =
+        # [[ 0 -1 -2 -3 -4 -5 -6 -7]
+        #  [ 1  0 -1 -2 -3 -4 -5 -6]
+        #  [ 2  1  0 -1 -2 -3 -4 -5]
+        #  [ 3  2  1  0 -1 -2 -3 -4]
+        #  [ 4  3  2  1  0 -1 -2 -3]
+        #  [ 5  4  3  2  1  0 -1 -2]
+        #  [ 6  5  4  3  2  1  0 -1]
+        #  [ 7  6  5  4  3  2  1  0]]
+        ind_col, ind_row = np.ogrid[0 : 2 * P, 0 : -2 * P : -1]
+        indices = ind_col + ind_row
+        return C[indices]
+    else:  # full is False
+        return C
+
+
 def generic_BTTB(
     symmetry_structure,
     symmetry_blocks,
@@ -302,97 +393,6 @@ def generic_BTTB(
     return T
 
 
-def Circulant_from_Toeplitz(symmetry, column, row, full=True, check_input=True):
-    """
-    Generate the circulant Circulant matrix C which embbeds a Toeplitz matrix T.
-
-    The Toeplitz matrix T has P x P elements. The embedding circulant matrix C has 2P x 2P elements.
-
-    Matrix T is represented as follows:
-
-        |t11 t12 ... t1P|
-        |t21            |
-    T = |.              | .
-        |:              |
-        |tP1            |
-
-
-    We consider that matrix T may have three symmetry types:
-    * gene - it denotes 'generic' and it means that there is no symmetry.
-    * symm - it denotes 'symmetric' and it means that there is a perfect symmetry.
-    * skew - it denotes 'skew-symmetric' and it means that the elements above the main diagonal
-        have opposite signal with respect to those below the main diagonal.
-
-    parameters
-    ----------
-    symmetry : string
-        Defines the type of symmetry between elements above and below the main diagonal.
-        It can be 'gene', 'symm' or 'skew' (see the explanation above).
-    column : numpy array 1D
-        First column of T.
-    row : None or numpy array 1D
-        If not None, it is the first row of T, without the diagonal element. In
-        this case, T does not have the assumed symmetries (see the text above).
-        If None, matrix T is symmetric or skew-symmetric. Default is None.
-    full : boolean
-        If True, returns the full BCCB matrix C. Otherwise, returns only its first column.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    C: numpy array 1D or 2D
-        The full 2P x 2P circulant matrix or only its first column (see parameter 'full').
-    """
-
-    if check_input == True:
-        check.Toeplitz_metadata(symmetry, column, row)
-        if full not in [True, False]:
-            raise ValueError("invalid parameter full ({})".format(full))
-
-    # order of the Toeplitz matrix T
-    P = column.size
-
-    # define the first column of the BCCB matrix C by
-    # concatenating (i) column in the correct order, (ii) a zero and (iii) row in the reversed order
-    # 'row' is defined in terms of 'column' if symmetry is 'symm' or 'skew'
-    if symmetry == "symm":
-        C = np.hstack([column, 0, column[-1:0:-1]])
-    elif symmetry == "skew":
-        C = np.hstack([column, 0, -column[-1:0:-1]])
-    else:  # symmetry == "gene"
-        C = np.hstack([column, 0, row[::-1]])
-
-    if full == True:
-        # auxiliary variable used to create full Circulant matrices
-        # P = 4
-        # ind_col =
-        # [[0]
-        #  [1]
-        #  [2]
-        #  [3]
-        #  [4]
-        #  [5]
-        #  [6]
-        #  [7]]
-        # ind_row =
-        # [[ 0 -1 -2 -3 -4 -5 -6 -7]]
-        # indices =
-        # [[ 0 -1 -2 -3 -4 -5 -6 -7]
-        #  [ 1  0 -1 -2 -3 -4 -5 -6]
-        #  [ 2  1  0 -1 -2 -3 -4 -5]
-        #  [ 3  2  1  0 -1 -2 -3 -4]
-        #  [ 4  3  2  1  0 -1 -2 -3]
-        #  [ 5  4  3  2  1  0 -1 -2]
-        #  [ 6  5  4  3  2  1  0 -1]
-        #  [ 7  6  5  4  3  2  1  0]]
-        ind_col, ind_row = np.ogrid[0 : 2 * P, 0 : -2 * P : -1]
-        indices = ind_col + ind_row
-        return C[indices]
-    else:  # full is False
-        return C
-
-
 # def BCCB_from_BTTB(symmetry_structure, symmetry_blocks, nblocks, columns, rows, rows=None):
 #     """
 #     Generate a circulant Block Circulant formed by Circulant Matrices (BCCB)
@@ -524,7 +524,121 @@ def Circulant_from_Toeplitz(symmetry, column, row, full=True, check_input=True):
 #     return C
 
 
-def BCCB_from_BTTB(
+# try to use the same input as generic_BTTB(nblocks, columns, rows=None)
+# the input above allows defining generic BTTB matrices and not only those
+# with symmetry "skew-skew", "skew-symm", "symm-skew" or "symm-symm"
+
+
+# def embedding_BCCB_first_column(b0, nblocks, npoints_per_block, symmetry):
+#     """
+#     Compute the first column "c0" of the embedding BCCB matrix
+#     from the first column "b0" of a BTTB matrix.
+
+#     parameters
+#     ----------
+#     b0: numpy array 1d
+#         First column of the BTTB matrix.
+#     nblocks: int
+#         Number of blocks along a column/row of the BTTB.
+#     npoints_per_block: int
+#         Number of rows/columns of each block forming the BTTB.
+#     symmetry: string
+#         Define the symmetry of the BTTB matrix. We consider four types:
+#             "skew-skew" - skew-symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
+#             "skew-symm" - skew-symmetric block Toeplitz formed by symmetric Toeplitz blocks
+#             "symm-skew" - symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
+#             "symm-symm" - symmetric block Toeplitz formed by symmetric Toeplitz blocks
+
+#     returns
+#     -------
+#     BCCB0 : dictionary
+#         Contains all the information required to reconstruct the full originating BTTB
+#         matrix or the full BCCB matrix. The dictionary has the following keys:
+#         "first_column" : : numpy array 1d
+#             First column of the embedding BCCB matrix.
+#         "nblocks" : nblocks (input variable)
+#         "npoints_per_block" : npoints_per_block (input variable)
+#         "symmetry" : symmetry (input variable)
+
+
+#     """
+
+#     check.is_array(x=b0, ndim=1)
+#     check.is_integer(x=nblocks, positive=True)
+#     check.is_integer(x=npoints_per_block, positive=True)
+#     # check if b0 match nblocks and npoints_per_block
+#     if b0.size != nblocks * npoints_per_block:
+#         raise ValueError("b0 must have nblocks*npoints_per_block elements")
+#     # check if symmetry is valid
+#     if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
+#         raise ValueError("invalid {} symmetry".format(symmetry))
+
+#     # split b into nblocks parts
+#     b_parts = np.split(b0, nblocks)
+
+#     # define a list to store the pieces
+#     # of c0 that will be computed below
+#     c0 = []
+
+#     # define the elements of c0 for symmetry 'skew-skew'
+#     if symmetry == "skew-skew":
+#         # run the first block column of the BTTB
+#         for bi in b_parts:
+#             c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
+#         # include zeros
+#         c0.append(np.zeros(2 * npoints_per_block))
+#         # run the first block row of the BTTB
+#         for bi in b_parts[:0:-1]:
+#             c0.append(np.hstack([-bi, 0, bi[:0:-1]]))
+
+#     # define the elements of c0 for symmetry 'skew-symm'
+#     if symmetry == "skew-symm":
+#         # run the first block column of the BTTB
+#         for bi in b_parts:
+#             c0.append(np.hstack([bi, 0, bi[:0:-1]]))
+#         # include zeros
+#         c0.append(np.zeros(2 * npoints_per_block))
+#         # run the first block row of the BTTB
+#         for bi in b_parts[:0:-1]:
+#             c0.append(np.hstack([-bi, 0, -bi[:0:-1]]))
+
+#     # define the elements of c0 for symmetry 'symm-skew'
+#     if symmetry == "symm-skew":
+#         # run the first block column of the BTTB
+#         for bi in b_parts:
+#             c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
+#         # include zeros
+#         c0.append(np.zeros(2 * npoints_per_block))
+#         # run the first block row of the BTTB
+#         for bi in b_parts[:0:-1]:
+#             c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
+
+#     # define the elements of c0 for symmetry 'symm-symm'
+#     if symmetry == "symm-symm":
+#         # run the first block column of the BTTB
+#         for bi in b_parts:
+#             c0.append(np.hstack([bi, 0, bi[:0:-1]]))
+#         # include zeros
+#         c0.append(np.zeros(2 * npoints_per_block))
+#         # run the first block row of the BTTB
+#         for bi in b_parts[:0:-1]:
+#             c0.append(np.hstack([bi, 0, bi[:0:-1]]))
+
+#     # concatenate c0 in a single vector
+#     c0 = np.concatenate(c0)
+
+#     # dictionary containing all metadata
+#     BCCB0 = {
+#         "first_column": c0,
+#         "nblocks": nblocks,
+#         "npoints_per_block": npoints_per_block,
+#         "symmetry": symmetry,
+#     }
+
+#     return BCCB0
+
+
+def embedding_BCCB(
     symmetry_structure,
     symmetry_blocks,
     nblocks,
@@ -534,26 +648,24 @@ def BCCB_from_BTTB(
     check_input=True,
 ):
     """
-    Generate the circulant Block Circulant formed by Circulant Matrices (BCCB)
-    which embeds a Block Toeplitz formed by Toeplitz Blocks (BTTB) matrix T.
+    Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)
+    matrix that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB).
 
-    The matrix BTTB has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements. The
-    embedding circulant matrix BCCB has 2*nblocks x 2*nblocks blocks, each one with
-    2*npoints_per_block x 2*npoints_per_block elements elements.
-
-    The BCCB inherits the symmetries of its associated BTTB matrix. For details, see function 'generic_BTTB'.
+    See details in the function 'generic_BTTB'.
 
     parameters
     ----------
     symmetry_structure, symmetry_blocks, nblocks, columns, rows
         See function 'generic_BTTB' for a description of the input parameters.
     full : boolean
-        If True, returns the full BCCB matrix. Otherwise, returns only its first column.
+        If True, returns the full BCCB matrix C. Otherwise, returns only its first column.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    C: numpy array 1D or 2D
-        The full BCCB matrix or only its first columns (see parameter 'full').
+    C: numpy array 2D or 1D
+        The full embedding BCCB matrix or only its first column (see parameter 'full').
     """
 
     if check_input == True:
@@ -563,210 +675,63 @@ def BCCB_from_BTTB(
         if full not in [True, False]:
             raise ValueError("invalid parameter full ({})".format(full))
 
-    if rows is None:
-        T_npoints_per_block = columns.shape[1]
-        nonull_blocks = []
-        for column in columns:
-            nonull_blocks.append(Circulant_from_Toeplitz(column))
-        C_npoints_per_block = 2 * T_npoints_per_block
-
-        # Case SBTSTB
-        # The first block column of the BCCB matrix C is formed by stacking the
-        # first block column of the SBTSTB matrix T (nonull_blocks), a block
-        # with null elements and the reversed block column "nonull_blocks"
-        # without its first block. The first block of "nonull_blocks" lies on
-        # the main block diagonal of matrix T.
-        if columns.shape[0] == nblocks:
-            C_blocks = np.concatenate(
-                (
-                    np.stack(nonull_blocks),
-                    np.zeros((1, C_npoints_per_block, C_npoints_per_block)),
-                    np.stack(nonull_blocks[-1:0:-1]),
-                )
-            )
-
-        # Case BTSTB
-        # The first block column of the BCCB matrix C is formed by stacking the
-        # first block column of the BTSTB matrix T (nonull_blocks[:nblocks]),
-        # a block with null elements and the reversed block row
-        # "nonull_blocks[-1:nblocks-1:-1]" without the block that lies on
-        # main block diagonal of matrix T.
-        if columns.shape[0] == (2 * nblocks - 1):
-            C_blocks = np.concatenate(
-                (
-                    np.stack(nonull_blocks[:nblocks]),
-                    np.zeros((1, C_npoints_per_block, C_npoints_per_block)),
-                    np.stack(nonull_blocks[-1 : nblocks - 1 : -1]),
-                )
-            )
-
-    else:
-        check.is_array(x=rows, ndim=2)
-        if columns.shape[0] != rows.shape[0]:
-            raise ValueError(
-                "the number of rows in 'rows' and 'columns' must be equal to each other"
-            )
-        if columns.shape[1] != (rows.shape[1] + 1):
-            raise ValueError(
-                "the number of columns in 'columns' must be equal that in 'rows' + 1"
-            )
-        T_npoints_per_block = columns.shape[1]
-        nonull_blocks = []
-        for column, rows in zip(columns, rows):
-            nonull_blocks.append(Circulant_from_Toeplitz(column, rows))
-        C_npoints_per_block = 2 * T_npoints_per_block
-
-        # Case SBTTB
-        # The first block column of the BCCB matrix C is formed by stacking the
-        # first block column of the SBTTB matrix T (nonull_blocks), a block
-        # with null elements and the reversed block column "nonull_blocks"
-        # without its first block. The first block of "nonull_blocks" lies on
-        # the main block diagonal of matrix T.
-        if columns.shape[0] == nblocks:
-            C_blocks = np.concatenate(
-                (
-                    np.stack(nonull_blocks),
-                    np.zeros((1, C_npoints_per_block, C_npoints_per_block)),
-                    np.stack(nonull_blocks[-1:0:-1]),
-                )
-            )
-
-        # Case BTTB generalized
-        # The first block column of the BCCB matrix C is formed by stacking the
-        # first block column of the BTTB matrix T (nonull_blocks[:nblocks]),
-        # a block with null elements and the reversed block row
-        # "nonull_blocks[-1:nblocks-1:-1]" without the block that lies on
-        # main block diagonal of matrix T.
-        if columns.shape[0] == (2 * nblocks - 1):
-            C_blocks = np.concatenate(
-                (
-                    np.stack(nonull_blocks[:nblocks]),
-                    np.zeros((1, C_npoints_per_block, C_npoints_per_block)),
-                    np.stack(nonull_blocks[-1 : nblocks - 1 : -1]),
-                )
-            )
-
     nblocks_C = 2 * nblocks
+    npoints_per_block_C = 2 * columns.shape[1]
 
-    ind_col, ind_row = np.ogrid[0:nblocks_C, 0:-nblocks_C:-1]
-    indices = ind_col + ind_row
-    C = np.hstack(np.hstack(C_blocks[indices]))
+    # list to store the first (block) column
+    C = []
+
+    if rows is None:
+        # iterate over columns
+        for t0 in columns:
+            C.append(
+                Circulant_from_Toeplitz(
+                    symmetry=symmetry_blocks,
+                    column=t0,
+                    row=None,
+                    full=full,
+                    check_input=False,
+                )
+            )
+        if full == True:
+            C = np.concatenate(
+                (
+                    np.stack(C),
+                    np.zeros((1, npoints_per_block_C, npoints_per_block_C)),
+                    np.stack(C[-1:0:-1]),
+                )
+            )
+    else:  # row is not None
+        # iterate over columns and rows
+        for t0, r0 in zip(columns, rows):
+            C.append(
+                Circulant_from_Toeplitz(
+                    symmetry=symmetry_blocks,
+                    column=t0,
+                    row=r0,
+                    full=full,
+                    check_input=False,
+                )
+            )
+        if full == True:
+            C = np.concatenate(
+                (
+                    np.stack(C[:nblocks]),
+                    np.zeros((1, npoints_per_block_C, npoints_per_block_C)),
+                    np.stack(C[-1 : nblocks - 1 : -1]),
+                )
+            )
+
+    if full == True:
+        ind_col, ind_row = np.ogrid[0:nblocks_C, 0:-nblocks_C:-1]
+        indices = ind_col + ind_row
+        C = np.hstack(np.hstack(C[indices]))
+
+    else:  # full == False
+        # concatenate all pieces to form the first column of the BCCB matrix
+        C = np.concatenate(C)
 
     return C
-
-
-# try to use the same input as generic_BTTB(nblocks, columns, rows=None)
-# the input above allows defining generic BTTB matrices and not only those
-# with symmetry "skew-skew", "skew-symm", "symm-skew" or "symm-symm"
-
-
-def embedding_BCCB_first_column(b0, nblocks, npoints_per_block, symmetry):
-    """
-    Compute the first column "c0" of the embedding BCCB matrix
-    from the first column "b0" of a BTTB matrix.
-
-    parameters
-    ----------
-    b0: numpy array 1d
-        First column of the BTTB matrix.
-    nblocks: int
-        Number of blocks along a column/row of the BTTB.
-    npoints_per_block: int
-        Number of rows/columns of each block forming the BTTB.
-    symmetry: string
-        Define the symmetry of the BTTB matrix. We consider four types:
-            "skew-skew" - skew-symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
-            "skew-symm" - skew-symmetric block Toeplitz formed by symmetric Toeplitz blocks
-            "symm-skew" - symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
-            "symm-symm" - symmetric block Toeplitz formed by symmetric Toeplitz blocks
-
-    returns
-    -------
-    BCCB0 : dictionary
-        Contains all the information required to reconstruct the full originating BTTB
-        matrix or the full BCCB matrix. The dictionary has the following keys:
-        "first_column" : : numpy array 1d
-            First column of the embedding BCCB matrix.
-        "nblocks" : nblocks (input variable)
-        "npoints_per_block" : npoints_per_block (input variable)
-        "symmetry" : symmetry (input variable)
-
-
-    """
-
-    check.is_array(x=b0, ndim=1)
-    check.is_integer(x=nblocks, positive=True)
-    check.is_integer(x=npoints_per_block, positive=True)
-    # check if b0 match nblocks and npoints_per_block
-    if b0.size != nblocks * npoints_per_block:
-        raise ValueError("b0 must have nblocks*npoints_per_block elements")
-    # check if symmetry is valid
-    if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
-        raise ValueError("invalid {} symmetry".format(symmetry))
-
-    # split b into nblocks parts
-    b_parts = np.split(b0, nblocks)
-
-    # define a list to store the pieces
-    # of c0 that will be computed below
-    c0 = []
-
-    # define the elements of c0 for symmetry 'skew-skew'
-    if symmetry == "skew-skew":
-        # run the first block column of the BTTB
-        for bi in b_parts:
-            c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
-        # include zeros
-        c0.append(np.zeros(2 * npoints_per_block))
-        # run the first block row of the BTTB
-        for bi in b_parts[:0:-1]:
-            c0.append(np.hstack([-bi, 0, bi[:0:-1]]))
-
-    # define the elements of c0 for symmetry 'skew-symm'
-    if symmetry == "skew-symm":
-        # run the first block column of the BTTB
-        for bi in b_parts:
-            c0.append(np.hstack([bi, 0, bi[:0:-1]]))
-        # include zeros
-        c0.append(np.zeros(2 * npoints_per_block))
-        # run the first block row of the BTTB
-        for bi in b_parts[:0:-1]:
-            c0.append(np.hstack([-bi, 0, -bi[:0:-1]]))
-
-    # define the elements of c0 for symmetry 'symm-skew'
-    if symmetry == "symm-skew":
-        # run the first block column of the BTTB
-        for bi in b_parts:
-            c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
-        # include zeros
-        c0.append(np.zeros(2 * npoints_per_block))
-        # run the first block row of the BTTB
-        for bi in b_parts[:0:-1]:
-            c0.append(np.hstack([bi, 0, -bi[:0:-1]]))
-
-    # define the elements of c0 for symmetry 'symm-symm'
-    if symmetry == "symm-symm":
-        # run the first block column of the BTTB
-        for bi in b_parts:
-            c0.append(np.hstack([bi, 0, bi[:0:-1]]))
-        # include zeros
-        c0.append(np.zeros(2 * npoints_per_block))
-        # run the first block row of the BTTB
-        for bi in b_parts[:0:-1]:
-            c0.append(np.hstack([bi, 0, bi[:0:-1]]))
-
-    # concatenate c0 in a single vector
-    c0 = np.concatenate(c0)
-
-    # dictionary containing all metadata
-    BCCB0 = {
-        "first_column": c0,
-        "nblocks": nblocks,
-        "npoints_per_block": npoints_per_block,
-        "symmetry": symmetry,
-    }
-
-    return BCCB0
 
 
 def eigenvalues_BCCB(BCCB0, ordering="row"):

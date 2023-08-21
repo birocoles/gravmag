@@ -44,6 +44,126 @@ def test_compute_filters_not_complex_matrices():
         cv.compute(FT_data, filters)
 
 
+##### Circulant_from_Toeplitz
+
+
+def test_Circulant_from_Toeplitz_compare_known_values_symm():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
+        [
+            [1, 2, 3, 0, 3, 2],
+            [2, 1, 2, 3, 0, 3],
+            [3, 2, 1, 2, 3, 0],
+            [0, 3, 2, 1, 2, 3],
+            [3, 0, 3, 2, 1, 2],
+            [2, 3, 0, 3, 2, 1],
+        ]
+    )
+    # compute the full matrix
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
+    )
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_known_values_skew():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
+        [
+            [1, -2, -3, 0, 3, 2],
+            [2, 1, -2, -3, 0, 3],
+            [3, 2, 1, -2, -3, 0],
+            [0, 3, 2, 1, -2, -3],
+            [-3, 0, 3, 2, 1, -2],
+            [-2, -3, 0, 3, 2, 1],
+        ]
+    )
+    # compute the full matrix
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="skew", column=np.array([1, 2, 3]), row=None, full=True
+    )
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_known_values_gene():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
+        [
+            [1, 4, 5, 0, 3, 2],
+            [2, 1, 4, 5, 0, 3],
+            [3, 2, 1, 4, 5, 0],
+            [0, 3, 2, 1, 4, 5],
+            [5, 0, 3, 2, 1, 4],
+            [4, 5, 0, 3, 2, 1],
+        ]
+    )
+    # compute the full matrix
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="gene",
+        column=np.array([1, 2, 3]),
+        row=np.array([4, 5]),
+        full=True,
+    )
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_first_column():
+    "verify if returns the correct first column"
+    # from symmetric Toeplitz
+    full = cv.Circulant_from_Toeplitz(
+        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
+    )
+    column = cv.Circulant_from_Toeplitz(
+        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=False
+    )
+    ae(circulant(column), full)
+    # from skew-symmetric Toeplitz
+    full = cv.Circulant_from_Toeplitz(
+        symmetry="skew", column=np.array([8, -2, 3]), row=None, full=True
+    )
+    column = cv.Circulant_from_Toeplitz(
+        symmetry="skew", column=np.array([8, -2, 3]), row=None, full=False
+    )
+    ae(circulant(column), full)
+    # from generic Toeplitz
+    full = cv.Circulant_from_Toeplitz(
+        symmetry="gene",
+        column=np.array([10, 92, -3]),
+        row=np.array([4, 18]),
+        full=True,
+    )
+    column = cv.Circulant_from_Toeplitz(
+        symmetry="gene",
+        column=np.array([10, 92, -3]),
+        row=np.array([4, 18]),
+        full=False,
+    )
+    ae(circulant(column), full)
+
+
+def test_Circulant_from_Toeplitz_symmetry_preservation():
+    "verify if the computed Circulant preserve the symmetry of the originating Toeplitz matrix"
+    # symmetric Toeplitz
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="symm", column=np.array([1, 2, 3]), row=None
+    )
+    ae(computed, computed.T)
+    # skew-symmetric Toeplitz
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="skew",
+        column=np.array([8, 2, 3]),
+        row=None,
+    )
+    # we are not interested in the elements at the main diagonal
+    diagonal = np.diag(np.diag(computed))
+    ae(-(computed - diagonal), (computed - diagonal).T)
+    # generic Toeplitz
+    computed = cv.Circulant_from_Toeplitz(
+        symmetry="gene", column=np.array([1, 2, 3]), row=np.array([4, 5])
+    )
+    ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
+
+
 ##### generic_BTTB
 
 
@@ -285,85 +405,6 @@ def test_general_BTTB_compare_known_values_gene_gene():
         ]
     )
     ae(computed, reference)
-
-
-##### Circulant_from_Toeplitz
-
-
-def test_Circulant_from_Toeplitz_compare_known_values_symm():
-    "verify if the computed Circulant is equal to the reference"
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None
-    )
-    reference = np.array(
-        [
-            [1, 2, 3, 0, 3, 2],
-            [2, 1, 2, 3, 0, 3],
-            [3, 2, 1, 2, 3, 0],
-            [0, 3, 2, 1, 2, 3],
-            [3, 0, 3, 2, 1, 2],
-            [2, 3, 0, 3, 2, 1],
-        ]
-    )
-    ae(computed, reference)
-
-
-def test_Circulant_from_Toeplitz_compare_known_values_skew():
-    "verify if the computed Circulant is equal to the reference"
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="skew", column=np.array([1, 2, 3]), row=None
-    )
-    reference = np.array(
-        [
-            [1, -2, -3, 0, 3, 2],
-            [2, 1, -2, -3, 0, 3],
-            [3, 2, 1, -2, -3, 0],
-            [0, 3, 2, 1, -2, -3],
-            [-3, 0, 3, 2, 1, -2],
-            [-2, -3, 0, 3, 2, 1],
-        ]
-    )
-    ae(computed, reference)
-
-
-def test_Circulant_from_Toeplitz_compare_known_values_gene():
-    "verify if the computed Circulant is equal to the reference"
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="gene", column=np.array([1, 2, 3]), row=np.array([4, 5])
-    )
-    reference = np.array(
-        [
-            [1, 4, 5, 0, 3, 2],
-            [2, 1, 4, 5, 0, 3],
-            [3, 2, 1, 4, 5, 0],
-            [0, 3, 2, 1, 4, 5],
-            [5, 0, 3, 2, 1, 4],
-            [4, 5, 0, 3, 2, 1],
-        ]
-    )
-    ae(computed, reference)
-
-
-def test_Circulant_from_Toeplitz_symmetry_preservation():
-    "verify if the computed Circulant preserve the symmetry of the originating Toeplitz matrix"
-    # symmetric Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None
-    )
-    ae(computed, computed.T)
-    # skew-symmetric Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="skew",
-        # diagonal elements change sign
-        column=np.array([0, 2, 3]),
-        row=None,
-    )
-    ae(-computed, computed.T)
-    # generic Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="gene", column=np.array([1, 2, 3]), row=np.array([4, 5])
-    )
-    ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
 
 
 # def test_BCCB_from_BTTB_bad_num_blocks():
