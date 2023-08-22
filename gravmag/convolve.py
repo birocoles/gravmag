@@ -502,134 +502,75 @@ def embedding_BCCB(BTTB, full=False, check_input=True):
     return C
 
 
-def eigenvalues_BCCB(BCCB0, ordering="row"):
+def eigenvalues_BCCB(BTTB, ordering="row", check_input=True):
     """
-    Compute the eigenvalues of a Block Circulant formed
-    by Circulant Blocks (BCCB) matrix C. The eigenvalues
+    Compute the eigenvalues of a Block Circulant formed by Circulant Blocks (BCCB) matrix C
+    that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB) matrix. The eigenvalues
     are rearranged along the rows or columns of a matrix L.
 
     parameters
     ----------
-    BCCB0 : dictionary
-        See the definition at the function "embedding_BCCB_first_column".
+    BTTB : dictionary
+        See function 'generic_BTTB' for a description of the input parameters.
     ordering: string
         If "row", the eigenvalues will be arranged along the rows of a matrix L;
         if "column", they will be arranged along the columns of a matrix L.
+        Default is 'row'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    BCCB_eigen : dictionary
-        Contains all the metadata required to recontruct the first column or the
-        full BCCB matrix. The dictionary has the following keys:
-        "eigenvalues" : numpy array 2D
-            Matrix formed by the eigenvalues of the BCCB.
-        "ordering" : ordering (input variable)
-        "nblocks" : nblocks (key forming the input dictionary BCCB0)
-        "npoints_per_block" : npoints_per_block (key forming the input dictionary BCCB0)
-        "symmetry" : string
-            Define the symmetry of the BTTB matrix. We consider five types:
-                "skew-skew" - skew-symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
-                "skew-symm" - skew-symmetric block Toeplitz formed by symmetric Toeplitz blocks
-                "symm-skew" - symmetric block Toeplitz formed by skew-symmetric Toeplitz blocks
-                "symm-symm" - symmetric block Toeplitz formed by symmetric Toeplitz blocks
-                "generic" - generic block Toeplitz formed by generic Toeplitz blocks
+    L : numpy array 2D
+        Matrix formed by the eigenvalues of the BCCB.
     """
 
-    if type(BCCB0) != dict:
-        raise ValueError("BCCB0 must be a dictionary")
-    if list(BCCB0.keys()) != [
-        "first_column",
-        "nblocks",
-        "npoints_per_block",
-        "symmetry",
-    ]:
-        raise ValueError(
-            "BCCB0 must have the following 4 keys: 'first_column', 'nblocks', 'npoints_per_block', 'symmetry'"
-        )
-    c0 = BCCB0["first_column"]
-    nblocks = BCCB0["nblocks"]
-    npoints_per_block = BCCB0["npoints_per_block"]
-    symmetry = BCCB0["symmetry"]
+    if check_input == True:
+        # check if the associated BTTB is valid
+        check.BTTB_metadata(BTTB)
+        # check if ordering is valid
+        if ordering not in ["row", "column"]:
+            raise ValueError("invalid {} ordering".format(ordering))
 
-    check.is_array(x=c0, ndim=1)
-    check.is_integer(x=nblocks, positive=True)
-    check.is_integer(x=npoints_per_block, positive=True)
-    # check size of c0
-    if c0.size != 4 * nblocks * npoints_per_block:
-        raise ValueError("c0 must have 4*nblocks*npoints_per_block elements")
-    # check if symmetry is valid
-    if symmetry not in [
-        "skew-skew",
-        "skew-symm",
-        "symm-skew",
-        "symm-symm",
-        "gene-symm",
-        "symm-gene",
-        "gene-skew",
-        "skew-gene",
-        "gene-gene",
-    ]:
-        raise ValueError("invalid {} symmetry".format(symmetry))
-    # check if ordering is valid
-    if ordering not in ["row", "column"]:
-        raise ValueError("invalid {} ordering".format(ordering))
+    # get the parameters defining the associated BTTB matrix
+    symmetry_structure = BTTB["symmetry_structure"]
+    symmetry_blocks = BTTB["symmetry_blocks"]
+    nblocks_BTTB = BTTB["nblocks"]
+    columns_BTTB = BTTB["columns"]
+    rows_BTTB = BTTB["rows"]
+
+    npoints_per_block_BTTB = columns_BTTB.shape[1]
+
+    # compute the first column of the BCCB matrix
+    c0 = embedding_BCCB(BTTB, full=False, check_input=False)
 
     # reshape c0 according to ordering
     if ordering == "row":
         # matrix containing the elements of c0 arranged along its rows
-        G = np.reshape(c0, (2 * nblocks, 2 * npoints_per_block))
+        G = np.reshape(c0, (2 * nblocks_BTTB, 2 * npoints_per_block_BTTB))
     else:  # if ordering == 'column':
         # matrix containing the elements of vector a arranged along its columns
-        G = np.reshape(c0, (2 * nblocks, 2 * npoints_per_block)).T
+        G = np.reshape(c0, (2 * nblocks_BTTB, 2 * npoints_per_block_BTTB)).T
 
     # compute the matrix L containing the eigenvalues
-    L = np.sqrt(4 * nblocks * npoints_per_block) * fft2(x=G, norm="ortho")
+    L = np.sqrt(4 * nblocks_BTTB * npoints_per_block_BTTB) * fft2(
+        x=G, norm="ortho"
+    )
 
-    # dictionary containing all metadata
-    BCCB_eigen = {
-        "eigenvalues": L,
-        "ordering": ordering,
-        "nblocks": nblocks,
-        "npoints_per_block": npoints_per_block,
-        "symmetry": symmetry,
-    }
-
-    return BCCB_eigen
+    return L
 
 
-def transposition_factor(symmetry):
+def product_BCCB_vector(eigenvalues, ordering, v, check_input=True):
     """
-    Define the transposition factor of an eigenvalues matrix
-    (defined according to the function 'eigenvalues_BCCB') according to the symmetry
-    (see the function 'embedding_BCCB_first_column') of its the originating BTTB matrix.
-    """
-
-    # check if symmetry is valid
-    if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
-        raise ValueError("invalid {} symmetry".format(symmetry))
-
-    # define the transposition factor
-    transposition_factor_dict = {
-        "skew-skew": 1,
-        "skew-symm": -1,
-        "symm-skew": -1,
-        "symm-symm": 1,
-    }
-
-    return transposition_factor_dict[symmetry]
-
-
-def product_BCCB_vector(BCCB_eigen, v, check_input=True):
-    """
-    Compute the product of a BCCB matrix and a vector
-    v by using the eigenvalues of the BCCB. This BCCB embeds
-    a BTTB matrix formed by nblocks x nblocks blocks, each one with
-    npoints_per_block x npoints_per_block elements.
+    Compute the product of a BCCB matrix and a vector v by using the eigenvalues of the BCCB.
 
     parameters
     ----------
-    BCCB_eigen : dictionary
-        See the definition at the function "eigenvalues_BCCB"
+    L : numpy array 2D
+        Matrix formed by the eigenvalues of the BCCB.
+    ordering: string
+        If "row", the eigenvalues are arranged along the rows of matrix L;
+        if "column", they are arranged along the columns of L.
     v: numpy array 1d
         Vector to be multiplied by the BCCB matrix.
     check_input : boolean
@@ -643,67 +584,164 @@ def product_BCCB_vector(BCCB_eigen, v, check_input=True):
     """
 
     if check_input == True:
-        if type(BCCB_eigen) != dict:
-            raise ValueError("BCCB_eigen must be a dictionary")
-        if list(BCCB_eigen.keys()) != [
-            "eigenvalues",
-            "ordering",
-            "nblocks",
-            "npoints_per_block",
-            "symmetry",
-        ]:
-            raise ValueError(
-                "BCCB0 must have the following 5 keys: 'eigenvalues', 'ordering', 'nblocks', 'npoints_per_block', 'symmetry'"
-            )
-
-        L = BCCB_eigen["eigenvalues"]
-        ordering = BCCB_eigen["ordering"]
-        nblocks = BCCB_eigen["nblocks"]
-        npoints_per_block = BCCB_eigen["npoints_per_block"]
-        symmetry = BCCB_eigen["symmetry"]
-
+        check.is_array(x=eigenvalues, ndim=2)
         if ordering not in ["row", "column"]:
             raise ValueError("invalid ordering {}".format(ordering))
-
-        check.is_integer(x=nblocks, positive=True)
-        check.is_integer(x=npoints_per_block, positive=True)
-
-        if ordering == "row":
-            check.is_array(
-                x=L, ndim=2, shape=(2 * nblocks, 2 * npoints_per_block)
-            )
-        else:  # if ordering == 'column':
-            check.is_array(
-                x=L, ndim=2, shape=(2 * npoints_per_block, 2 * nblocks)
+        check.is_array(x=v, ndim=1)
+        if eigenvalues.size != 4 * v.size:
+            raise ValueError(
+                "'eigenvalues' size ({}) must be equal to 4 times v size ({})".format(
+                    eigenvalues.size, 4 * v.size
+                )
             )
 
-        check.is_array(x=v, ndim=1, shape=(nblocks * npoints_per_block,))
-
+    # rearrange vector v into a matrix and pad with zeros
     if ordering == "row":
+        # define the number of blocks and points per block of the
+        # BTTB matrix associated with the BCCB matrix
+        nblocks_BTTB = eigenvalues.shape[0] // 2
+        npoints_per_block_BTTB = eigenvalues.shape[1] // 2
         # matrix containing the elements of vector a arranged along its rows
-        V = np.reshape(v, (nblocks, npoints_per_block))
-        V = np.hstack([V, np.zeros((nblocks, npoints_per_block))])
-        V = np.vstack([V, np.zeros((nblocks, 2 * npoints_per_block))])
+        V = np.reshape(v, (nblocks_BTTB, npoints_per_block_BTTB))
+        V = np.hstack([V, np.zeros((nblocks_BTTB, npoints_per_block_BTTB))])
+        V = np.vstack([V, np.zeros((nblocks_BTTB, 2 * npoints_per_block_BTTB))])
     else:  # if ordering == 'column':
+        # define the number of blocks and points per block of the
+        # BTTB matrix associated with the BCCB matrix
+        nblocks_BTTB = eigenvalues.shape[1] // 2
+        npoints_per_block_BTTB = eigenvalues.shape[0] // 2
         # matrix containing the elements of vector a arranged along its columns
-        V = np.reshape(v, (nblocks, npoints_per_block)).T
-        V = np.hstack([V, np.zeros((npoints_per_block, nblocks))])
-        V = np.vstack([V, np.zeros((npoints_per_block, 2 * nblocks))])
+        V = np.reshape(v, (nblocks_BTTB, npoints_per_block_BTTB)).T
+        V = np.hstack([V, np.zeros((npoints_per_block_BTTB, nblocks_BTTB))])
+        V = np.vstack([V, np.zeros((npoints_per_block_BTTB, 2 * nblocks_BTTB))])
 
     # matrix obtained by computing the Hadamard product
-    H = L * fft2(x=V, norm="ortho")
+    H = eigenvalues * fft2(x=V, norm="ortho")
 
     # matrix containing the non-null elements of the product BCCB v
     # arranged according to the parameter 'ordering'
     # the non-null elements are located in the first quadrant.
     if ordering == "row":
-        w = ifft2(x=H, norm="ortho")[:nblocks, :npoints_per_block].real
+        w = ifft2(x=H, norm="ortho")[
+            :nblocks_BTTB, :npoints_per_block_BTTB
+        ].real
         w = w.ravel()
     else:  # if ordering == 'column':
-        w = ifft2(x=H, norm="ortho")[:npoints_per_block, :nblocks].real
+        w = ifft2(x=H, norm="ortho")[
+            :npoints_per_block_BTTB, :nblocks_BTTB
+        ].real
         w = w.T.ravel()
 
     return w
+
+
+# def transposition_factor(symmetry):
+#     """
+#     Define the transposition factor of an eigenvalues matrix
+#     (defined according to the function 'eigenvalues_BCCB') according to the symmetry
+#     (see the function 'embedding_BCCB_first_column') of its the originating BTTB matrix.
+#     """
+
+#     # check if symmetry is valid
+#     if symmetry not in ["skew-skew", "skew-symm", "symm-skew", "symm-symm"]:
+#         raise ValueError("invalid {} symmetry".format(symmetry))
+
+#     # define the transposition factor
+#     transposition_factor_dict = {
+#         "skew-skew": 1,
+#         "skew-symm": -1,
+#         "symm-skew": -1,
+#         "symm-symm": 1,
+#     }
+
+#     return transposition_factor_dict[symmetry]
+
+
+# def product_BCCB_vector(BCCB_eigen, v, check_input=True):
+#     """
+#     Compute the product of a BCCB matrix and a vector
+#     v by using the eigenvalues of the BCCB. This BCCB embeds
+#     a BTTB matrix formed by nblocks x nblocks blocks, each one with
+#     npoints_per_block x npoints_per_block elements.
+
+#     parameters
+#     ----------
+#     BCCB_eigen : dictionary
+#         See the definition at the function "eigenvalues_BCCB"
+#     v: numpy array 1d
+#         Vector to be multiplied by the BCCB matrix.
+#     check_input : boolean
+#         If True, verify if the input is valid. Default is True.
+
+#     returns
+#     -------
+#     w: numpy array 1d
+#         Vector containing the non-null elements of the product of the BCCB
+#         matrix and vector v.
+#     """
+
+#     if check_input == True:
+#         if type(BCCB_eigen) != dict:
+#             raise ValueError("BCCB_eigen must be a dictionary")
+#         if list(BCCB_eigen.keys()) != [
+#             "eigenvalues",
+#             "ordering",
+#             "nblocks",
+#             "npoints_per_block",
+#             "symmetry",
+#         ]:
+#             raise ValueError(
+#                 "BCCB0 must have the following 5 keys: 'eigenvalues', 'ordering', 'nblocks', 'npoints_per_block', 'symmetry'"
+#             )
+
+#         L = BCCB_eigen["eigenvalues"]
+#         ordering = BCCB_eigen["ordering"]
+#         nblocks = BCCB_eigen["nblocks"]
+#         npoints_per_block = BCCB_eigen["npoints_per_block"]
+#         symmetry = BCCB_eigen["symmetry"]
+
+#         if ordering not in ["row", "column"]:
+#             raise ValueError("invalid ordering {}".format(ordering))
+
+#         check.is_integer(x=nblocks, positive=True)
+#         check.is_integer(x=npoints_per_block, positive=True)
+
+#         if ordering == "row":
+#             check.is_array(
+#                 x=L, ndim=2, shape=(2 * nblocks, 2 * npoints_per_block)
+#             )
+#         else:  # if ordering == 'column':
+#             check.is_array(
+#                 x=L, ndim=2, shape=(2 * npoints_per_block, 2 * nblocks)
+#             )
+
+#         check.is_array(x=v, ndim=1, shape=(nblocks * npoints_per_block,))
+
+#     if ordering == "row":
+#         # matrix containing the elements of vector a arranged along its rows
+#         V = np.reshape(v, (nblocks, npoints_per_block))
+#         V = np.hstack([V, np.zeros((nblocks, npoints_per_block))])
+#         V = np.vstack([V, np.zeros((nblocks, 2 * npoints_per_block))])
+#     else:  # if ordering == 'column':
+#         # matrix containing the elements of vector a arranged along its columns
+#         V = np.reshape(v, (nblocks, npoints_per_block)).T
+#         V = np.hstack([V, np.zeros((npoints_per_block, nblocks))])
+#         V = np.vstack([V, np.zeros((npoints_per_block, 2 * nblocks))])
+
+#     # matrix obtained by computing the Hadamard product
+#     H = L * fft2(x=V, norm="ortho")
+
+#     # matrix containing the non-null elements of the product BCCB v
+#     # arranged according to the parameter 'ordering'
+#     # the non-null elements are located in the first quadrant.
+#     if ordering == "row":
+#         w = ifft2(x=H, norm="ortho")[:nblocks, :npoints_per_block].real
+#         w = w.ravel()
+#     else:  # if ordering == 'column':
+#         w = ifft2(x=H, norm="ortho")[:npoints_per_block, :nblocks].real
+#         w = w.T.ravel()
+
+#     return w
 
 
 # def eigenvalues_matrix(h_hat, u_hat, eigenvalues_K,

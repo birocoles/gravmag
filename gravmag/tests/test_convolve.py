@@ -867,261 +867,186 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
     ae(computed, reference)
 
 
-# def test_eigenvalues_BCCB_bad_c0():
-#     "must raise ValueError for invalid c0"
-#     Q = 4
-#     P = 3
-#     ordering = "row"
-#     # set c0 as a float
-#     c0 = 3.5
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
-#     # set c0 as a matrix
-#     c0 = np.ones((3, 3))
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
+##### eigenvalues_BCCB
 
 
-# def test_eigenvalues_BCCB_bad_QP():
-#     "must raise AssertionError for invalids Q and P"
-#     c0 = np.zeros(4)
-#     ordering = "row"
-#     # set Q negative
-#     Q = -4
-#     P = 3
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
-#     # set P negative
-#     Q = 4
-#     P = -3
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
-#     # set Q as a float
-#     Q = 4.1
-#     P = 3
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
-#     # set P as a float
-#     Q = 4
-#     P = 3.2
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
+def test_eigenvalues_BCCB_bad_ordering():
+    "must raise ValueError for invalid symmetry"
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.zeros((2, 3)),
+        "rows": None,
+    }
+    ordering = "invalid-ordering"
+    with raises(ValueError):
+        cv.eigenvalues_BCCB(BTTB, ordering)
 
 
-# def test_eigenvalues_BCCB_bad_c0_QP():
-#     "must raise ValueError if c0.size is not 4*Q*P"
-#     Q = 4
-#     P = 3
-#     ordering = "row"
-#     # set c0.size greater than 4*Q*P
-#     c0 = np.zeros(4 * Q * P + 2)
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
-#     # set c0.size smaller than 4*Q*P
-#     c0 = np.zeros(4 * Q * P - 1)
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
+def test_eigenvalues_BCCB_known_values():
+    "compare result with reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
+    # define unitaty DFT matrices
+    F2Q = dft(n=2 * Q, scale="sqrtn")
+    F2P = dft(n=2 * P, scale="sqrtn")
+    # compute the Kronecker product between them
+    F2Q_kron_F2P = np.kron(F2Q, F2P)
+    # compute the reference eigenvalues of BCCB from its first column
+    lambda_ref = np.sqrt(4 * Q * P) * F2Q_kron_F2P @ BCCB[:, 0]
+    # compute eigenvalues with ordering='row'
+    L_row = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    lambda_row = L_row.ravel()
+    aae(lambda_row, lambda_ref, decimal=10)
+    # compute eigenvalues with ordering='column'
+    L_col = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    lambda_col = L_col.T.ravel()
+    aae(lambda_col, lambda_ref, decimal=10)
 
 
-# def test_eigenvalues_BCCB_bad_ordering():
-#     "must raise ValueError for invalid symmetry"
-#     Q = 4
-#     P = 3
-#     c0 = np.zeros(4 * Q * P)
-#     ordering = "invalid-ordering"
-#     BCCB0 = {
-#         "first_column": c0,
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     with raises(ValueError):
-#         cv.eigenvalues_BCCB(BCCB0, ordering)
+def test_product_BCCB_vector_bad_eigenvalues():
+    "must raise AssertionError for bad eigenvalues matrix"
+    v = np.zeros(12)
+    # float
+    L = 1.3
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # vector
+    L = np.ones(3)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # matrix with size different from 4 * v.size
+    L = np.zeros((5, 4))
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
 
 
-# def test_eigenvalues_BCCB_known_values():
-#     "compare result with reference"
-#     Q = 4  # number of blocks along rows/columns of BTTB matrix
-#     P = 3  # number of rows/columns in each block of BTTB matrix
-#     # matrix containing the columns of each block  of BTTB matrix
-#     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-#     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-#     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-#     # define unitaty DFT matrices
-#     F2Q = dft(n=2 * Q, scale="sqrtn")
-#     F2P = dft(n=2 * P, scale="sqrtn")
-#     # compute the Kronecker product between them
-#     F2Q_kron_F2P = np.kron(F2Q, F2P)
-#     # compute the reference eigenvalues of BCCB from its first column
-#     lambda_ref = np.sqrt(4 * Q * P) * np.dot(F2Q_kron_F2P, BCCB[:, 0])
-#     # compute eigenvalues with ordering='row'
-#     BCCB0 = {
-#         "first_column": BCCB[:, 0],
-#         "nblocks": Q,
-#         "npoints_per_block": P,
-#         "symmetry": 'symm-symm',
-#     }
-#     L_row = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
-#     lambda_row = L_row.ravel()
-#     aae(lambda_row, lambda_ref, decimal=10)
-#     # compute eigenvalues with ordering='column'
-#     L_col = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
-#     lambda_col = L_col.T.ravel()
-#     aae(lambda_col, lambda_ref, decimal=10)
+def test_product_BCCB_vector_bad_v():
+    "must raise AssertionError for bad v"
+    Q = 4
+    P = 3
+    L = np.zeros((2 * Q, 2 * P))
+    # v float
+    v = 1.3
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # v matrix
+    v = np.ones((3, 3))
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # v vector with size different from Q*P
+    v = np.ones(Q * P + 5)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
 
 
-# def test_product_BCCB_vector_bad_L():
-#     "must raise AssertionError for bad L"
-#     Q = 4
-#     P = 3
-#     v = np.zeros(Q * P)
-#     # L float
-#     L = 1.3
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v)
-#     # L vector
-#     L = np.ones(3)
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v)
-#     # L matrix with shape different from (2*Q, 2*P) and ordering='row'
-#     L = np.zeros((2 * Q + 1, 2 * P - 1))
-#     ordering = "row"
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # L matrix with shape different from (2*P, 2*Q) and ordering='column'
-#     L = np.zeros((2 * P + 1, 2 * Q - 1))
-#     ordering = "column"
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
+def test_product_BCCB_vector_bad_ordering():
+    "must raise AssertionError for invalid ordering"
+    Q = 4
+    P = 3
+    L = np.zeros((2 * Q, 2 * P))
+    v = np.ones(Q * P)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="invalid-ordering", v=v)
 
 
-# def test_product_BCCB_vector_bad_QP():
-#     "must raise AssertionError for bad Q and P"
-#     # define L and v considering Q = 4 and P = 3
-#     L = np.zeros((8, 6))  # shape (2*Q, 2*P)
-#     v = np.zeros(12)  # size Q*P
-#     ordering = "row"
-#     # Q negative
-#     Q = -4
-#     P = 3
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # P negative
-#     Q = 4
-#     P = -3
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # Q float
-#     Q = 4.1
-#     P = 3
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # P float
-#     Q = 4
-#     P = 3.0
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-
-
-# def test_product_BCCB_vector_bad_v():
-#     "must raise AssertionError for bad v"
-#     Q = 4
-#     P = 3
-#     L = np.zeros((2 * Q, 2 * P))
-#     ordering = "row"
-#     # v float
-#     v = 1.3
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # v matrix
-#     v = np.ones((3, 3))
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-#     # v vector with size different from Q*P
-#     v = np.ones(Q * P + 5)
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-
-
-# def test_product_BCCB_vector_bad_ordering():
-#     "must raise AssertionError for invalid ordering"
-#     Q = 4
-#     P = 3
-#     L = np.zeros((2 * Q, 2 * P))
-#     v = np.ones(Q * P)
-#     ordering = "invalid-ordering"
-#     with raises(AssertionError):
-#         cv.product_BCCB_vector(L, Q, P, v, ordering)
-
-
-# def test_product_BCCB_vector_compare_matrix_vector():
-#     "compare values with that obtained via matrix-vector product"
-#     Q = 4  # number of blocks along rows/columns of BTTB matrix
-#     P = 3  # number of rows/columns in each block of BTTB matrix
-#     # matrix containing the columns of each block  of BTTB matrix
-#     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-#     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-#     BTTB = cv.generic_BTTB(Q, columns, rows)
-#     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-#     # define a vector v
-#     np.random.seed(5)
-#     v = np.random.rand(Q * P)
-#     # define reference
-#     w_matvec = BTTB @ v
-#     # compute the product with function convolve.product_BCCB_vector
-#     # ordering='row'
-#     L = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
-#     w_conv_row = cv.product_BCCB_vector(L, Q, P, v, ordering="row")
-#     aae(w_conv_row, w_matvec, decimal=12)
-#     # ordering='column'
-#     L = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
-#     w_conv_col = cv.product_BCCB_vector(L, Q, P, v, ordering="column")
-#     aae(w_conv_col, w_matvec, decimal=12)
+def test_product_BCCB_vector_compare_matrix_vector():
+    "compare values with that obtained via matrix-vector product"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
+    # define a vector v
+    np.random.seed(5)
+    v = np.random.rand(Q * P)
+    # define reference
+    w_matvec = BTTB_matrix @ v
+    # compute the product with function convolve.product_BCCB_vector
+    # ordering='row'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    w_conv_row = cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    aae(w_conv_row, w_matvec, decimal=12)
+    # ordering='column'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    w_conv_col = cv.product_BCCB_vector(eigenvalues=L, ordering="column", v=v)
+    aae(w_conv_col, w_matvec, decimal=12)
