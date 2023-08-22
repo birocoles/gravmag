@@ -60,9 +60,12 @@ def test_Circulant_from_Toeplitz_compare_known_values_symm():
         ]
     )
     # compute the full matrix
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
-    )
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     ae(computed, reference)
 
 
@@ -79,9 +82,12 @@ def test_Circulant_from_Toeplitz_compare_known_values_skew():
         ]
     )
     # compute the full matrix
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="skew", column=np.array([1, 2, 3]), row=None, full=True
-    )
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     ae(computed, reference)
 
 
@@ -98,70 +104,73 @@ def test_Circulant_from_Toeplitz_compare_known_values_gene():
         ]
     )
     # compute the full matrix
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="gene",
-        column=np.array([1, 2, 3]),
-        row=np.array([4, 5]),
-        full=True,
-    )
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([1, 2, 3]),
+        "row": np.array([4, 5]),
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     ae(computed, reference)
 
 
 def test_Circulant_from_Toeplitz_compare_first_column():
     "verify if returns the correct first column"
     # from symmetric Toeplitz
-    full = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
-    )
-    column = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=False
-    )
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
     ae(circulant(column), full)
     # from skew-symmetric Toeplitz
-    full = cv.Circulant_from_Toeplitz(
-        symmetry="skew", column=np.array([8, -2, 3]), row=None, full=True
-    )
-    column = cv.Circulant_from_Toeplitz(
-        symmetry="skew", column=np.array([8, -2, 3]), row=None, full=False
-    )
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([8, -2, 3]),
+        "row": None,
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
     ae(circulant(column), full)
     # from generic Toeplitz
-    full = cv.Circulant_from_Toeplitz(
-        symmetry="gene",
-        column=np.array([10, 92, -3]),
-        row=np.array([4, 18]),
-        full=True,
-    )
-    column = cv.Circulant_from_Toeplitz(
-        symmetry="gene",
-        column=np.array([10, 92, -3]),
-        row=np.array([4, 18]),
-        full=False,
-    )
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([10, 92, -3]),
+        "row": np.array([4, 18]),
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
     ae(circulant(column), full)
 
 
 def test_Circulant_from_Toeplitz_symmetry_preservation():
     "verify if the computed Circulant preserve the symmetry of the originating Toeplitz matrix"
     # symmetric Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
-    )
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     ae(computed, computed.T)
     # skew-symmetric Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="skew", column=np.array([8, 2, 3]), row=None, full=False
-    )
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([8, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     # we are not interested in the elements at the main diagonal
     diagonal = np.diag(np.diag(computed))
     ae(-(computed - diagonal), (computed - diagonal).T)
     # generic Toeplitz
-    computed = cv.Circulant_from_Toeplitz(
-        symmetry="gene",
-        column=np.array([1, 2, 3]),
-        row=np.array([4, 5]),
-        full=True,
-    )
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([1, 2, 3]),
+        "row": np.array([4, 5]),
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
     ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
 
 
@@ -176,13 +185,14 @@ def test_general_BTTB_compare_known_values_symm_symm():
             [10, 20, 30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="symm",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [1, 2, 3, 10, 20, 30],
@@ -204,13 +214,14 @@ def test_general_BTTB_compare_known_values_symm_skew():
             [10, 20, 30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="symm",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [1, -2, -3, 10, -20, -30],
@@ -233,13 +244,14 @@ def test_general_BTTB_compare_known_values_symm_gene():
             [20, 30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="symm",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [0, 18, 32, 10, 20, 30],
@@ -261,13 +273,14 @@ def test_general_BTTB_compare_known_values_skew_symm():
             [10, 20, 30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="skew",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [1, 2, 3, -10, -20, -30],
@@ -289,13 +302,14 @@ def test_general_BTTB_compare_known_values_skew_skew():
             [-10, -20, -30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="skew",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [1, -2, -3, 10, -20, -30],
@@ -318,13 +332,14 @@ def test_general_BTTB_compare_known_values_skew_gene():
             [20, 30],
         ]
     )
-    computed = cv.generic_BTTB(
-        symmetry_structure="skew",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [0, 18, 32, -10, -20, -30],
@@ -341,13 +356,14 @@ def test_general_BTTB_compare_known_values_skew_gene():
 def test_general_BTTB_compare_known_values_gene_symm():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [60, -70, 80], [10, -40, -30]])
-    computed = cv.generic_BTTB(
-        symmetry_structure="gene",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [0, -2, 32, 10, -40, -30],
@@ -364,13 +380,14 @@ def test_general_BTTB_compare_known_values_gene_symm():
 def test_general_BTTB_compare_known_values_gene_skew():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [-60, -70, 80], [10, -40, -30]])
-    computed = cv.generic_BTTB(
-        symmetry_structure="gene",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [0, 2, -32, 10, 40, 30],
@@ -388,13 +405,14 @@ def test_general_BTTB_compare_known_values_gene_gene():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 7], [60, -90, 100], [10, 40, 50]])
     rows = np.array([[18, 32], [70, -80], [20, 30]])
-    computed = cv.generic_BTTB(
-        symmetry_structure="gene",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
     reference = np.array(
         [
             [0, 18, 32, 10, 20, 30],
@@ -408,7 +426,7 @@ def test_general_BTTB_compare_known_values_gene_gene():
     ae(computed, reference)
 
 
-##### embedding_BCCB
+# ##### embedding_BCCB
 
 
 def test_embedding_BCCB_compare_known_values_symm_symm():
@@ -421,13 +439,14 @@ def test_embedding_BCCB_compare_known_values_symm_symm():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="symm",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -470,13 +489,14 @@ def test_embedding_BCCB_compare_known_values_symm_skew():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="symm",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -520,13 +540,14 @@ def test_embedding_BCCB_compare_known_values_symm_gene():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="symm",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -569,13 +590,14 @@ def test_embedding_BCCB_compare_known_values_skew_symm():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="skew",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -618,13 +640,14 @@ def test_embedding_BCCB_compare_known_values_skew_skew():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="skew",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -668,13 +691,14 @@ def test_embedding_BCCB_compare_known_values_skew_gene():
         ]
     )
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="skew",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -712,13 +736,14 @@ def test_embedding_BCCB_compare_known_values_gene_symm():
     # define the columns/rows of the generating BTTB
     columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="gene",
-        symmetry_blocks="symm",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -756,13 +781,14 @@ def test_embedding_BCCB_compare_known_values_gene_skew():
     # define the columns/rows of the generating BTTB
     columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="gene",
-        symmetry_blocks="skew",
-        nblocks=2,
-        columns=columns,
-        rows=None,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -801,13 +827,14 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
     columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
     rows = np.array([[18, 32], [20, 30], [1, 2]])
     # compute the BCCB
-    computed = cv.embedding_BCCB(
-        symmetry_structure="gene",
-        symmetry_blocks="gene",
-        nblocks=2,
-        columns=columns,
-        rows=rows,
-    )
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
     # define the reference
     reference = np.array(
         [
@@ -838,394 +865,6 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
         ]
     )
     ae(computed, reference)
-
-
-# def test_BCCB_from_BTTB_bad_num_blocks():
-#     "must raise an error for bad num_blocks"
-#     columns_blocks = np.ones((3, 2))
-#     # num_blocks negative integer
-#     num_blocks = -5
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-#     # num_blocks float
-#     num_blocks = 4.2
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-#     # num_blocks equal to 1
-#     num_blocks = 1
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-# def test_BCCB_from_BTTB_columns_blocks_not_matrix():
-#     "must raise an error for columns_blocks not matrix"
-#     num_blocks = 5
-#     # columns_blocks a float
-#     columns_blocks = 2.9
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-#     # columns_blocks a vector
-#     columns_blocks = np.ones(5)
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-# def test_BCCB_from_BTTB_bad_columns_blocks_without_rows_blocks():
-#     "must raise an error for bad columns_blocks shape"
-#     num_blocks = 5
-#     # columns_blocks number of rows different from
-#     # (num_blocks) and (2*num_blocks - 1)
-#     columns_blocks = np.ones((7, 3))
-#     with raises(ValueError):
-#         cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-# def test_BCCB_from_BTTB_arbitrary():
-#     "verify if returned matrix is BCCB"
-#     Q = 4  # number of blocks along rows/columns of BTTB matrix
-#     P = 3  # number of rows/columns in each block of BTTB matrix
-#     # matrix containing the columns of each block  of BTTB matrix
-#     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-#     rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-#     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-#     # split matrix in blocks
-#     blocks = []
-#     for i in range(0, 4 * Q * P, 2 * P):
-#         blocks_i = []
-#         for j in range(0, 4 * Q * P, 2 * P):
-#             blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-#         blocks.append(blocks_i)
-#     # verify if each block is a circulant matrix
-#     for i in range(Q):
-#         for j in range(Q):
-#             block_ref = circulant(blocks[i][j][:, 0])
-#             ae(blocks[i][j], block_ref)
-#     # verify if each block is not symmetric
-#     for i in range(Q):
-#         for j in range(Q):
-#             ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-#     # verify if block_ij is different from block_ji
-#     for i in range(Q):
-#         for j in range(i + 1, Q):
-#             ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-# def test_BCCB_from_BTTB_SBCSCB():
-#     "verify if returned matrix is SBCSCB"
-#     Q = 4  # number of blocks along rows/columns
-#     P = 3  # number of rows/columns in each block
-#     # matrix containing the columns of each block
-#     columns = np.arange(Q * P).reshape((Q, P))
-#     BCCB = cv.BCCB_from_BTTB(Q, columns)
-#     # split matrix in blocks
-#     blocks = []
-#     for i in range(0, 4 * Q * P, 2 * P):
-#         blocks_i = []
-#         for j in range(0, 4 * Q * P, 2 * P):
-#             blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-#         blocks.append(blocks_i)
-#     # verify if each block is a circulant matrix
-#     for i in range(Q):
-#         for j in range(Q):
-#             block_ref = circulant(blocks[i][j][:, 0])
-#             ae(blocks[i][j], block_ref)
-#     # verify if each block is symmetric
-#     for i in range(Q):
-#         for j in range(Q):
-#             ae(blocks[i][j], blocks[i][j].T)
-#     # verify if block_ij is equal to block_ji
-#     for i in range(Q):
-#         for j in range(i + 1, Q):
-#             ae(blocks[i][j], blocks[j][i])
-
-
-# def test_BCCB_from_BTTB_BCSCB():
-#     "verify if returned matrix is BCSCB"
-#     Q = 4  # number of blocks along rows/columns
-#     P = 3  # number of rows/columns in each block
-#     # matrix containing the columns of each block
-#     columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-#     BCCB = cv.BCCB_from_BTTB(Q, columns)
-#     # split matrix in blocks
-#     blocks = []
-#     for i in range(0, 4 * Q * P, 2 * P):
-#         blocks_i = []
-#         for j in range(0, 4 * Q * P, 2 * P):
-#             blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-#         blocks.append(blocks_i)
-#     # verify if each block is a circulant matrix
-#     for i in range(Q):
-#         for j in range(Q):
-#             block_ref = circulant(blocks[i][j][:, 0])
-#             ae(blocks[i][j], block_ref)
-#     # verify if each block is symmetric
-#     for i in range(Q):
-#         for j in range(Q):
-#             ae(blocks[i][j], blocks[i][j].T)
-#     # verify if block_ij is different from block_ji
-#     for i in range(Q):
-#         for j in range(i + 1, Q):
-#             ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-# def test_BCCB_from_BTTB_SBCCB():
-#     "verify if returned matrix is SBCCB"
-#     Q = 4  # number of blocks along rows/columns
-#     P = 3  # number of rows/columns in each block
-#     # matrix containing the columns of each block
-#     columns = np.arange(Q * P).reshape((Q, P))
-#     rows = np.arange(Q * (P - 1)).reshape((Q, P - 1)) + 100
-#     BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-#     # split matrix in blocks
-#     blocks = []
-#     for i in range(0, 4 * Q * P, 2 * P):
-#         blocks_i = []
-#         for j in range(0, 4 * Q * P, 2 * P):
-#             blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-#         blocks.append(blocks_i)
-#     # verify if each block is a circulant matrix
-#     for i in range(Q):
-#         for j in range(Q):
-#             block_ref = circulant(blocks[i][j][:, 0])
-#             ae(blocks[i][j], block_ref)
-#     # verify if each block is not symmetric
-#     for i in range(Q):
-#         for j in range(Q):
-#             ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-#     # verify if block_ij is different from block_ji
-#     for i in range(Q):
-#         for j in range(i + 1, Q):
-#             ae(blocks[i][j], blocks[j][i])
-
-
-# def test_embedding_BCCB_first_column_bad_b0():
-#     "must raise error for invalid b0"
-#     Q = 4
-#     P = 3
-#     symmetry = "symm-symm"
-#     # set b0 as a float
-#     b0 = 3.5
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     # set b0 as a matrix
-#     b0 = np.ones((3, 3))
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-# def test_embedding_BCCB_first_column_bad_QP():
-#     "must raise an error for invalids Q and P"
-#     b0 = np.zeros(4)
-#     symmetry = "symm-symm"
-#     # set Q negative
-#     Q = -4
-#     P = 3
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     # set P negative
-#     Q = 4
-#     P = -3
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     # set Q as a float
-#     Q = 4.1
-#     P = 3
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     # set P as a float
-#     Q = 4
-#     P = 3.2
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-# def test_embedding_BCCB_first_column_bad_b0_QP():
-#     "must raise ValueError if b0.size is not Q*P"
-#     Q = 4
-#     P = 3
-#     symmetry = "symm-symm"
-#     # set b0.size greater than Q*P
-#     b0 = np.zeros(Q * P + 2)
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     # set b0.size smaller than Q*P
-#     b0 = np.zeros(Q * P - 1)
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-# def test_embedding_BCCB_first_column_bad_symmetry():
-#     "must raise ValueError for invalid symmetry"
-#     Q = 4
-#     P = 3
-#     b0 = np.zeros(Q * P)
-#     symmetry = "invalid-symmetry"
-#     with raises(ValueError):
-#         cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-# def test_embedding_BCCB_first_column_symmetry_skew_skew():
-#     "verify result obtained with specific input"
-#     Q = 2
-#     P = 3
-#     symmetry = "skew-skew"
-#     b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-#     c0_true = np.array(
-#         [
-#             1.0,
-#             1.0,
-#             1.0,
-#             0.0,
-#             -1.0,
-#             -1.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#             -2.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#         ]
-#     )
-#     BCCB0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     aae(BCCB0['first_column'], c0_true, decimal=15)
-#     ae(BCCB0['nblocks'], Q)
-#     ae(BCCB0['npoints_per_block'], P)
-#     ae(BCCB0['symmetry'], symmetry)
-
-
-# def test_embedding_BCCB_first_column_symmetry_skew_symm():
-#     "verify result obtained with specific input"
-#     Q = 2
-#     P = 3
-#     symmetry = "skew-symm"
-#     b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-#     c0_true = np.array(
-#         [
-#             1.0,
-#             1.0,
-#             1.0,
-#             0.0,
-#             1.0,
-#             1.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#             -2.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#         ]
-#     )
-#     BCCB0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     aae(BCCB0['first_column'], c0_true, decimal=15)
-#     ae(BCCB0['nblocks'], Q)
-#     ae(BCCB0['npoints_per_block'], P)
-#     ae(BCCB0['symmetry'], symmetry)
-
-
-# def test_embedding_BCCB_first_column_symmetry_symm_skew():
-#     "verify result obtained with specific input"
-#     Q = 2
-#     P = 3
-#     symmetry = "symm-skew"
-#     b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-#     c0_true = np.array(
-#         [
-#             1.0,
-#             1.0,
-#             1.0,
-#             0.0,
-#             -1.0,
-#             -1.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             -2.0,
-#             -2.0,
-#         ]
-#     )
-#     BCCB0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     aae(BCCB0['first_column'], c0_true, decimal=15)
-#     ae(BCCB0['nblocks'], Q)
-#     ae(BCCB0['npoints_per_block'], P)
-#     ae(BCCB0['symmetry'], symmetry)
-
-
-# def test_embedding_BCCB_first_column_symmetry_symm_symm():
-#     "verify result obtained with specific input"
-#     Q = 2
-#     P = 3
-#     symmetry = "symm-symm"
-#     b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-#     c0_true = np.array(
-#         [
-#             1.0,
-#             1.0,
-#             1.0,
-#             0.0,
-#             1.0,
-#             1.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#             2.0,
-#             0.0,
-#             2.0,
-#             2.0,
-#         ]
-#     )
-#     BCCB0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-#     aae(BCCB0['first_column'], c0_true, decimal=15)
-#     ae(BCCB0['nblocks'], Q)
-#     ae(BCCB0['npoints_per_block'], P)
-#     ae(BCCB0['symmetry'], symmetry)
 
 
 # def test_eigenvalues_BCCB_bad_c0():

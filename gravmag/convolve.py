@@ -56,9 +56,7 @@ def compute(FT_data, filters, check_input=True):
     return convolved_data
 
 
-def Circulant_from_Toeplitz(
-    symmetry, column, row, full=False, check_input=True
-):
+def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
     """
     Generate the Circulant matrix C which embbeds a Toeplitz matrix T.
 
@@ -81,15 +79,16 @@ def Circulant_from_Toeplitz(
 
     parameters
     ----------
-    symmetry : string
-        Defines the type of symmetry between elements above and below the main diagonal.
-        It can be 'gene', 'symm' or 'skew' (see the explanation above).
-    column : numpy array 1D
-        First column of T.
-    row : None or numpy array 1D
-        If not None, it is the first row of T, without the diagonal element. In
-        this case, T does not have the assumed symmetries (see the text above).
-        If None, matrix T is symmetric or skew-symmetric. Default is None.
+    Toeplitz : dictionary containing the following keys
+        symmetry : string
+            Defines the type of symmetry between elements above and below the main diagonal.
+            It can be 'gene', 'symm' or 'skew' (see the explanation above).
+        column : numpy array 1D
+            First column of T.
+        row : None or numpy array 1D
+            If not None, it is the first row of T, without the diagonal element. In
+            this case, T does not have the assumed symmetries (see the text above).
+            If None, matrix T is symmetric or skew-symmetric. Default is None.
     full : boolean
         If True, returns the full Circulant matrix C. Otherwise, returns only its first column. Default is False.
     check_input : boolean
@@ -102,9 +101,14 @@ def Circulant_from_Toeplitz(
     """
 
     if check_input == True:
-        check.Toeplitz_metadata(symmetry, column, row)
+        check.Toeplitz_metadata(Toeplitz)
         if full not in [True, False]:
             raise ValueError("invalid parameter full ({})".format(full))
+
+    # get the parameters defining the Toeplitz matrix
+    symmetry = Toeplitz["symmetry"]
+    column = Toeplitz["column"]
+    row = Toeplitz["row"]
 
     # order of the Toeplitz matrix T
     P = column.size
@@ -149,14 +153,7 @@ def Circulant_from_Toeplitz(
         return C
 
 
-def generic_BTTB(
-    symmetry_structure,
-    symmetry_blocks,
-    nblocks,
-    columns,
-    rows,
-    check_input=True,
-):
+def generic_BTTB(BTTB, check_input=True):
     """
     Generate a full Block Toeplitz formed by Toeplitz Blocks (BTTB)
     matrix T from the first columns and first rows of its non-repeating
@@ -195,22 +192,23 @@ def generic_BTTB(
 
     parameters
     ----------
-    symmetry_structure : string
-        Defines the type of symmetry between all blocks above and below the main block diagonal.
-        It can be 'gene', 'symm' or 'skew' (see the explanation above).
-    symmetry_blocks : string
-        Defines the type of symmetry between elements above and below the main diagonal within all blocks.
-        It can be 'gene', 'symm' or 'skew' (see the explanation above).
-    nblocks : int
-        Number of blocks (nblocks) of T along column and row.
-    columns : numpy array
-        Matrix whose rows are the first columns cij of the non-repeating blocks
-        Tij of T. They must be ordered as follows: c11, c21, ..., cQ1,
-        c12, ..., c1Q.
-    rows : None or numpy array 2D
-        If not None, it is a matrix whose rows are the first rows rij of the
-        non-repeating blocks Tij of T, without the diagonal term. They must
-        be ordered as follows: r11, r21, ..., rM1, r12, ..., r1M.
+    BTTB : dictionary containing the following keys:
+        symmetry_structure : string
+            Defines the type of symmetry between all blocks above and below the main block diagonal.
+            It can be 'gene', 'symm' or 'skew' (see the explanation above).
+        symmetry_blocks : string
+            Defines the type of symmetry between elements above and below the main diagonal within all blocks.
+            It can be 'gene', 'symm' or 'skew' (see the explanation above).
+        nblocks : int
+            Number of blocks (nblocks) of T along column and row.
+        columns : numpy array
+            Matrix whose rows are the first columns cij of the non-repeating blocks
+            Tij of T. They must be ordered as follows: c11, c21, ..., cQ1,
+            c12, ..., c1Q.
+        rows : None or numpy array 2D
+            If not None, it is a matrix whose rows are the first rows rij of the
+            non-repeating blocks Tij of T, without the diagonal term. They must
+            be ordered as follows: r11, r21, ..., rM1, r12, ..., r1M.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -221,9 +219,14 @@ def generic_BTTB(
     """
 
     if check_input == True:
-        check.BTTB_metadata(
-            symmetry_structure, symmetry_blocks, nblocks, columns, rows
-        )
+        check.BTTB_metadata(BTTB)
+
+    # get the parameters defining the BTTB matrix
+    symmetry_structure = BTTB["symmetry_structure"]
+    symmetry_blocks = BTTB["symmetry_blocks"]
+    nblocks = BTTB["nblocks"]
+    columns = BTTB["columns"]
+    rows = BTTB["rows"]
 
     # number of points per block row/column
     npoints_per_block = columns.shape[1]
@@ -395,15 +398,7 @@ def generic_BTTB(
     return T
 
 
-def embedding_BCCB(
-    symmetry_structure,
-    symmetry_blocks,
-    nblocks,
-    columns,
-    rows,
-    full=False,
-    check_input=True,
-):
+def embedding_BCCB(BTTB, full=False, check_input=True):
     """
     Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)
     matrix that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB).
@@ -412,7 +407,7 @@ def embedding_BCCB(
 
     parameters
     ----------
-    symmetry_structure, symmetry_blocks, nblocks, columns, rows
+    BTTB : dictionary
         See function 'generic_BTTB' for a description of the input parameters.
     full : boolean
         If True, returns the full BCCB matrix C. Otherwise, returns only its first column. Default is False.
@@ -421,16 +416,21 @@ def embedding_BCCB(
 
     returns
     -------
-    C: numpy array 1D
-        The first column of the embedding BCCB matrix.
+    C: numpy array 2D or 1D
+        The full embedding BCCB matrix or only its first column (see parameter 'full').
     """
 
     if check_input == True:
-        check.BTTB_metadata(
-            symmetry_structure, symmetry_blocks, nblocks, columns, rows
-        )
+        check.BTTB_metadata(BTTB)
         if full not in [True, False]:
             raise ValueError("invalid parameter full ({})".format(full))
+
+    # get the parameters defining the BTTB matrix
+    symmetry_structure = BTTB["symmetry_structure"]
+    symmetry_blocks = BTTB["symmetry_blocks"]
+    nblocks = BTTB["nblocks"]
+    columns = BTTB["columns"]
+    rows = BTTB["rows"]
 
     nblocks_C = 2 * nblocks
     npoints_per_block_C = 2 * columns.shape[1]
@@ -441,26 +441,24 @@ def embedding_BCCB(
     if symmetry_blocks in ["symm", "skew"]:
         # iterate over columns
         for t0 in columns:
+            Toeplitz = {
+                "symmetry": symmetry_blocks,
+                "column": t0,
+                "row": None,
+            }
             c0.append(
-                Circulant_from_Toeplitz(
-                    symmetry=symmetry_blocks,
-                    column=t0,
-                    row=None,
-                    full=False,
-                    check_input=False,
-                )
+                Circulant_from_Toeplitz(Toeplitz, full=False, check_input=False)
             )
     else:  # symmetry_blocks == "gene"
         # iterate over columns and rows
         for t0, r0 in zip(columns, rows):
+            Toeplitz = {
+                "symmetry": symmetry_blocks,
+                "column": t0,
+                "row": r0,
+            }
             c0.append(
-                Circulant_from_Toeplitz(
-                    symmetry=symmetry_blocks,
-                    column=t0,
-                    row=r0,
-                    full=False,
-                    check_input=False,
-                )
+                Circulant_from_Toeplitz(Toeplitz, full=False, check_input=False)
             )
 
     if symmetry_structure == "symm":
