@@ -145,21 +145,22 @@ def test_Circulant_from_Toeplitz_symmetry_preservation():
     "verify if the computed Circulant preserve the symmetry of the originating Toeplitz matrix"
     # symmetric Toeplitz
     computed = cv.Circulant_from_Toeplitz(
-        symmetry="symm", column=np.array([1, 2, 3]), row=None
+        symmetry="symm", column=np.array([1, 2, 3]), row=None, full=True
     )
     ae(computed, computed.T)
     # skew-symmetric Toeplitz
     computed = cv.Circulant_from_Toeplitz(
-        symmetry="skew",
-        column=np.array([8, 2, 3]),
-        row=None,
+        symmetry="skew", column=np.array([8, 2, 3]), row=None, full=False
     )
     # we are not interested in the elements at the main diagonal
     diagonal = np.diag(np.diag(computed))
     ae(-(computed - diagonal), (computed - diagonal).T)
     # generic Toeplitz
     computed = cv.Circulant_from_Toeplitz(
-        symmetry="gene", column=np.array([1, 2, 3]), row=np.array([4, 5])
+        symmetry="gene",
+        column=np.array([1, 2, 3]),
+        row=np.array([4, 5]),
+        full=True,
     )
     ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
 
@@ -402,6 +403,438 @@ def test_general_BTTB_compare_known_values_gene_gene():
             [60, 70, -80, 0, 18, 32],
             [-90, 60, 70, -2, 0, 18],
             [100, -90, 60, 7, -2, 0],
+        ]
+    )
+    ae(computed, reference)
+
+
+##### embedding_BCCB
+
+
+def test_embedding_BCCB_compare_known_values_symm_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="symm",
+        symmetry_blocks="symm",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            3,
+            2,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_symm_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="symm",
+        symmetry_blocks="skew",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            -3,
+            -2,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_symm_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="symm",
+        symmetry_blocks="gene",
+        nblocks=2,
+        columns=columns,
+        rows=rows,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="skew",
+        symmetry_blocks="symm",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            3,
+            2,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -20,
+            -30,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="skew",
+        symmetry_blocks="skew",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            -3,
+            -2,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -20,
+            -30,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="skew",
+        symmetry_blocks="gene",
+        nblocks=2,
+        columns=columns,
+        rows=rows,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -40,
+            -50,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="gene",
+        symmetry_blocks="symm",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            7,
+            -2,
+            10,
+            40,
+            50,
+            0,
+            50,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            3,
+            12,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="gene",
+        symmetry_blocks="skew",
+        nblocks=2,
+        columns=columns,
+        rows=None,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            -7,
+            2,
+            10,
+            40,
+            50,
+            0,
+            -50,
+            -40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            -3,
+            -12,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    rows = np.array([[18, 32], [20, 30], [1, 2]])
+    # compute the BCCB
+    computed = cv.embedding_BCCB(
+        symmetry_structure="gene",
+        symmetry_blocks="gene",
+        nblocks=2,
+        columns=columns,
+        rows=rows,
+    )
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            2,
+            1,
         ]
     )
     ae(computed, reference)
