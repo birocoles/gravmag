@@ -1050,3 +1050,79 @@ def test_product_BCCB_vector_compare_matrix_vector():
     L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
     w_conv_col = cv.product_BCCB_vector(eigenvalues=L, ordering="column", v=v)
     aae(w_conv_col, w_matvec, decimal=12)
+
+
+##### transposition_factor
+
+def test_transposition_factor_bad_symmetry():
+    "check if passing a generic symmetry raises an error"
+    # symmetry_structure is 'symm', symmetry_blocks is 'gene'
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": np.zeros((2,3)),
+        "rows": None,
+    }
+    with raises(ValueError):
+        cv.transposition_factor(BTTB=BTTB)
+    # symmetry_structure is 'gene', symmetry_blocks is 'skew'
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.zeros((3,3)),
+        "rows": None,
+    }
+    with raises(ValueError):
+        cv.transposition_factor(BTTB=BTTB)
+    # both symmetry_structure and symmetry_blocks are 'gene'
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": np.zeros((3,3)),
+        "rows": np.zeros((3,2)),
+    }
+    with raises(ValueError):
+        cv.transposition_factor(BTTB=BTTB)
+
+
+def test_transposition_factor_compare_known_values():
+    "check if passing a generic symmetry raises an error"
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.zeros((2,3)),
+        "rows": None,
+    }
+    computed = cv.transposition_factor(BTTB=BTTB)
+    ae(computed, 1)
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.zeros((2,3)),
+        "rows": None,
+    }
+    computed = cv.transposition_factor(BTTB=BTTB)
+    ae(computed, -1)
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.zeros((2,3)),
+        "rows": None,
+    }
+    computed = cv.transposition_factor(BTTB=BTTB)
+    ae(computed, -1)
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.zeros((2,3)),
+        "rows": None,
+    }
+    computed = cv.transposition_factor(BTTB=BTTB)
+    ae(computed, 1)
