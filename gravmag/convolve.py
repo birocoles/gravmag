@@ -635,53 +635,6 @@ def product_BCCB_vector(eigenvalues, ordering, v, check_input=True):
     return w
 
 
-def transposition_factor(BTTB, check_input=True):
-    """
-    Define the transposition factor of an eigenvalues matrix
-    (computed with the function 'eigenvalues_BCCB') according to the symmetries of its
-    generating BTTB matrix (see the function 'embedding_BCCB').
-    We consider only the cases in which the symmetries are 'symm' or 'skew'.
-
-    parameters
-    ----------
-    BTTB : dictionary
-        See function 'generic_BTTB' for a description of the input parameters.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    factor : int
-        Positive or negative 1.
-    """
-
-    if check_input == True:
-        # check if the associated BTTB is valid
-        check.BTTB_metadata(BTTB)
-        # verify if symmetries are 'symm' or 'skew'
-        if (BTTB["symmetry_structure"] not in ['symm', 'skew']) or (BTTB["symmetry_blocks"] not in ['symm', 'skew']):
-            raise ValueError(
-                "symmetry structure ({}) and blocks ({}) must be 'symm' or 'skew'".format(
-                    BTTB["symmetry_structure"], BTTB["symmetry_blocks"]
-                )
-            )
-
-    # define the transposition factor
-    if BTTB["symmetry_structure"] == 'symm':
-        aux1 = 1
-    else: # BTTB["symmetry_structure"] == 'skew'
-        aux1 = -1
-    if BTTB["symmetry_blocks"] == 'symm':
-        aux2 = 1
-    else: # BTTB["symmetry_blocks"] == 'skew'
-        aux2 = -1
-
-    # compute the transfposition factor
-    factor = aux1*aux2
-
-    return factor
-
-
 # def product_BCCB_vector(BCCB_eigen, v, check_input=True):
 #     """
 #     Compute the product of a BCCB matrix and a vector
