@@ -246,7 +246,7 @@ def are_wavenumbers(wavenumbers):
         raise ValueError("all elements of key 'z' must be positive or zero")
 
 
-def sensibility_matrix_and_data(matrix, data):
+def sensitivity_matrix_and_data(matrix, data):
     """
     Check if the given matrix and data are formed by consistent numpy arrays.
 

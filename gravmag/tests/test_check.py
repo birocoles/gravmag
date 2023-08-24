@@ -545,44 +545,44 @@ def test_invalid_wavenumbers_xyz():
         check.are_wavenumbers(wavenumbers=w)
 
 
-##### sensibility matrix and data vector
+##### sensitivity matrix and data vector
 
 
-def test_sensibility_matrix_and_data_non_arrays():
+def test_sensitivity_matrix_and_data_non_arrays():
     "Check if passing non-arrays raises an error"
     # G array, d tuple
     G = np.empty((4, 3))
     data = (9, 7.1)
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
     # G float, d array
     G = 7.5
     data = np.empty(3)
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
     # G 1d array, d 1d array
     G = np.empty(5)
     data = np.empty(5)
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
     # G 2d array, d 2d array
     G = np.empty((4, 3))
     data = np.empty((3, 5))
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
     # G complex, d list
     G = 7.2 + 9.1j
     data = [3, 5, 6.6]
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
 
 
-def test_sensibility_matrix_and_data_mismatch():
+def test_sensitivity_matrix_and_data_mismatch():
     "Check if passing incompatible matrix and data raises an error"
     G = np.empty((5, 3))
     data = np.empty(4)
     with pytest.raises(ValueError):
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        check.sensitivity_matrix_and_data(matrix=G, data=data)
 
 
 ###### Toeplitz_metadata
