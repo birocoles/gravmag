@@ -1209,3 +1209,67 @@ def test_product_BCCB_vector_compare_matrix_vector():
     L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
     w_conv_col = cv.product_BCCB_vector(eigenvalues=L, ordering="column", v=v)
     aae(w_conv_col, w_matvec, decimal=12)
+
+
+def test_product_BCCB_vector_compare_transposed():
+    "compare values with that obtained via transposed-matrix-vector product"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
+    # define a vector v
+    np.random.seed(5)
+    v = np.random.rand(Q * P)
+    # define reference product with transposed BTTB matrix
+    w_matvec = BTTB_matrix.T @ v
+    # compute the product with function convolve.product_BCCB_vector
+    # ordering='row'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    w_conv_row = cv.product_BCCB_vector(
+        eigenvalues=np.conj(L), ordering="row", v=v
+    )
+    aae(w_conv_row, w_matvec, decimal=12)
+    # ordering='column'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    w_conv_col = cv.product_BCCB_vector(
+        eigenvalues=np.conj(L), ordering="column", v=v
+    )
+    aae(w_conv_col, w_matvec, decimal=12)
