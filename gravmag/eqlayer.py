@@ -196,7 +196,7 @@ def kernel_matrix_dipoles(
 
 
 def method_CGLS(
-    sensibility_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -206,7 +206,7 @@ def method_CGLS(
 
     parameters
     ----------
-    sensibility_matrices: list of numpy arrays 2d
+    sensitivity_matrices: list of numpy arrays 2d
         List of matrices with same number of columns defining the kernel of the equivalent layer integral.
     data_vectors : list of numpy arrays 1d
         List of potential-field data.
@@ -227,16 +227,16 @@ def method_CGLS(
 
     if check_input == True:
         # check if G and data are consistent numpy arrays
-        if type(sensibility_matrices) != list:
-            raise ValueError("sensibility_matrices must be a list")
+        if type(sensitivity_matrices) != list:
+            raise ValueError("sensitivity_matrices must be a list")
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
-        if len(sensibility_matrices) != len(data_vectors):
+        if len(sensitivity_matrices) != len(data_vectors):
             raise ValueError(
-                "sensibility_matrices and data_vectors must have the same number of elements"
+                "sensitivity_matrices and data_vectors must have the same number of elements"
             )
-        for G, data in zip(sensibility_matrices, data_vectors):
-            check.sensibility_matrix_and_data(matrix=G, data=data)
+        for G, data in zip(sensitivity_matrices, data_vectors):
+            check.sensitivity_matrix_and_data(matrix=G, data=data)
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -264,7 +264,7 @@ def method_CGLS(
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for G, res in zip(sensibility_matrices, residuals):
+    for G, res in zip(sensitivity_matrices, residuals):
         vartheta[:] += G.T @ res
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
@@ -278,7 +278,7 @@ def method_CGLS(
     while (delta > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
-        for G, nu in zip(sensibility_matrices, nus):
+        for G, nu in zip(sensitivity_matrices, nus):
             nu[:] = G @ eta
             aux += np.sum(nu * nu)
         upsilon = rho0 / aux
@@ -290,8 +290,8 @@ def method_CGLS(
         delta = np.sqrt(delta) / ndata
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
-        for sensibility_matrix, res in zip(sensibility_matrices, residuals):
-            vartheta[:] += sensibility_matrix.T @ res
+        for sensitivity_matrix, res in zip(sensitivity_matrices, residuals):
+            vartheta[:] += sensitivity_matrix.T @ res
         rho = np.sum(vartheta * vartheta)
         tau = rho / rho0
         rho0 = rho
@@ -301,14 +301,20 @@ def method_CGLS(
 
 
 def method_column_action_C92(
-    G, data, data_points, zlayer, epsilon, ITMAX, check_input=True
+    sensitivity_matrix,
+    data,
+    data_points,
+    zlayer,
+    epsilon,
+    ITMAX,
+    check_input=True,
 ):
     """
     Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
 
     parameters
     ----------
-    G: numpy array 2d
+    sensitivity_matrix: numpy array 2d
         N x M matrix defined by the kernel of the equivalent layer integral.
     data : numpy array 1d
         Potential-field data.
@@ -333,8 +339,8 @@ def method_column_action_C92(
     """
 
     if check_input == True:
-        # check if data and G are consistent numpy arrays
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        # check if data and sensitivity_matrix are consistent numpy arrays
+        check.sensitivity_matrix_and_data(matrix=sensitivity_matrix, data=data)
         # check data points
         check.are_coordinates(coordinates=data_points)
         # check if zlayer result in a layer below the data points
@@ -349,10 +355,10 @@ def method_column_action_C92(
         check.is_integer(x=ITMAX, positive=True)
 
         # initializations
-        data_aux = G @ data
+        data_aux = sensitivity_matrix @ data
         scale = (data_aux @ data) / (data_aux @ data_aux)
         parameters = data * scale
-        residuals = data - G @ parameters
+        residuals = data - sensitivity_matrix @ parameters
         imax = np.argmax(np.abs(residuals))
         rmax = residuals[imax]
         rmax_list = []
@@ -366,7 +372,7 @@ def method_column_action_C92(
             # dp = rmax * scale * np.abs(zlayer - zmax)
             dp = rmax * scale
             parameters[imax] += dp
-            residuals[:] -= G[:, imax] * dp
+            residuals[:] -= sensitivity_matrix[:, imax] * dp
             imax = np.argmax(np.abs(residuals))
             rmax = residuals[imax]
             rmax_list.append(abs(rmax))
@@ -375,14 +381,16 @@ def method_column_action_C92(
         return rmax_list, parameters
 
 
-def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
+def method_iterative_SOB17(
+    sensitivity_matrix, data, epsilon, ITMAX=50, check_input=True
+):
     """
     Solves the unconstrained problem to estimate the physical-property
     distribution on the equivalent layer via iterative method.
 
     parameters
     ----------
-    G: numpy array 2d
+    sensitivity_matrix: numpy array 2d
         N x M matrix defined by the kernel of the equivalent layer integral.
     data : numpy array 1d
         Potential-field data.
@@ -402,8 +410,8 @@ def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
     """
 
     if check_input == True:
-        # check if data and G are consistent numpy arrays
-        check.sensibility_matrix_and_data(matrix=G, data=data)
+        # check if data and sensitivity_matrix are consistent numpy arrays
+        check.sensitivity_matrix_and_data(matrix=sensitivity_matrix, data=data)
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -411,10 +419,10 @@ def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
 
     # initializations
     D = data.size
-    data_aux = G @ data
+    data_aux = sensitivity_matrix @ data
     scale = (data_aux @ data) / (data_aux @ data_aux)
     parameters = data * scale
-    residuals = data - G @ parameters
+    residuals = data - sensitivity_matrix @ parameters
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
@@ -424,7 +432,7 @@ def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
     while (delta > epsilon) and (m < ITMAX):
         dp = scale * residuals
         parameters[:] += dp
-        nu[:] = G @ dp
+        nu[:] = sensitivity_matrix @ dp
         residuals[:] -= nu
         delta = np.sqrt(np.sum(residuals * residuals)) / D
         delta_list.append(delta)
@@ -434,15 +442,7 @@ def method_iterative_SOB17(G, data, epsilon, ITMAX=50, check_input=True):
 
 
 def method_iterative_deconvolution_TOB20(
-    eigenvalues_matrices,
-    Q,
-    P,
-    ordering,
-    transposition_factors,
-    data_vectors,
-    epsilon,
-    ITMAX=50,
-    check_input=True,
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -451,17 +451,9 @@ def method_iterative_deconvolution_TOB20(
 
     parameters
     ----------
-    eigenvalues_matrices : list of numpy arrays 2d
-        List of matrices containing the eigenvalues of kernel matrices.
-    Q: int
-        Number of blocks along a column/row of the BTTB.
-    P: int
-        Number of rows/columns of each block forming the BTTB.
-    ordering: string
-        If "row", the eigenvalues are arranged along the rows of a matrix L;
-        if "column", they are arranged along the columns of a matrix L.
-    transposition_factors : list of ints
-        List of ints defining the transposition factors of eigenvalues matrices.
+    sensitivity_matrices: list of dictionaries
+        List of dictionaries defining the kernel of the equivalent layer integral. Here, it is considered that
+        the kernels are BTTB matrices.
     data_vectors : list of numpy arrays 1d
         List of potential-field data.
     epsilon : float
@@ -480,49 +472,41 @@ def method_iterative_deconvolution_TOB20(
     """
 
     if check_input == True:
-        if type(eigenvalues_matrices) != list:
-            raise ValueError("eigenvalues_matrices must be a list")
-        check.is_integer(x=Q, positive=True)
-        check.is_integer(x=P, positive=True)
-        if ordering not in ["row", "column"]:
-            raise ValueError("invalid ordering")
-        for L in eigenvalues_matrices:
-            if ordering == "row":
-                if L.shape != (2 * Q, 2 * P):
-                    raise ValueError("L must have shape (2*Q, 2*P)")
-            else:  # if ordering == 'column':
-                if L.shape != (2 * P, 2 * Q):
-                    raise ValueError("L must have shape (2*P, 2*Q)")
-        if type(transposition_factors) != list:
-            raise ValueError("transposition_factors must be a list")
-        for factor in transposition_factors:
-            if (factor != 1) and (factor != -1):
-                raise ValueError(
-                    "transposition_factors must contain only 1 or -1 elements"
-                )
+        if type(sensitivity_matrices) != list:
+            raise ValueError("sensitivity_matrices must be a list")
+        for G in sensitivity_matrices:
+            check.BTTB_metadata(BTTB=G)
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
-        if len(eigenvalues_matrices) != len(data_vectors):
+        if len(sensitivity_matrices) != len(data_vectors):
             raise ValueError(
-                "eigenvalues_matrices and data_vectors must have the same number of elements"
+                "sensitivity_matrices and data_vectors must have the same number of elements"
             )
-        if len(eigenvalues_matrices) != len(transposition_factors):
-            raise ValueError(
-                "eigenvalues_matrices and transposition_factors must have the same number of elements"
+        # check if the sensitivity_matrices and data_vectors are formed by consistent
+        # BTTB matrices and numpy arrays
+        for G, data in zip(sensitivity_matrices, data_vectors):
+            check.BTTB_metadata(BTTB=G)
+            check.is_array(
+                x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
             )
-        for data in data_vectors:
-            check.is_array(x=data, ndim=1, shape=(Q * P,))
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
 
+    # get number of data for each dataset and initialize residuals list
     ndatasets = len(data_vectors)
-    ndata_per_dataset = Q * P
-    ndata = ndatasets * ndata_per_dataset
+    ndata_per_dataset = []
     residuals = []
     for data in data_vectors:
+        ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
+    ndata = np.sum(ndata_per_dataset)
+
+    # compute the matrices of eigenvalues
+    eigenvalues = []
+    for G in sensitivity_matrices:
+        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB=G, ordering="row"))
 
     # compute the first delta and initialize the deltas list
     deltas = []
@@ -537,11 +521,9 @@ def method_iterative_deconvolution_TOB20(
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for L, res, factor in zip(
-        eigenvalues_matrices, residuals, transposition_factors
-    ):
+    for L, res in zip(eigenvalues, residuals):
         vartheta[:] += convolve.product_BCCB_vector(
-            L=factor * L, Q=Q, P=P, v=res, ordering=ordering, check_input=False
+            eigenvalues=np.conj(L), ordering="row", v=res
         )
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
@@ -555,9 +537,9 @@ def method_iterative_deconvolution_TOB20(
     while (delta > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
-        for L, nu in zip(eigenvalues_matrices, nus):
+        for L, nu in zip(eigenvalues, nus):
             nu[:] = convolve.product_BCCB_vector(
-                L=L, Q=Q, P=P, v=eta, ordering=ordering, check_input=False
+                eigenvalues=L, ordering="row", v=eta
             )
             aux += np.sum(nu * nu)
         upsilon = rho0 / aux
@@ -569,16 +551,9 @@ def method_iterative_deconvolution_TOB20(
         delta = np.sqrt(delta) / ndata
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
-        for L, res, factor in zip(
-            eigenvalues_matrices, residuals, transposition_factors
-        ):
+        for L, res in zip(eigenvalues, residuals):
             vartheta[:] += convolve.product_BCCB_vector(
-                L=factor * L,
-                Q=Q,
-                P=P,
-                v=res,
-                ordering=ordering,
-                check_input=False,
+                eigenvalues=np.conj(L), ordering="row", v=res
             )
         rho = np.sum(vartheta * vartheta)
         tau = rho / rho0
