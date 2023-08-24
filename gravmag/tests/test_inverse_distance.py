@@ -90,14 +90,15 @@ def test_sedm_BTTB_compare_sedm_xy():
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    SEDM_BTTB = conv.general_BTTB(
-        num_blocks=y.size,
-        columns_blocks=np.reshape(
-            a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)
-        ),
-        rows_blocks=None,
-    )
-    aae(SEDM, SEDM_BTTB, decimal=10)
+    SEDM_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": y.size,
+        "columns": np.reshape(a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)),
+        "rows": None,
+    }
+    SEDM_BTTB_full = conv.generic_BTTB(BTTB=SEDM_BTTB)
+    aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
 def test_sedm_BTTB_compare_sedm_yx():
@@ -115,14 +116,15 @@ def test_sedm_BTTB_compare_sedm_yx():
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    SEDM_BTTB = conv.general_BTTB(
-        num_blocks=x.size,
-        columns_blocks=np.reshape(
-            a=SEDM_BTTB_1st_col, newshape=(x.size, y.size)
-        ),
-        rows_blocks=None,
-    )
-    aae(SEDM, SEDM_BTTB, decimal=10)
+    SEDM_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": x.size,
+        "columns": np.reshape(a=SEDM_BTTB_1st_col, newshape=(x.size, y.size)),
+        "rows": None,
+    }
+    SEDM_BTTB_full = conv.generic_BTTB(BTTB=SEDM_BTTB)
+    aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
 #### grad
@@ -276,6 +278,112 @@ def test_grad_known_points():
 ##### grad BTTB
 
 
+def test_grad_BTTB_known_points_x_oriented():
+    "verify results obtained for specific points"
+
+    # full grid of computation points
+    P = {
+        "x": np.array([-10, 0, 10, -10, 0, 10, -10, 0, 10], dtype=float),
+        "y": np.array([-10, -10, -10, 0, 0, 0, 10, 10, 10], dtype=float),
+        "z": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=float),
+    }
+
+    # source at the first corner
+    S = {
+        "x": np.array([-10], dtype=float),
+        "y": np.array([-10], dtype=float),
+        "z": np.array([10], dtype=float),
+    }
+
+    # vertical distance
+    DZ = 10.0
+
+    # relative coordinates
+    X = P["x"] - S["x"]
+    Y = P["y"] - S["y"]
+    Z = P["z"] - S["z"]
+
+    # first column of the SEDM BTTB
+    R2 = X**2 + Y**2 + DZ**2
+    R3 = R2 * np.sqrt(R2)
+
+    # reference gradient components
+    GX = -X / R3
+    GY = -Y / R3
+    GZ = -Z / R3
+
+    # open grid of computation points
+    grid = {
+        "x": np.array([[-10], [0], [10]], dtype=float),
+        "y": np.array([-10, 0, 10], dtype=float),
+        "z": 0.0,
+        "ordering": "xy",
+    }
+
+    # computed components
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    G = idist.grad_BTTB(
+        data_grid=grid, delta_z=DZ, SEDM=SEDM, components=["x", "y", "z"]
+    )
+
+    aae(G[0], GX, decimal=12)
+    aae(G[1], GY, decimal=12)
+    aae(G[2], GZ, decimal=12)
+
+
+def test_grad_BTTB_known_points_y_oriented():
+    "verify results obtained for specific points"
+
+    # full grid of computation points
+    P = {
+        "x": np.array([-10, -10, -10, 0, 0, 0, 10, 10, 10], dtype=float),
+        "y": np.array([-10, 0, 10, -10, 0, 10, -10, 0, 10], dtype=float),
+        "z": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=float),
+    }
+
+    # source at the first corner
+    S = {
+        "x": np.array([-10], dtype=float),
+        "y": np.array([-10], dtype=float),
+        "z": np.array([10], dtype=float),
+    }
+
+    # vertical distance
+    DZ = 10.0
+
+    # relative coordinates
+    X = P["x"] - S["x"]
+    Y = P["y"] - S["y"]
+    Z = P["z"] - S["z"]
+
+    # first column of the SEDM BTTB
+    R2 = X**2 + Y**2 + DZ**2
+    R3 = R2 * np.sqrt(R2)
+
+    # reference gradient components
+    GX = -X / R3
+    GY = -Y / R3
+    GZ = -Z / R3
+
+    # open grid of computation points
+    grid = {
+        "x": np.array([[-10], [0], [10]], dtype=float),
+        "y": np.array([-10, 0, 10], dtype=float),
+        "z": 0.0,
+        "ordering": "yx",
+    }
+
+    # computed components
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    G = idist.grad_BTTB(
+        data_grid=grid, delta_z=DZ, SEDM=SEDM, components=["x", "y", "z"]
+    )
+
+    aae(G[0], GX, decimal=12)
+    aae(G[1], GY, decimal=12)
+    aae(G[2], GZ, decimal=12)
+
+
 def test_grad_BTTB_compare_grad_xy():
     "verify if grad_BTTB produces the same result as grad for a xy grid"
     # cordinates of the grid
@@ -301,15 +409,25 @@ def test_grad_BTTB_compare_grad_xy():
     GRAD_BTTB_1st_col = idist.grad_BTTB(
         data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["x", "y", "z"]
     )
-    for element, element_BTTB_1st_col in zip(GRAD, GRAD_BTTB_1st_col):
-        element_BTTB = conv.general_BTTB(
-            num_blocks=y.size,
-            columns_blocks=np.reshape(
+    symmetries_structure = ["symm", "skew", "symm"]
+    symmetries_blocks = ["skew", "symm", "symm"]
+    for (
+        element,
+        element_BTTB_1st_col,
+        symmetry_structure,
+        symmetry_blocks,
+    ) in zip(GRAD, GRAD_BTTB_1st_col, symmetries_structure, symmetries_blocks):
+        element_BTTB = {
+            "symmetry_structure": symmetry_structure,
+            "symmetry_blocks": symmetry_blocks,
+            "nblocks": y.size,
+            "columns": np.reshape(
                 a=element_BTTB_1st_col, newshape=(y.size, x.size)
             ),
-            rows_blocks=None,
-        )
-        aae(element, element_BTTB, decimal=8)
+            "rows": None,
+        }
+        element_BTTB_full = conv.generic_BTTB(BTTB=element_BTTB)
+        aae(element, element_BTTB_full, decimal=8)
 
 
 def test_grad_BTTB_compare_grad_yx():
@@ -337,15 +455,25 @@ def test_grad_BTTB_compare_grad_yx():
     GRAD_BTTB_1st_col = idist.grad_BTTB(
         data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["x", "y", "z"]
     )
-    for element, element_BTTB_1st_col in zip(GRAD, GRAD_BTTB_1st_col):
-        element_BTTB = conv.general_BTTB(
-            num_blocks=x.size,
-            columns_blocks=np.reshape(
+    symmetries_structure = ["skew", "symm", "symm"]
+    symmetries_blocks = ["symm", "skew", "symm"]
+    for (
+        element,
+        element_BTTB_1st_col,
+        symmetry_structure,
+        symmetry_blocks,
+    ) in zip(GRAD, GRAD_BTTB_1st_col, symmetries_structure, symmetries_blocks):
+        element_BTTB = {
+            "symmetry_structure": symmetry_structure,
+            "symmetry_blocks": symmetry_blocks,
+            "nblocks": x.size,
+            "columns": np.reshape(
                 a=element_BTTB_1st_col, newshape=(x.size, y.size)
             ),
-            rows_blocks=None,
-        )
-        aae(element, element_BTTB, decimal=8)
+            "rows": None,
+        }
+        element_BTTB_full = conv.generic_BTTB(BTTB=element_BTTB)
+        aae(element, element_BTTB_full, decimal=8)
 
 
 #### grad tensor
@@ -597,18 +725,144 @@ def test_grad_tensor_known_points():
 ##### grad tensor BTTB
 
 
-def test_grad_tensor_BTTB_compare_grad_xy():
+def test_grad_tensor_BTTB_known_points_x_oriented():
+    "verify results obtained for specific points"
+
+    # full grid of computation points
+    P = {
+        "x": np.array([-10, 0, 10, -10, 0, 10, -10, 0, 10], dtype=float),
+        "y": np.array([-10, -10, -10, 0, 0, 0, 10, 10, 10], dtype=float),
+        "z": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=float),
+    }
+
+    # source at the first corner
+    S = {
+        "x": np.array([-10], dtype=float),
+        "y": np.array([-10], dtype=float),
+        "z": np.array([10], dtype=float),
+    }
+
+    # vertical distance
+    DZ = 10.0
+
+    # relative coordinates
+    X = P["x"] - S["x"]
+    Y = P["y"] - S["y"]
+    Z = P["z"] - S["z"]
+
+    # first column of the SEDM BTTB
+    R2 = X**2 + Y**2 + DZ**2
+    R3 = R2 * np.sqrt(R2)
+    R5 = R2 * R3
+
+    # reference gradient components
+    GXX = 3 * X * X / R5 - 1 / R3
+    GXY = 3 * X * Y / R5
+    GXZ = 3 * X * Z / R5
+    GYY = 3 * Y * Y / R5 - 1 / R3
+    GYZ = 3 * Y * Z / R5
+    GZZ = 3 * Z * Z / R5 - 1 / R3
+
+    # open grid of computation points
+    grid = {
+        "x": np.array([[-10], [0], [10]], dtype=float),
+        "y": np.array([-10, 0, 10], dtype=float),
+        "z": 0.0,
+        "ordering": "xy",
+    }
+
+    # computed components
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    G = idist.grad_tensor_BTTB(
+        data_grid=grid,
+        delta_z=DZ,
+        SEDM=SEDM,
+        components=["xx", "xy", "xz", "yy", "yz", "zz"],
+    )
+
+    aae(G[0], GXX, decimal=12)
+    aae(G[1], GXY, decimal=12)
+    aae(G[2], GXZ, decimal=12)
+    aae(G[3], GYY, decimal=12)
+    aae(G[4], GYZ, decimal=12)
+    aae(G[5], GZZ, decimal=12)
+
+
+def test_grad_tensor_BTTB_known_points_y_oriented():
+    "verify results obtained for specific points"
+
+    # full grid of computation points
+    P = {
+        "x": np.array([-10, -10, -10, 0, 0, 0, 10, 10, 10], dtype=float),
+        "y": np.array([-10, 0, 10, -10, 0, 10, -10, 0, 10], dtype=float),
+        "z": np.array([0, 0, 0, 0, 0, 0, 0, 0, 0], dtype=float),
+    }
+
+    # source at the first corner
+    S = {
+        "x": np.array([-10], dtype=float),
+        "y": np.array([-10], dtype=float),
+        "z": np.array([10], dtype=float),
+    }
+
+    # vertical distance
+    DZ = 10.0
+
+    # relative coordinates
+    X = P["x"] - S["x"]
+    Y = P["y"] - S["y"]
+    Z = P["z"] - S["z"]
+
+    # first column of the SEDM BTTB
+    R2 = X**2 + Y**2 + DZ**2
+    R3 = R2 * np.sqrt(R2)
+    R5 = R2 * R3
+
+    # reference gradient components
+    GXX = 3 * X * X / R5 - 1 / R3
+    GXY = 3 * X * Y / R5
+    GXZ = 3 * X * Z / R5
+    GYY = 3 * Y * Y / R5 - 1 / R3
+    GYZ = 3 * Y * Z / R5
+    GZZ = 3 * Z * Z / R5 - 1 / R3
+
+    # open grid of computation points
+    grid = {
+        "x": np.array([[-10], [0], [10]], dtype=float),
+        "y": np.array([-10, 0, 10], dtype=float),
+        "z": 0.0,
+        "ordering": "yx",
+    }
+
+    # computed components
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    G = idist.grad_tensor_BTTB(
+        data_grid=grid,
+        delta_z=DZ,
+        SEDM=SEDM,
+        components=["xx", "xy", "xz", "yy", "yz", "zz"],
+    )
+
+    aae(G[0], GXX, decimal=12)
+    aae(G[1], GXY, decimal=12)
+    aae(G[2], GXZ, decimal=12)
+    aae(G[3], GYY, decimal=12)
+    aae(G[4], GYZ, decimal=12)
+    aae(G[5], GZZ, decimal=12)
+
+
+def test_grad_tensor_BTTB_compare_grad_x_oriented():
     "verify if grad_tensor_BTTB produces the same result as grad_tensor for a xy grid"
     # cordinates of the grid
-    x = np.linspace(1.3, 5.7, 5) * 1e3
-    y = np.linspace(100.0, 104.3, 4) * 1e3
-    Dz = 15.8 * 1e3
+    x = np.linspace(100.3, 105.7, 5)
+    y = np.linspace(100.0, 104.3, 4)
+    Dz = 10.0
     # define points with 'ordering'='xy'
     xp, yp = np.meshgrid(x, y, indexing="xy")
-    zp = np.zeros_like(xp) + 30.0
+    zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "xy"}
+    grid = {"x": x[:, np.newaxis], "y": y, "z": 0.0, "ordering": "xy"}
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
@@ -625,29 +879,92 @@ def test_grad_tensor_BTTB_compare_grad_xy():
         SEDM=SEDM_BTTB,
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
-    for element, element_BTTB_1st_col in zip(GRAD, GRAD_BTTB_1st_col):
-        element_BTTB = conv.general_BTTB(
-            num_blocks=y.size,
-            columns_blocks=np.reshape(
-                a=element_BTTB_1st_col, newshape=(y.size, x.size)
-            ),
-            rows_blocks=None,
-        )
-        aae(element, element_BTTB, decimal=8)
+    # component xx
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[0], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[0], component_BTTB_full, decimal=12)
+    # component xy
+    component_BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[1], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[1], component_BTTB_full, decimal=12)
+    # component xz
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[2], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[2], component_BTTB_full, decimal=12)
+    # component yy
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[3], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[3], component_BTTB_full, decimal=12)
+    # component yz
+    component_BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[4], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[4], component_BTTB_full, decimal=12)
+    # component zz
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": y.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[5], newshape=(y.size, x.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[5], component_BTTB_full, decimal=12)
 
 
-def test_grad_tensor_BTTB_compare_grad_yx():
+def test_grad_tensor_BTTB_compare_grad_y_oriented():
     "verify if grad_tensor_BTTB produces the same result as grad_tensor for a yx grid"
     # cordinates of the grid
-    x = np.linspace(1.3, 5.7, 5) * 1e3
-    y = np.linspace(100.0, 104.3, 4) * 1e3
-    Dz = 15.8 * 1e3
+    x = np.linspace(100.3, 105.7, 5)
+    y = np.linspace(100.0, 104.3, 4)
+    Dz = 10.0
     # define points with 'ordering'='yx'
     xp, yp = np.meshgrid(x, y, indexing="ij")
-    zp = np.zeros_like(xp) + 30.0
+    zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "yx"}
+    grid = {"x": x[:, np.newaxis], "y": y, "z": 0.0, "ordering": "yx"}
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
@@ -664,12 +981,75 @@ def test_grad_tensor_BTTB_compare_grad_yx():
         SEDM=SEDM_BTTB,
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
-    for element, element_BTTB_1st_col in zip(GRAD, GRAD_BTTB_1st_col):
-        element_BTTB = conv.general_BTTB(
-            num_blocks=x.size,
-            columns_blocks=np.reshape(
-                a=element_BTTB_1st_col, newshape=(x.size, y.size)
-            ),
-            rows_blocks=None,
-        )
-        aae(element, element_BTTB, decimal=8)
+    # component xx
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[0], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[0], component_BTTB_full, decimal=12)
+    # component xy
+    component_BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[1], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[1], component_BTTB_full, decimal=12)
+    # component xz
+    component_BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[2], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[2], component_BTTB_full, decimal=12)
+    # component yy
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[3], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[3], component_BTTB_full, decimal=12)
+    # component yz
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[4], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[4], component_BTTB_full, decimal=12)
+    # component zz
+    component_BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": x.size,
+        "columns": np.reshape(
+            a=GRAD_BTTB_1st_col[5], newshape=(x.size, y.size)
+        ),
+        "rows": None,
+    }
+    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
+    aae(GRAD[5], component_BTTB_full, decimal=12)

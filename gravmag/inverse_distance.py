@@ -295,7 +295,7 @@ def grad_BTTB(
     broadcast_to_args = {
         "x": (data_grid["x"] - data_grid["x"][0]),
         "y": (data_grid["y"] - data_grid["y"][0]),
-        "z": delta_z,
+        "z": -delta_z,
     }
 
     # compute the gradient components defined in components
@@ -491,7 +491,7 @@ def grad_tensor_BTTB(
     broadcast_to_args = {
         "x": (data_grid["x"] - data_grid["x"][0]),
         "y": (data_grid["y"] - data_grid["y"][0]),
-        "z": delta_z,
+        "z": -delta_z,
     }
 
     # compute the inverse distance function to the powers 3 and 5
