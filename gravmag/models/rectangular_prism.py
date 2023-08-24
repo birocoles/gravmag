@@ -155,7 +155,7 @@ def kernel_potential(X, Y, Z, R):
     for a rectangular prism
     """
     result = (
-        Y * X * utils.safe_log(Z + R)
+        X * Y * utils.safe_log(Z + R)
         + X * Z * utils.safe_log(Y + R)
         + Y * Z * utils.safe_log(X + R)
         - 0.5 * Y**2 * utils.safe_atan2(Z * X, Y * R)
