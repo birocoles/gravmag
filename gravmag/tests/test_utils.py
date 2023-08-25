@@ -1,6 +1,8 @@
 import numpy as np
-import numpy.testing as npt
+from numpy.testing import assert_almost_equal as aae
+from numpy.testing import assert_equal as ae
 import pytest
+from numba import njit
 from .. import utils
 
 
@@ -10,7 +12,7 @@ def test_unit_vector_magnitude():
     D = [-28, 47, 5, 18, 0, 90, -90, 7, 89]
     for inc, dec in zip(I, D):
         u = utils.unit_vector(inc, dec)
-        npt.assert_allclose(np.sum(u * u), 1, atol=1e-15)
+        aae(np.sum(u * u), 1, decimal=15)
 
 
 def test_unit_vector_known_values():
@@ -26,7 +28,7 @@ def test_unit_vector_known_values():
     ]
     for inc, dec, ref in zip(I, D, reference_outputs):
         u = utils.unit_vector(inc, dec)
-        npt.assert_allclose(u, ref, atol=1e-15)
+        aae(u, ref, decimal=15)
 
 
 def test_direction_known_values():
@@ -44,9 +46,9 @@ def test_direction_known_values():
         reference_I, reference_D, reference_inputs
     ):
         intens, inc, dec = utils.direction(ref_input)
-        npt.assert_allclose(intens, 1)
-        npt.assert_allclose(inc, ref_inc)
-        npt.assert_allclose(dec, ref_dec)
+        aae(intens, 1, decimal=15)
+        aae(inc, ref_inc, decimal=15)
+        aae(dec, ref_dec, decimal=15)
 
 
 def test_rotation_matrix_orthonormal():
@@ -57,40 +59,74 @@ def test_rotation_matrix_orthonormal():
     dD = [8, 7, -51, 108, 19.4, 0, 6, -7, 389]
     for inc, dec, dinc, ddec in zip(I, D, dI, dD):
         R = utils.rotation_matrix(inc, dec, dinc, ddec)
-        npt.assert_allclose(np.dot(R.T, R), np.identity(3), atol=1e-15)
-        npt.assert_allclose(np.dot(R, R.T), np.identity(3), atol=1e-15)
+        aae(np.dot(R.T, R), np.identity(3), decimal=15)
+        aae(np.dot(R, R.T), np.identity(3), decimal=15)
+
+
+def test_safe_atan2_entrywise():
+    "Test the safe_atan2 function"
+    # Test safe_atan2 for one point per quadrant
+    x = np.array([1.0, -1.0, -1.0, 1.0])
+    y = np.array([1.0, 1.0, -1.0, -1.0])
+    reference = np.array([np.pi / 4, -np.pi / 4, np.pi / 4, -np.pi / 4])
+    for xi, yi, ri in zip(x, y, reference):
+        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
+    # Test safe_atan2 if the denominator is equal to zero
+    x = np.array([0.0, 0.0])
+    y = np.array([1.0, -1.0])
+    reference = np.array([np.pi / 2, -np.pi / 2])
+    for xi, yi, ri in zip(x, y, reference):
+        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
+    # Test safe_atan2 if both numerator and denominator are equal to zero
+    x = np.array([0.0, 0.0])
+    y = np.array([0.0, 0.0])
+    reference = np.array([0, 0])
+    for xi, yi, ri in zip(x, y, reference):
+        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
 
 
 def test_safe_atan2():
     "Test the safe_atan2 function"
     # Test safe_atan2 for one point per quadrant
-    # First quadrant
-    x, y = 1, 1
-    npt.assert_allclose(utils.safe_atan2(y, x), np.pi / 4)
-    # Second quadrant
-    x, y = -1, 1
-    npt.assert_allclose(utils.safe_atan2(y, x), -np.pi / 4)
-    # Third quadrant
-    x, y = -1, -1
-    npt.assert_allclose(utils.safe_atan2(y, x), np.pi / 4)
-    # Forth quadrant
-    x, y = 1, -1
-    npt.assert_allclose(utils.safe_atan2(y, x), -np.pi / 4)
+    x = np.array([[1.0, -1.0], [-1.0, 1.0]])
+    y = np.array([[1.0, 1.0], [-1.0, -1.0]])
+    reference = np.array([[np.pi / 4, -np.pi / 4], [np.pi / 4, -np.pi / 4]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
     # Test safe_atan2 if the denominator is equal to zero
-    npt.assert_allclose(utils.safe_atan2(1, 0), np.pi / 2)
-    npt.assert_allclose(utils.safe_atan2(-1, 0), -np.pi / 2)
+    x = np.array([[0.0, 0.0]])
+    y = np.array([[1.0, -1.0]])
+    reference = np.array([[np.pi / 2, -np.pi / 2]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
     # Test safe_atan2 if both numerator and denominator are equal to zero
-    npt.assert_allclose(utils.safe_atan2(0, 0), 0)
+    x = np.array([[0.0, 0.0]])
+    y = np.array([[0.0, 0.0]])
+    reference = np.array([[0, 0]])
+    aae(utils.safe_atan2(y, x), reference, decimal=15)
+
+
+def test_safe_log_entrywise():
+    "Test the safe_log function"
+    # Check if safe_log function satisfies safe_log(0) == 0
+    x = np.array([0.0, 0.0])
+    reference = np.zeros(2)
+    for xi, ri in zip(x, reference):
+        aae(utils.safe_log_entrywise(xi), ri, decimal=15)
+    # Check if safe_log behaves like the natural logarithm in case that x != 0
+    x = np.linspace(1, 100, 100)
+    reference = np.log(x)
+    for xi, ri in zip(x, reference):
+        aae(utils.safe_log_entrywise(xi), ri, decimal=15)
 
 
 def test_safe_log():
     "Test the safe_log function"
     # Check if safe_log function satisfies safe_log(0) == 0
-    npt.assert_allclose(utils.safe_log(0), 0)
+    x = np.array([[0.0, 0.0]])
+    reference = np.zeros((1, 2))
+    aae(utils.safe_log(x), reference, decimal=15)
     # Check if safe_log behaves like the natural logarithm in case that x != 0
-    x = np.linspace(1, 100, 101)
-    for x_i in x:
-        npt.assert_allclose(utils.safe_log(x_i), np.log(x_i))
+    x = np.linspace(1, 100, 100).reshape((4, 25))
+    aae(utils.safe_log(x), np.log(x), decimal=15)
 
 
 def test_magnetization_components():
@@ -101,11 +137,7 @@ def test_magnetization_components():
     my_ref = np.array([np.sqrt(6) / 4, -10 / 4])
     mz_ref = np.array([-1 / 2, 10 * np.sqrt(3) / 2])
     mx, my, mz = utils.magnetization_components(magnetization)
-    # mx, my, mz with ndim != 1
-    npt.assert_allclose(mx.ndim, 1)
-    npt.assert_allclose(my.ndim, 1)
-    npt.assert_allclose(mz.ndim, 1)
     # mx, my, mz are close to reference values
-    npt.assert_allclose(mx, mx_ref)
-    npt.assert_allclose(my, my_ref)
-    npt.assert_allclose(mz, mz_ref)
+    aae(mx, mx_ref, decimal=13)
+    aae(my, my_ref, decimal=13)
+    aae(mz, mz_ref, decimal=13)

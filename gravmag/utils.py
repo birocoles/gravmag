@@ -4,6 +4,29 @@ from . import check
 
 
 @njit
+def safe_atan2_entrywise(y, x):
+    """
+    Principal value of the arctangent expressed as a two variable function
+
+    This modification has to be made to the arctangent function so the
+    gravitational field of the prism satisfies the Poisson's equation.
+    Therefore, it guarantees that the fields satisfies the symmetry properties
+    of the prism. This modified function has been defined according to
+    Fukushima (2020, eq. 72).
+    """
+    if x != 0.0:
+        result = np.arctan(y / x)
+    else:
+        if y > 0.0:
+            result = np.pi / 2
+        elif y < 0.0:
+            result = -np.pi / 2
+        else:
+            result = 0.0
+    return result
+
+
+@njit
 def safe_atan2(y, x):
     """
     Principal value of the arctangent expressed as a two variable function
@@ -14,19 +37,22 @@ def safe_atan2(y, x):
     of the prism. This modified function has been defined according to
     Fukushima (2020, eq. 72).
     """
-    if x != 0:
-        result = np.arctan(y / x)
-    else:
-        if y > 0:
-            result = np.pi / 2
-        elif y < 0:
-            result = -np.pi / 2
-        else:
-            result = 0
+    result = np.empty_like(x)
+    for i in range(result.shape[0]):
+        for j in range(result.shape[1]):
+            if x[i, j] != 0.0:
+                result[i, j] = np.arctan(y[i, j] / x[i, j])
+            else:
+                if y[i, j] > 0.0:
+                    result[i, j] = np.pi / 2
+                elif y[i, j] < 0.0:
+                    result[i, j] = -np.pi / 2
+                else:
+                    result[i, j] = 0.0
     return result
 
 
-def numpy_safe_atan2(y, x):
+def safe_atan2_np(y, x):
     """
     Principal value of the arctangent expressed as a two variable function
 
@@ -36,16 +62,30 @@ def numpy_safe_atan2(y, x):
     of the prism. This modified function has been defined according to
     Fukushima (2020, eq. 72).
     """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
     result = np.zeros_like(y)
-    
+
     # x != 0
-    indices_x = np.nonzero(x)
-    result[indices_x] = np.arctan(y[indices_x] / x[indices_x])
+    nonzero_x = x != 0
+    result[nonzero_x] = np.arctan(y[nonzero_x] / x[nonzero_x])
 
     # x == 0
-    indices_x = np.invert(indices_x)
-    result[indices_x] = np.sign(y[indices_x]) * np.pi / 2
+    zero_x = x == 0
+    result[zero_x] = np.sign(y[zero_x]) * np.pi / 2
+    return result
 
+
+@njit
+def safe_log_entrywise(x):
+    """
+    Modified log to return 0 for log(0).
+    The limits in the formula terms tend to 0.
+    """
+    if np.abs(x) < 1e-10:
+        result = 0.0
+    else:
+        result = np.log(x)
     return result
 
 
@@ -55,23 +95,26 @@ def safe_log(x):
     Modified log to return 0 for log(0).
     The limits in the formula terms tend to 0.
     """
-    if np.abs(x) < 1e-10:
-        result = 0
-    else:
-        result = np.log(x)
+    result = np.empty_like(x)
+    for i in range(result.shape[0]):
+        for j in range(result.shape[1]):
+            if np.abs(x[i, j]) < 1e-10:
+                result[i, j] = 0.0
+            else:
+                result[i, j] = np.log(x[i, j])
     return result
 
 
-def numpy_safe_log(x):
+def safe_log_np(x):
     """
     Modified log to return 0 for log(0).
     The limits in the formula terms tend to 0.
     """
+    x = np.asarray(x, dtype=float)
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = (np.abs(x) >= 1e-10)
+    indices_x = np.abs(x) >= 1e-10
     result[indices_x] = np.log(x[indices_x])
-
     return result
 
 
@@ -270,6 +313,6 @@ def prisms_volume(prisms):
     # Verify the input parameters
     check.rectangular_prisms(prisms)
 
-    volume = np.prod(prisms[:,[1,3,5]] - prisms[:,[0,2,4]], axis=1)
+    volume = np.prod(prisms[:, [1, 3, 5]] - prisms[:, [0, 2, 4]], axis=1)
 
     return volume

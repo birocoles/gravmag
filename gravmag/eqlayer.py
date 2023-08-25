@@ -1,71 +1,81 @@
 import numpy as np
 from scipy.spatial import distance
-from . import inverse_distance as id
-from . import check, utils
+from scipy.fft import fft2, ifft2
+import warnings
+from . import inverse_distance as idist
+from . import check, utils, constants, convolve
 
 
-def kernel_matrix_monopoles(data_points, source_points, field="z", check_input=True):
-    """
-    Compute the kernel matrix produced by a planar layer of monopoles.
+# def kernel_grav(data_points, source_points, fields=["z"], check_input=True):
+#     """
+#     Compute the kernel matrix produced by a planar layer of monopoles.
 
-    parameters
-    ----------
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
-    field : string
-        Defines the field produced by the layer. The available options are:
-        "potential", "x", "y", "z", "xx", "xy", "xz", "yy", "yz", "zz".
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
+#     parameters
+#     ----------
+#     data_points: dictionary
+#         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+#         respectively. Each key is a numpy array 1d having the same number of elements.
+#     source_points: dictionary
+#         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+#         respectively. Each key is a numpy array 1d having the same number of elements.
+#     field : list of strings
+#         Defines the fields produced by the layer. The available options are:
+#         "potential", "x", "y", "z", "xx", "xy", "xz", "yy", "yz", "zz".
+#     check_input : boolean
+#         If True, verify if the input is valid. Default is True.
 
-    returns
-    -------
-    G: numpy array 2d
-        N x M matrix defined by the kernel of the equivalent layer integral.
-    """
+#     returns
+#     -------
+#     G: list of numpy array 2d
+#         List of N x M matrices defined by the kernels of the equivalent layer integral.
+#     """
 
-    if check_input is True:
-        data_points = np.asarray(data_points)
-        check.coordinates(data_points)
-        check.coordinates(source_points)
-        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
-        # check if field is valid
-        if field not in [
-            "potential",
-            "x",
-            "y",
-            "z",
-            "xx",
-            "xy",
-            "xz",
-            "yy",
-            "yz",
-            "zz",
-        ]:
-            raise ValueError("invalid field {}".format(field))
+#     if check_input is True:
+#         check.are_coordinates(data_points)
+#         check.are_coordinates(source_points)
+#         if np.max(data_points['z']) >= np.min(source_points['z']):
+#             warnings.warn("verify if the surface containing data cross the equivalent layer")
+#         # check if field is valid
+#         for field in fields:
+#             if field not in [
+#                 "potential",
+#                 "x",
+#                 "y",
+#                 "z",
+#                 "xx",
+#                 "xy",
+#                 "xz",
+#                 "yy",
+#                 "yz",
+#                 "zz",
+#             ]:
+#                 raise ValueError("invalid field {}".format(field))
 
-    # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = id.sedm(data_points, source_points, check_input=False)
+#     # compute Squared Euclidean Distance Matrix (SEDM)
+#     R2 = idist.sedm(data_points, source_points, check_input=False)
 
-    # compute the kernel matrix according to "field"
-    if field == "potential":
-        G = 1.0 / np.sqrt(R2)
-    elif field in ["x", "y", "z"]:
-        G = id.grad(data_points, source_points, R2, [field], False)[0]
-    else:  # field is in ["xx", "xy", "xz", "yy", "yz", "zz"]
-        G = id.grad_tensor(data_points, source_points, R2, [field], False)[0]
+#     # compute the kernel matrices according to "fields"
+#     G = []
+#     for field in fields:
+#         if field == "potential":
+#             G.append(1.0 / np.sqrt(R2))
+#         elif field in ["x", "y", "z"]:
+#             G.append(idist.grad(data_points, source_points, R2, [field], False)[0])
+#         else:  # field is in ["xx", "xy", "xz", "yy", "yz", "zz"]
+#             G.append(idist.grad_tensor(data_points, source_points, R2, [field], False)[0])
 
-    return G
+#     return G
 
 
 def kernel_matrix_dipoles(
-    data_points, source_points, inc, dec, field="t", inct=None, dect=None, check_input=True
+    data_points,
+    source_points,
+    inc,
+    dec,
+    field="z",
+    inct=None,
+    dect=None,
+    check_input=True,
 ):
     """
     Compute the kernel matrix produced by a planar layer of dipoles with
@@ -73,14 +83,12 @@ def kernel_matrix_dipoles(
 
     parameters
     ----------
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
-    source_points: numpy array 2d
-        3 x M matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of M sources. The jth column contains the coordinates of
-        the jth source.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
     inc, dec : ints or floats
         Scalars defining the constant inclination and declination of the
         dipoles magnetization.
@@ -107,31 +115,33 @@ def kernel_matrix_dipoles(
     """
 
     if check_input is True:
-        data_points = np.asarray(data_points)
-        check.coordinates(data_points)
-        check.coordinates(source_points)
-        assert np.all(data_points[2] < source_points[2]), "all data points must be above source points"
-        assert isinstance(inc, (float, int)), "inc must be a scalar"
-        assert isinstance(dec, (float, int)), "dec must be a scalar"
+        check.are_coordinates(data_points)
+        check.are_coordinates(source_points)
+        if np.max(data_points["z"]) >= np.min(source_points["z"]):
+            warnings.warn(
+                "verify if the surface containing data cross the equivalent layer"
+            )
+        if type(inc) not in [float, int]:
+            raise ValueError("inc must be a scalar")
+        if type(dec) not in [float, int]:
+            raise ValueError("dec must be a scalar")
         # check if field is valid
         if field not in ["potential", "x", "y", "z", "t"]:
             raise ValueError("invalid field {}".format(field))
         if field == "t":
-            assert isinstance(
-                inct, (float, int)
-            ), "inct must be a scalar because field is 't'"
-            assert isinstance(
-                dect, (float, int)
-            ), "dect must be a scalar because field is 't'"
+            if type(inct) not in [float, int]:
+                raise ValueError("inct must be a scalar because field is 't'")
+            if type(dect) not in [float, int]:
+                raise ValueError("dect must be a scalar because field is 't'")
 
     # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = id.sedm(data_points, source_points, check_input=False)
+    R2 = idist.sedm(data_points, source_points, check_input=False)
     # compute the unit vector defined by inc and dec
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # compute the kernel matrix according to "field"
     if field == "potential":
-        Gx, Gy, Gz = id.grad(
+        Gx, Gy, Gz = idist.grad(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -140,7 +150,7 @@ def kernel_matrix_dipoles(
         )
         G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
     elif field == "x":
-        Gxx, Gxy, Gxz = id.grad_tensor(
+        Gxx, Gxy, Gxz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -149,7 +159,7 @@ def kernel_matrix_dipoles(
         )
         G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
     elif field == "y":
-        Gxy, Gyy, Gyz = id.grad_tensor(
+        Gxy, Gyy, Gyz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -158,7 +168,7 @@ def kernel_matrix_dipoles(
         )
         G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
     elif field == "z":
-        Gxz, Gyz, Gzz = id.grad_tensor(
+        Gxz, Gyz, Gzz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -169,7 +179,7 @@ def kernel_matrix_dipoles(
     else:  # field is "t"
         # compute the unit vector defined by inct and dect
         t = utils.unit_vector(inct, dect, check_input=False)
-        Gxx, Gxy, Gxz, Gyy, Gyz = id.grad_tensor(
+        Gxx, Gxy, Gxz, Gyy, Gyz = idist.grad_tensor(
             data_points=data_points,
             source_points=source_points,
             SEDM=R2,
@@ -186,16 +196,202 @@ def kernel_matrix_dipoles(
     return G
 
 
-def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
+def method_CGLS(
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
+):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
-    distribution on the equivalent layer via conjugate gradient normal equation residual 
-    (CGNR) (Golub and Van Loan, 2013, sec. 11.3) or conjugate gradient least squares (CGLS) 
+    distribution on the equivalent layer via conjugate gradient normal equation residual
+    (CGNR) (Golub and Van Loan, 2013, sec. 11.3) or conjugate gradient least squares (CGLS)
     (Aster et al., 2019, p. 165) method.
 
     parameters
     ----------
-    G: numpy array 2d
+    sensitivity_matrices: list of numpy arrays 2d
+        List of matrices with same number of columns defining the kernel of the equivalent layer integral.
+    data_vectors : list of numpy arrays 1d
+        List of potential-field data.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    deltas : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
+
+    if check_input == True:
+        # check if G and data are consistent numpy arrays
+        if type(sensitivity_matrices) != list:
+            raise ValueError("sensitivity_matrices must be a list")
+        if type(data_vectors) != list:
+            raise ValueError("data_vectors must be a list")
+        if len(sensitivity_matrices) != len(data_vectors):
+            raise ValueError(
+                "sensitivity_matrices and data_vectors must have the same number of elements"
+            )
+        for G, data in zip(sensitivity_matrices, data_vectors):
+            check.sensitivity_matrix_and_data(matrix=G, data=data)
+        # check if epsilon is a positive scalar
+        check.is_scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.is_integer(x=ITMAX, positive=True)
+
+    # get number of data for each dataset and initialize residuals list
+    ndatasets = len(data_vectors)
+    ndata_per_dataset = []
+    residuals = []
+    for data in data_vectors:
+        ndata_per_dataset.append(data.size)
+        residuals.append(np.copy(data))
+    ndata = np.sum(ndata_per_dataset)
+
+    # compute the first delta and initialize the deltas list
+    deltas = []
+    delta = 0.0
+    for res in residuals:
+        delta += np.sum(res * res)
+    delta = np.sqrt(delta) / ndata
+    deltas.append(delta)
+
+    # initialize the parameter vector
+    parameters = np.zeros(ndata_per_dataset, dtype=float)
+
+    # initialize auxiliary variables
+    vartheta = np.zeros_like(parameters)
+    for G, res in zip(sensitivity_matrices, residuals):
+        vartheta[:] += G.T @ res
+    rho0 = np.sum(vartheta * vartheta)
+    tau = 0.0
+    eta = np.zeros_like(parameters)
+    nus = []
+    for i in range(ndatasets):
+        nus.append(np.zeros_like(parameters))
+    m = 1
+
+    # updates
+    while (delta > epsilon) and (m < ITMAX):
+        eta[:] = vartheta + tau * eta
+        aux = 0.0
+        for G, nu in zip(sensitivity_matrices, nus):
+            nu[:] = G @ eta
+            aux += np.sum(nu * nu)
+        upsilon = rho0 / aux
+        parameters[:] += upsilon * eta
+        delta = 0.0
+        for res, nu in zip(residuals, nus):
+            res[:] -= upsilon * nu
+            delta += np.sum(res * res)
+        delta = np.sqrt(delta) / ndata
+        deltas.append(delta)
+        vartheta[:] = 0.0  # remember that vartheta in an array like parameters
+        for sensitivity_matrix, res in zip(sensitivity_matrices, residuals):
+            vartheta[:] += sensitivity_matrix.T @ res
+        rho = np.sum(vartheta * vartheta)
+        tau = rho / rho0
+        rho0 = rho
+        m += 1
+
+    return deltas, parameters
+
+
+def method_column_action_C92(
+    sensitivity_matrix,
+    data,
+    data_points,
+    zlayer,
+    epsilon,
+    ITMAX,
+    check_input=True,
+):
+    """
+    Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
+
+    parameters
+    ----------
+    sensitivity_matrix: numpy array 2d
+        N x M matrix defined by the kernel of the equivalent layer integral.
+    data : numpy array 1d
+        Potential-field data.
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    zlayer : float
+        Constant defining the vertical position for all equivalent sources.
+    epsilon : float
+        Tolerance for evaluating convergence criterion.
+    ITMAX : int
+        Maximum number of iterations. Default is 50.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    rmax_list : list of floats
+        List of maximum absolute residuals.
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
+
+    if check_input == True:
+        # check if data and sensitivity_matrix are consistent numpy arrays
+        check.sensitivity_matrix_and_data(matrix=sensitivity_matrix, data=data)
+        # check data points
+        check.are_coordinates(coordinates=data_points)
+        # check if zlayer result in a layer below the data points
+        check.is_scalar(x=zlayer, positive=False)
+        if np.any(zlayer <= data_points["z"]):
+            raise ValueError(
+                "zlayer must be greater than the z coordinate of all data points"
+            )
+        # check if epsilon is a positive scalar
+        check.is_scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.is_integer(x=ITMAX, positive=True)
+
+        # initializations
+        data_aux = sensitivity_matrix @ data
+        scale = (data_aux @ data) / (data_aux @ data_aux)
+        parameters = data * scale
+        residuals = data - sensitivity_matrix @ parameters
+        imax = np.argmax(np.abs(residuals))
+        rmax = residuals[imax]
+        rmax_list = []
+        rmax_list.append(abs(rmax))
+        m = 1
+        # updates
+        while (abs(rmax) > epsilon) and (m < ITMAX):
+            xmax = data_points["x"][imax]
+            ymax = data_points["y"][imax]
+            zmax = data_points["z"][imax]
+            # dp = rmax * scale * np.abs(zlayer - zmax)
+            dp = rmax * scale
+            parameters[imax] += dp
+            residuals[:] -= sensitivity_matrix[:, imax] * dp
+            imax = np.argmax(np.abs(residuals))
+            rmax = residuals[imax]
+            rmax_list.append(abs(rmax))
+            m += 1
+
+        return rmax_list, parameters
+
+
+def method_iterative_SOB17(
+    sensitivity_matrix, data, epsilon, ITMAX=50, check_input=True
+):
+    """
+    Solves the unconstrained problem to estimate the physical-property
+    distribution on the equivalent layer via iterative method.
+
+    parameters
+    ----------
+    sensitivity_matrix: numpy array 2d
         N x M matrix defined by the kernel of the equivalent layer integral.
     data : numpy array 1d
         Potential-field data.
@@ -213,82 +409,54 @@ def method_CGLS(G, data, epsilon, ITMAX=50, check_input=True):
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
-    
-    if check_input is True:
 
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
-            raise ValueError(
-                "data must be a 1d array"
-            )
-
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
-            )
-
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
-
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
-
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
-
+    if check_input == True:
+        # check if data and sensitivity_matrix are consistent numpy arrays
+        check.sensitivity_matrix_and_data(matrix=sensitivity_matrix, data=data)
+        # check if epsilon is a positive scalar
+        check.is_scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.is_integer(x=ITMAX, positive=True)
 
     # initializations
     D = data.size
-    residuals = np.copy(data)
+    data_aux = sensitivity_matrix @ data
+    scale = (data_aux @ data) / (data_aux @ data_aux)
+    parameters = data * scale
+    residuals = data - sensitivity_matrix @ parameters
     delta_list = []
-    delta = np.sqrt(np.sum(residuals*residuals))/D
+    delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
-    vartheta = G.T@residuals
-    rho0 = np.sum(vartheta*vartheta)
-    parameters = np.zeros(G.shape[1])
-    tau = 0
-    eta = np.zeros_like(parameters)
+    nu = np.zeros_like(parameters)
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
-        eta = vartheta + tau*eta
-        nu = G@eta
-        upsilon = rho0/np.sum(nu*nu)
-        parameters += upsilon*eta
-        residuals -= upsilon*nu
-        delta = np.sqrt(np.sum(residuals*residuals))/D
+        dp = scale * residuals
+        parameters[:] += dp
+        nu[:] = sensitivity_matrix @ dp
+        residuals[:] -= nu
+        delta = np.sqrt(np.sum(residuals * residuals)) / D
         delta_list.append(delta)
-        vartheta = G.T@residuals
-        rho = np.sum(vartheta*vartheta)
-        tau = rho/rho0
-        rho0 = rho
         m += 1
 
     return delta_list, parameters
 
 
-def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX, check_input=True):
+def method_iterative_deconvolution_TOB20(
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
+):
     """
-    Estimates the physical-property distribution on the equivalent layer via column-action approach proposed by Cordell (1992).
+    Solves the unconstrained overdetermined problem to estimate the physical-property
+    distribution on the equivalent layer via convolutional equivalent-layer method
+    proposed by Takahashi et al. (2020, 2022).
 
     parameters
     ----------
-    G: numpy array 2d
-        N x M matrix defined by the kernel of the equivalent layer integral.
-    data : numpy array 1d
-        Potential-field data.
-    data_points : numpy array 2d
-        3 x N matrix containing the coordinates x (1rt row), y (2nd row),
-        z (3rd row) of N data points. The ith column contains the
-        coordinates of the ith data point.
-    zlayer : float
-        Constant defining the vertical position for all equivalent sources.
+    sensitivity_matrices: list of dictionaries
+        List of dictionaries defining the kernel of the equivalent layer integral. Here, it is considered that
+        the kernels are BTTB matrices.
+    data_vectors : list of numpy arrays 1d
+        List of potential-field data.
     epsilon : float
         Tolerance for evaluating convergence criterion.
     ITMAX : int
@@ -298,143 +466,143 @@ def method_column_action_C92(G, data, data_points, zlayer, sigma, epsilon, ITMAX
 
     returns
     -------
-    rmax_list : list of floats
-        List of maximum absolute residuals.
-    parameters : numpy array 1d
-        Physical property distribution on the equivalent layer.
-    """    
-
-    if check_input is True:
-
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
-            raise ValueError(
-                "data must be a 1d array"
-            )
-
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
-            )
-
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
-
-        data_points = np.asarray(data_points)
-        check.coordinates(data_points)
-
-        assert isinstance(zlayer, float) and (
-            np.all(zlayer > data_points[2])
-        ), "zlayer must be below the observation points"
-
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
-
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
-
-
-        # initializations
-        residuals = np.copy(data)
-        parameters = np.zeros_like(data)
-        imax = np.argmax(np.abs(residuals))
-        rmax = residuals[imax]
-        rmax_list = []
-        rmax_list.append(rmax)
-        m = 1
-        # updates
-        while (rmax > epsilon) and (m < ITMAX):
-            xmax, ymax, zmax = data_points[:,imax]
-            parameters[imax] += rmax*(zlayer - zmax)*sigma
-            residuals -= G[:,imax]*rmax
-            imax = np.argmax(np.abs(residuals))
-            rmax = residuals[imax]
-            rmax_list.append(rmax)
-            m += 1
-
-        return rmax_list, parameters
-
-
-def method_iterative_SOB17(G, data, factor, epsilon, ITMAX=50, check_input=True):
-    """
-    Solves the unconstrained problem to estimate the physical-property
-    distribution on the equivalent layer via iterative method.
-
-    parameters
-    ----------
-    G: numpy array 2d
-        N x M matrix defined by the kernel of the equivalent layer integral.
-    data : numpy array 1d
-        Potential-field data.
-    factor : float
-        Positive scalar controlling the convergence.
-    epsilon : float
-        Tolerance for evaluating convergence criterion.
-    ITMAX : int
-        Maximum number of iterations. Default is 50.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    delta : float
-        Ratio of Euclidean norm of the residuals and number of data.
+    deltas : list of floats
+        List of ratios of Euclidean norm of the residuals and number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
-    
-    if check_input is True:
 
-        # check if data is a 1d numpy array
-        if data.ndim != 1:
+    if check_input == True:
+        if type(sensitivity_matrices) != list:
+            raise ValueError("sensitivity_matrices must be a list")
+        for G in sensitivity_matrices:
+            check.BTTB_metadata(BTTB=G)
+        if type(data_vectors) != list:
+            raise ValueError("data_vectors must be a list")
+        if len(sensitivity_matrices) != len(data_vectors):
             raise ValueError(
-                "data must be a 1d array"
+                "sensitivity_matrices and data_vectors must have the same number of elements"
             )
-
-        # check if G is a 2d numpy array
-        if G.ndim != 2:
-            raise ValueError(
-                "G must be a matriz"
+        # check if the sensitivity_matrices and data_vectors are formed by consistent
+        # BTTB matrices and numpy arrays
+        for G, data in zip(sensitivity_matrices, data_vectors):
+            check.BTTB_metadata(BTTB=G)
+            check.is_array(
+                x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
             )
+        # check if epsilon is a positive scalar
+        check.is_scalar(x=epsilon, positive=True)
+        # check if ITMAX is a positive integer
+        check.is_integer(x=ITMAX, positive=True)
 
-        # check if G match number of data
-        if G.shape[0] != (data.size):
-            raise ValueError(
-                "G does not match the number of data"
-            )
+    # get number of data for each dataset and initialize residuals list
+    ndatasets = len(data_vectors)
+    ndata_per_dataset = []
+    residuals = []
+    for data in data_vectors:
+        ndata_per_dataset.append(data.size)
+        residuals.append(np.copy(data))
+    ndata = np.sum(ndata_per_dataset)
 
-        assert isinstance(factor, float) and (
-            factor > 0
-        ), "factor must be a positive scalar"
+    # compute the matrices of eigenvalues
+    eigenvalues = []
+    for G in sensitivity_matrices:
+        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB=G, ordering="row"))
 
-        assert isinstance(epsilon, float) and (
-            epsilon > 0
-        ), "epsilon must be a positive scalar"
+    # compute the first delta and initialize the deltas list
+    deltas = []
+    delta = 0.0
+    for res in residuals:
+        delta += np.sum(res * res)
+    delta = np.sqrt(delta) / ndata
+    deltas.append(delta)
 
-        assert isinstance(ITMAX, int) and (
-            ITMAX > 0
-        ), "ITMAX must be a positive integer"
+    # initialize the parameter vector
+    parameters = np.zeros(ndata_per_dataset, dtype=float)
 
-
-    # initializations
-    D = data.size
-    parameters = factor*data
-    residuals = data - G@parameters
-    delta = np.sqrt(np.sum(residuals*residuals))/D
+    # initialize auxiliary variables
+    vartheta = np.zeros_like(parameters)
+    for L, res in zip(eigenvalues, residuals):
+        vartheta[:] += convolve.product_BCCB_vector(
+            eigenvalues=np.conj(L), ordering="row", v=res
+        )
+    rho0 = np.sum(vartheta * vartheta)
+    tau = 0.0
+    eta = np.zeros_like(parameters)
+    nus = []
+    for i in range(ndatasets):
+        nus.append(np.zeros_like(parameters))
     m = 1
+
     # updates
     while (delta > epsilon) and (m < ITMAX):
-        dp = factor*residuals
-        p += dp
-        nu = G@dp
-        r -= nu
-        delta = np.sqrt(np.sum(residuals*residuals))/D
+        eta[:] = vartheta + tau * eta
+        aux = 0.0
+        for L, nu in zip(eigenvalues, nus):
+            nu[:] = convolve.product_BCCB_vector(
+                eigenvalues=L, ordering="row", v=eta
+            )
+            aux += np.sum(nu * nu)
+        upsilon = rho0 / aux
+        parameters[:] += upsilon * eta
+        delta = 0.0
+        for res, nu in zip(residuals, nus):
+            res[:] -= upsilon * nu
+            delta += np.sum(res * res)
+        delta = np.sqrt(delta) / ndata
+        deltas.append(delta)
+        vartheta[:] = 0.0  # remember that vartheta in an array like parameters
+        for L, res in zip(eigenvalues, residuals):
+            vartheta[:] += convolve.product_BCCB_vector(
+                eigenvalues=np.conj(L), ordering="row", v=res
+            )
+        rho = np.sum(vartheta * vartheta)
+        tau = rho / rho0
+        rho0 = rho
         m += 1
 
-    return delta, parameters
+    return deltas, parameters
+
+
+def method_direct_deconvolution(
+    sensitivity_matrix, data, zeta, check_input=True
+):
+    if check_input == True:
+        check.BTTB_metadata(BTTB=sensitivity_matrix)
+        check.is_array(
+            x=data,
+            ndim=1,
+            shape=(
+                sensitivity_matrix["columns"].shape[1]
+                * sensitivity_matrix["nblocks"],
+            ),
+        )
+        # check if zeta is a positive scalar
+        check.is_scalar(x=zeta, positive=True)
+
+    # compute the eigenvalues matrix
+    L = convolve.eigenvalues_BCCB(BTTB=sensitivity_matrix, ordering="row")
+
+    # rearrange data vector into a matrix W and pad with zeros
+    # presume that ordering of eigenvalues matrix is 'row'
+    # define the number of blocks and points per block of the
+    # BTTB matrix associated with the BCCB matrix
+    nblocks_BTTB = L.shape[0] // 2
+    npoints_per_block_BTTB = L.shape[1] // 2
+    # matrix containing the elements of vector a arranged along its rows
+    W = np.reshape(data, (nblocks_BTTB, npoints_per_block_BTTB))
+    W = np.hstack([W, np.zeros((nblocks_BTTB, npoints_per_block_BTTB))])
+    W = np.vstack([W, np.zeros((nblocks_BTTB, 2 * npoints_per_block_BTTB))])
+
+    # set the Wiener filter
+    L = np.conj(L) / (np.conj(L) * L + zeta)
+
+    # estimate the parameter in the Fourier domain
+    L = L * fft2(x=W, norm="ortho")
+
+    # get the parameters in the space domain
+    # presume that ordering of eigenvalues matrix is 'row'
+    v = ifft2(x=L, norm="ortho")[:nblocks_BTTB, :npoints_per_block_BTTB].real
+    v = v.ravel()
+
+    return v

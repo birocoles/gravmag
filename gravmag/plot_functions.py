@@ -33,7 +33,6 @@ def plot_panels(
     npanels = len(Z)
 
     for i in range(npanels):
-
         plt.subplot(nrows, ncols, i + 1)
         plt.axis("scaled")
         plt.title(titles[i], fontsize=14)
@@ -102,18 +101,28 @@ def define_mask(total, shape, clip):
     return mask, masked_shape
 
 
-def model_boundaries(model, m2km=True):
+def model_boundaries(model, color="k", style="--", width="2", m2km=True):
     """
     Plot the projection of the model boundaries on plane xy.
     """
-    for prism in model:
-        x1, x2, y1, y2 = prism[:4]
+    P = check.are_rectangular_prisms(model)
+    for i in range(P):
+        x1 = model["x1"][i]
+        x2 = model["x2"][i]
+        y1 = model["y1"][i]
+        y2 = model["y2"][i]
         x = np.array([x1, x2, x2, x1, x1])
         y = np.array([y1, y1, y2, y2, y1])
         if m2km is True:
-            plt.plot(0.001 * y, 0.001 * x, "k--", linewidth=2)
+            plt.plot(
+                0.001 * y,
+                0.001 * x,
+                color=color,
+                linestyle=style,
+                linewidth=width,
+            )
         else:
-            plt.plot(y, x, "k--", linewidth=2)
+            plt.plot(y, x, color=color, linestyle=style, linewidth=width)
 
 
 def draw_region(
@@ -145,77 +154,6 @@ def draw_region(
     ax.set_zlabel("z (m)", fontsize=label_size)
 
 
-def draw_surface_prisms(
-    ax, prisms, color, alpha, edges_width, edges_color, check_prisms=True
-):
-    """
-    Plot the surface of rectangular prisms.
-
-    Parameters:
-
-    * ax: axes of a matplotlib figure.
-    * prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
-        All coordinates should be in meters.
-    * color: RGB matplotlib tuple
-        Color of the body.
-    * alpha: float
-        Transparency of the body.
-    * edges_width: float
-        Thickness of the edges.
-    * edges_color: RGB matplotlib tuple
-        Color of the edges.
-    * check_prisms: boolean
-        If True, call function prism_functions._check_prisms to verify if prisms
-        are well defined.
-    """
-
-    if check_prisms is True:
-        prf._check_prisms(prisms)
-
-    for prism in prisms:
-        # get the coordinates
-        x1, x2, y1, y2, z1, z2 = prism
-        # plot top surface
-        x = [x1, x2, x2, x1, x1]
-        y = [y1, y1, y2, y2, y1]
-        z = [z1, z1, z1, z1, z1]
-        surface = Poly3DCollection(
-            [list(zip(x, y, z))], color=color, alpha=alpha
-        )
-        ax.add_collection3d(surface)
-        edges = Line3DCollection(
-            [list(zip(x, y, z))], color=edges_color, linewidth=edges_width
-        )
-        ax.add_collection3d(edges)
-        # plot bottom surface
-        x = [x1, x2, x2, x1, x1]
-        y = [y1, y1, y2, y2, y1]
-        z = [z2, z2, z2, z2, z2]
-        surface = Poly3DCollection(
-            [list(zip(x, y, z))], color=color, alpha=alpha
-        )
-        ax.add_collection3d(surface)
-        edges = Line3DCollection(
-            [list(zip(x, y, z))], color=edges_color, linewidth=edges_width
-        )
-        ax.add_collection3d(edges)
-        # plot x1 surface
-        x = [x1, x2, x2, x1, x1]
-        y = [y1, y1, y2, y2, y1]
-        z = [z2, z2, z2, z2, z2]
-        surface = Poly3DCollection(
-            [list(zip(x, y, z))], color=color, alpha=alpha
-        )
-        ax.add_collection3d(surface)
-        edges = Line3DCollection(
-            [list(zip(x, y, z))], color=edges_color, linewidth=edges_width
-        )
-        ax.add_collection3d(edges)
-
-
 def bounds_diffs(computed, true):
     assert len(computed) == len(true)
     bounds = []
@@ -242,77 +180,74 @@ def fields_list(computed, true, diffs):
 
 
 def prisms_to_pyvista(prisms, prop):
-    '''
+    """
     This function creates a pyvista.UnstructuredGrid of
     rectangular prisms from a Numpy array acoording to:
-    
+
     https://docs.pyvista.org/examples/00-load/create-unstructured-surface.html
-    
+
     parameters
     ----------
-    prisms : 2d-array
-        2d-array containing the coordinates of the prisms. Each line must contain
-        the coordinates of a single prism in the following order:
-        south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2).
-        All coordinates should be in meters.
+    prisms : dictionary
+        Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
+        prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
+        Each key is a numpy array 1d having the same number of elements.
     prop : 1d-array
         1d-array containing the scalar physical property of each prism.
 
     returns
     -------
     model_mesh: pyvista.UnstructuredGrid
-    '''
-    
+    """
+
     # Verify the input parameters
-    check.rectangular_prisms(prisms)
-    check.scalar_prop(prop, prisms)
-    
-    # number of prisms
-    nprisms = prisms.shape[0]
-    
+    nprisms = check.are_rectangular_prisms(prisms=prisms)
+    check.is_array(x=prop, ndim=1, shape=(nprisms,))
+
     # define indices of the cells composing the pyvista.UnstructuredGrid
     cells = np.empty((nprisms, 9), dtype=int)
-    cells[:,0] = 8
-    cells[:,1:] = np.reshape(np.arange(8*nprisms), (nprisms, 8))
+    cells[:, 0] = 8
+    cells[:, 1:] = np.reshape(np.arange(8 * nprisms), (nprisms, 8))
     cells = cells.ravel()
-    
+
     # define cell types of the pyvista.UnstructuredGrid
     cell_type = np.tile(np.array([pv.CellType.HEXAHEDRON]), nprisms)
-    
+
     # define the cells forming the pyvista.UnstructuredGrid
     points = []
-    for prism in prisms:
+    for i in range(nprisms):
         points.append(
             np.array(
                 [
-                    [prism[0], prism[2], prism[4]],
-                    [prism[1], prism[2], prism[4]],
-                    [prism[1], prism[3], prism[4]],
-                    [prism[0], prism[3], prism[4]],
-                    [prism[0], prism[2], prism[5]],
-                    [prism[1], prism[2], prism[5]],
-                    [prism[1], prism[3], prism[5]],
-                    [prism[0], prism[3], prism[5]]
-                ], 
-                dtype=float
+                    [prisms["x1"][i], prisms["y1"][i], prisms["z1"][i]],
+                    [prisms["x2"][i], prisms["y1"][i], prisms["z1"][i]],
+                    [prisms["x2"][i], prisms["y2"][i], prisms["z1"][i]],
+                    [prisms["x1"][i], prisms["y2"][i], prisms["z1"][i]],
+                    [prisms["x1"][i], prisms["y1"][i], prisms["z2"][i]],
+                    [prisms["x2"][i], prisms["y1"][i], prisms["z2"][i]],
+                    [prisms["x2"][i], prisms["y2"][i], prisms["z2"][i]],
+                    [prisms["x1"][i], prisms["y2"][i], prisms["z2"][i]],
+                ],
+                dtype=float,
             )
         )
     points = np.vstack(points)
-    
+
     # create the model mesh (pyvista.UnstructuredGrid)
     model_mesh = pv.UnstructuredGrid(cells, cell_type, points)
-    
+
     # add physical property
-    model_mesh.cell_data['prop'] = prop.flatten(order="F")
+    model_mesh.cell_data["prop"] = prop.flatten(order="F")
 
     return model_mesh
 
 
 def data_to_surface_pyvista(coordinates, data):
-    '''
+    """
     This function creates a connected surface from a PyVista point cloud.
     The surface is created by using delaunay_2d triangulation.
-    
+
     parameters
     ----------
     coordinates : 2d-array
@@ -324,19 +259,19 @@ def data_to_surface_pyvista(coordinates, data):
     returns
     -------
     data_mesh: pyvista.PolyData
-    '''
-    check.coordinates(coordinates)
-    assert data.ndim == 1, 'data must have ndim == 1'
-    assert data.size == coordinates.shape[1], 'data size and coordinates.shape[1] must match'
+    """
+    D = check.are_coordinates(coordinates)
+    assert data.size == D, "data size and coordinates must match"
 
     # create a PyVista point cloud
-    data_mesh = pv.PolyData(coordinates.T)
+    data_mesh = pv.PolyData(
+        np.vstack([coordinates["x"], coordinates["y"], coordinates["z"]]).T
+    )
 
     # add point data to the point cloud
-    data_mesh.point_data['data'] = data
+    data_mesh.point_data["data"] = data
 
     # transform the point cloud in a connected surface
     _ = data_mesh.delaunay_2d(inplace=True)
 
     return data_mesh
-

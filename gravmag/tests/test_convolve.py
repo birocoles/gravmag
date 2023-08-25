@@ -7,765 +7,1118 @@ from scipy.linalg import toeplitz, circulant, dft
 from pytest import raises
 from .. import convolve as cv
 
+##### compute
+
 
 def test_compute_FT_data_not_complex_matrix():
-    "must raise AssertionError if FT_data not a complex matrix"
+    "must raise an error if FT_data is not a complex matrix"
     filters = [np.ones((5, 5))]
     # FT_data as a complex vector
     FT_data = np.ones(5) - 1j * np.ones(5)
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
     # FT_data as a real matrix
     FT_data = np.ones((5, 5))
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
 
 
 def test_compute_filters_not_complex_matrices():
-    "must raise AssertionError if filters does not contain complex matrices"
+    "must raise an error if filters does not contain complex matrices"
     FT_data = np.ones((5, 5)) - 1j * np.ones((5, 5))
     # filters without any element
     filters = []
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
     # filters as a scalar
     filters = 3
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
     # filters with vectors
     filters = [np.ones(3)]
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
     # filters with matrices having a sahpe different from FT_data
     filters = [np.ones((3, 3))]
-    with raises(AssertionError):
+    with raises(ValueError):
         cv.compute(FT_data, filters)
 
 
-def test_general_BTTB_bad_num_blocks():
-    "must raise AssertionError for bad num_blocks"
-    columns_blocks = np.ones((3, 2))
-    # num_blocks negative integer
-    num_blocks = -5
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-    # num_blocks float
-    num_blocks = 4.2
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-    # num_blocks equal to 1
-    num_blocks = 1
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
+##### Circulant_from_Toeplitz
 
 
-def test_general_BTTB_columns_blocks_not_matrix():
-    "must raise AssertionError for columns_blocks not matrix"
-    num_blocks = 5
-    # columns_blocks a float
-    columns_blocks = 2.9
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-    # columns_blocks a vector
-    columns_blocks = np.ones(5)
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-
-
-def test_general_BTTB_bad_columns_blocks_without_rows_blocks():
-    "must raise AssertionError for bad columns_blocks shape"
-    num_blocks = 5
-    # columns_blocks number of rows different from
-    # (num_blocks) and (2*num_blocks - 1)
-    columns_blocks = np.ones((7, 3))
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-
-
-def test_general_BTTB_arbitrary():
-    "verify if returned matrix is BTTB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-    BTTB = cv.general_BTTB(Q, columns, rows)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, Q * P, P):
-        blocks_i = []
-        for j in range(0, Q * P, P):
-            blocks_i.append(BTTB[i : i + P, j : j + P])
-        blocks.append(blocks_i)
-    # verify if each block is a toeplitz matrix
-    for i in range(Q):
-        for j in range(Q):
-            block = blocks[i][j]
-            block_ref = toeplitz(block[:, 0], block[0, :])
-            ae(block, block_ref)
-    # verify if each block is not symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is different from block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-def test_general_BTTB_SBTSTB():
-    "verify if returned matrix is SBTSTB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange(Q * P).reshape((Q, P))
-    BTTB = cv.general_BTTB(Q, columns)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, Q * P, P):
-        blocks_i = []
-        for j in range(0, Q * P, P):
-            blocks_i.append(BTTB[i : i + P, j : j + P])
-        blocks.append(blocks_i)
-    # verify if each block is symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ae(blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is equal to block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ae(blocks[i][j], blocks[j][i])
-
-
-def test_general_BTTB_BTSTB():
-    "verify if returned matrix is BTSTB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    BTTB = cv.general_BTTB(Q, columns)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, Q * P, P):
-        blocks_i = []
-        for j in range(0, Q * P, P):
-            blocks_i.append(BTTB[i : i + P, j : j + P])
-        blocks.append(blocks_i)
-    # verify if each block is symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ae(blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is different from block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-def test_general_BTTB_SBTTB():
-    "verify if returned matrix is SBTTB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange(Q * P).reshape((Q, P))
-    rows = np.arange(Q * (P - 1)).reshape((Q, P - 1)) + 100
-    BTTB = cv.general_BTTB(Q, columns, rows)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, Q * P, P):
-        blocks_i = []
-        for j in range(0, Q * P, P):
-            blocks_i.append(BTTB[i : i + P, j : j + P])
-        blocks.append(blocks_i)
-    # verify if each block is a toeplitz matrix
-    for i in range(Q):
-        for j in range(Q):
-            block = blocks[i][j]
-            block_ref = toeplitz(block[:, 0], block[0, :])
-            ae(block, block_ref)
-    # verify if each block is not symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is equal to block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ae(blocks[i][j], blocks[j][i])
-
-
-def test_general_BTTB_bad_columns_blocks_with_rows_blocks():
-    "must raise AssertionError for inconsistent columns_blocks and row_blocks"
-    num_blocks = 5
-    # columns_blocks.shape[0] different from rows_blocks.shape[0]
-    columns_blocks = np.ones((7, 3))
-    row_blocks = np.ones((6, 3))
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-    # columns_blocks.shape[1] different from (rows_blocks.shape[1]+1
-    columns_blocks = np.ones((7, 3))
-    row_blocks = np.ones((7, 3))
-    with raises(AssertionError):
-        cv.general_BTTB(num_blocks, columns_blocks)
-
-
-def test_C_from_T_T_column_not_vector():
-    "must raise AssertionError if T_column not a vector"
-    # T_column a float
-    T_column = 2.9
-    with raises(AssertionError):
-        cv.C_from_T(T_column)
-    # T_column a matrix
-    T_column = np.ones((5, 4))
-    with raises(AssertionError):
-        cv.C_from_T(T_column)
-
-
-def test_C_from_T_row_not_vector():
-    "must raise AssertionError if T_row not a vector"
-    # T_row a float
-    T_column = np.ones(3)
-    T_row = 3.2
-    with raises(AssertionError):
-        cv.C_from_T(T_column, T_row)
-    # T_row a matrix
-    T_column = np.ones(3)
-    T_row = np.ones((3, 2))
-    with raises(AssertionError):
-        cv.C_from_T(T_column, T_row)
-
-
-def test_C_from_bad_T_column_T_row_sizes():
-    "must raise AssertionError for inconsistent T_column and T_row sizes"
-    # T_row size smaller than T_column.size - 1
-    T_column = np.ones(5)
-    T_row = np.ones(3)
-    with raises(AssertionError):
-        cv.C_from_T(T_column, T_row)
-    # T_row size greater than T_column.size - 1
-    T_column = np.ones(5)
-    T_row = np.ones(7)
-    with raises(AssertionError):
-        cv.C_from_T(T_column, T_row)
-
-
-def test_C_from_known_values():
-    "compare result with a reference"
-    # with T_row None
-    T_column = np.arange(1, 4)
-    C_ref = circulant(np.array([1, 2, 3, 0, 3, 2]))
-    C = cv.C_from_T(T_column)
-    ae(C, C_ref)
-    # with T_row not None
-    T_column = np.arange(1, 4)
-    T_row = np.array([-0.8, 30])
-    C_ref = circulant(np.array([1, 2, 3, 0, 30, -0.8]))
-    C = cv.C_from_T(T_column, T_row)
-    ae(C, C_ref)
-
-
-def test_BCCB_from_BTTB_bad_num_blocks():
-    "must raise AssertionError for bad num_blocks"
-    columns_blocks = np.ones((3, 2))
-    # num_blocks negative integer
-    num_blocks = -5
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-    # num_blocks float
-    num_blocks = 4.2
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-    # num_blocks equal to 1
-    num_blocks = 1
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-def test_BCCB_from_BTTB_columns_blocks_not_matrix():
-    "must raise AssertionError for columns_blocks not matrix"
-    num_blocks = 5
-    # columns_blocks a float
-    columns_blocks = 2.9
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-    # columns_blocks a vector
-    columns_blocks = np.ones(5)
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-def test_BCCB_from_BTTB_bad_columns_blocks_without_rows_blocks():
-    "must raise AssertionError for bad columns_blocks shape"
-    num_blocks = 5
-    # columns_blocks number of rows different from
-    # (num_blocks) and (2*num_blocks - 1)
-    columns_blocks = np.ones((7, 3))
-    with raises(AssertionError):
-        cv.BCCB_from_BTTB(num_blocks, columns_blocks)
-
-
-def test_BCCB_from_BTTB_arbitrary():
-    "verify if returned matrix is BCCB"
-    Q = 4  # number of blocks along rows/columns of BTTB matrix
-    P = 3  # number of rows/columns in each block of BTTB matrix
-    # matrix containing the columns of each block  of BTTB matrix
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-    BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, 4 * Q * P, 2 * P):
-        blocks_i = []
-        for j in range(0, 4 * Q * P, 2 * P):
-            blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-        blocks.append(blocks_i)
-    # verify if each block is a circulant matrix
-    for i in range(Q):
-        for j in range(Q):
-            block_ref = circulant(blocks[i][j][:, 0])
-            ae(blocks[i][j], block_ref)
-    # verify if each block is not symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is different from block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-def test_BCCB_from_BTTB_SBCSCB():
-    "verify if returned matrix is SBCSCB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange(Q * P).reshape((Q, P))
-    BCCB = cv.BCCB_from_BTTB(Q, columns)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, 4 * Q * P, 2 * P):
-        blocks_i = []
-        for j in range(0, 4 * Q * P, 2 * P):
-            blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-        blocks.append(blocks_i)
-    # verify if each block is a circulant matrix
-    for i in range(Q):
-        for j in range(Q):
-            block_ref = circulant(blocks[i][j][:, 0])
-            ae(blocks[i][j], block_ref)
-    # verify if each block is symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ae(blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is equal to block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ae(blocks[i][j], blocks[j][i])
-
-
-def test_BCCB_from_BTTB_BCSCB():
-    "verify if returned matrix is BCSCB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    BCCB = cv.BCCB_from_BTTB(Q, columns)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, 4 * Q * P, 2 * P):
-        blocks_i = []
-        for j in range(0, 4 * Q * P, 2 * P):
-            blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-        blocks.append(blocks_i)
-    # verify if each block is a circulant matrix
-    for i in range(Q):
-        for j in range(Q):
-            block_ref = circulant(blocks[i][j][:, 0])
-            ae(blocks[i][j], block_ref)
-    # verify if each block is symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ae(blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is different from block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[j][i])
-
-
-def test_BCCB_from_BTTB_SBCCB():
-    "verify if returned matrix is SBCCB"
-    Q = 4  # number of blocks along rows/columns
-    P = 3  # number of rows/columns in each block
-    # matrix containing the columns of each block
-    columns = np.arange(Q * P).reshape((Q, P))
-    rows = np.arange(Q * (P - 1)).reshape((Q, P - 1)) + 100
-    BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
-    # split matrix in blocks
-    blocks = []
-    for i in range(0, 4 * Q * P, 2 * P):
-        blocks_i = []
-        for j in range(0, 4 * Q * P, 2 * P):
-            blocks_i.append(BCCB[i : i + (2 * P), j : j + (2 * P)])
-        blocks.append(blocks_i)
-    # verify if each block is a circulant matrix
-    for i in range(Q):
-        for j in range(Q):
-            block_ref = circulant(blocks[i][j][:, 0])
-            ae(blocks[i][j], block_ref)
-    # verify if each block is not symmetric
-    for i in range(Q):
-        for j in range(Q):
-            ar(AssertionError, ae, blocks[i][j], blocks[i][j].T)
-    # verify if block_ij is different from block_ji
-    for i in range(Q):
-        for j in range(i + 1, Q):
-            ae(blocks[i][j], blocks[j][i])
-
-
-def test_embedding_BCCB_first_column_bad_b0():
-    "must raise ValueError for invalid b0"
-    Q = 4
-    P = 3
-    symmetry = "symm-symm"
-    # set b0 as a float
-    b0 = 3.5
-    with raises(ValueError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    # set b0 as a matrix
-    b0 = np.ones((3, 3))
-    with raises(ValueError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-def test_embedding_BCCB_first_column_bad_QP():
-    "must raise AssertionError for invalids Q and P"
-    b0 = np.zeros(4)
-    symmetry = "symm-symm"
-    # set Q negative
-    Q = -4
-    P = 3
-    with raises(AssertionError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    # set P negative
-    Q = 4
-    P = -3
-    with raises(AssertionError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    # set Q as a float
-    Q = 4.1
-    P = 3
-    with raises(AssertionError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    # set P as a float
-    Q = 4
-    P = 3.2
-    with raises(AssertionError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-def test_embedding_BCCB_first_column_bad_b0_QP():
-    "must raise ValueError if b0.size is not Q*P"
-    Q = 4
-    P = 3
-    symmetry = "symm-symm"
-    # set b0.size greater than Q*P
-    b0 = np.zeros(Q * P + 2)
-    with raises(ValueError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    # set b0.size smaller than Q*P
-    b0 = np.zeros(Q * P - 1)
-    with raises(ValueError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-def test_embedding_BCCB_first_column_bad_symmetry():
-    "must raise ValueError for invalid symmetry"
-    Q = 4
-    P = 3
-    b0 = np.zeros(Q * P)
-    symmetry = "invalid-symmetry"
-    with raises(ValueError):
-        cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-
-
-def test_embedding_BCCB_first_column_known_values():
-    "verify result obtained with specific input"
-    Q = 2
-    P = 3
-    # verify result with symmetry 'symm-symm'
-    symmetry = "skew-skew"
-    b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-    c0_true = np.array(
+def test_Circulant_from_Toeplitz_compare_known_values_symm():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
         [
-            1.0,
-            1.0,
-            1.0,
-            0.0,
-            -1.0,
-            -1.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            -2.0,
-            -2.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            -2.0,
-            -2.0,
-            -2.0,
-            0.0,
-            2.0,
-            2.0,
+            [1, 2, 3, 0, 3, 2],
+            [2, 1, 2, 3, 0, 3],
+            [3, 2, 1, 2, 3, 0],
+            [0, 3, 2, 1, 2, 3],
+            [3, 0, 3, 2, 1, 2],
+            [2, 3, 0, 3, 2, 1],
         ]
     )
-    c0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    aae(c0, c0_true, decimal=15)
-    # verify result with symmetry 'symm-symm'
-    symmetry = "skew-symm"
-    b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-    c0_true = np.array(
+    # compute the full matrix
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_known_values_skew():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
         [
-            1.0,
-            1.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            2.0,
-            2.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            -2.0,
-            -2.0,
-            -2.0,
-            0.0,
-            -2.0,
-            -2.0,
+            [1, -2, -3, 0, 3, 2],
+            [2, 1, -2, -3, 0, 3],
+            [3, 2, 1, -2, -3, 0],
+            [0, 3, 2, 1, -2, -3],
+            [-3, 0, 3, 2, 1, -2],
+            [-2, -3, 0, 3, 2, 1],
         ]
     )
-    c0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    aae(c0, c0_true, decimal=15)
-    # verify result with symmetry 'symm-symm'
-    symmetry = "symm-skew"
-    b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-    c0_true = np.array(
+    # compute the full matrix
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_known_values_gene():
+    "verify if the computed Circulant is equal to the reference"
+    reference = np.array(
         [
-            1.0,
-            1.0,
-            1.0,
-            0.0,
-            -1.0,
-            -1.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            -2.0,
-            -2.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            -2.0,
-            -2.0,
+            [1, 4, 5, 0, 3, 2],
+            [2, 1, 4, 5, 0, 3],
+            [3, 2, 1, 4, 5, 0],
+            [0, 3, 2, 1, 4, 5],
+            [5, 0, 3, 2, 1, 4],
+            [4, 5, 0, 3, 2, 1],
         ]
     )
-    c0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    aae(c0, c0_true, decimal=15)
-    # verify result with symmetry 'symm-symm'
-    symmetry = "symm-symm"
-    b0 = np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0])
-    c0_true = np.array(
+    # compute the full matrix
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([1, 2, 3]),
+        "row": np.array([4, 5]),
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    ae(computed, reference)
+
+
+def test_Circulant_from_Toeplitz_compare_first_column():
+    "verify if returns the correct first column"
+    # from symmetric Toeplitz
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
+    ae(circulant(column), full)
+    # from skew-symmetric Toeplitz
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([8, -2, 3]),
+        "row": None,
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
+    ae(circulant(column), full)
+    # from generic Toeplitz
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([10, 92, -3]),
+        "row": np.array([4, 18]),
+    }
+    full = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    column = cv.Circulant_from_Toeplitz(Toeplitz, full=False)
+    ae(circulant(column), full)
+
+
+def test_Circulant_from_Toeplitz_symmetry_preservation():
+    "verify if the computed Circulant preserve the symmetry of the originating Toeplitz matrix"
+    # symmetric Toeplitz
+    Toeplitz = {
+        "symmetry": "symm",
+        "column": np.array([1, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    ae(computed, computed.T)
+    # skew-symmetric Toeplitz
+    Toeplitz = {
+        "symmetry": "skew",
+        "column": np.array([8, 2, 3]),
+        "row": None,
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    # we are not interested in the elements at the main diagonal
+    diagonal = np.diag(np.diag(computed))
+    ae(-(computed - diagonal), (computed - diagonal).T)
+    # generic Toeplitz
+    Toeplitz = {
+        "symmetry": "gene",
+        "column": np.array([1, 2, 3]),
+        "row": np.array([4, 5]),
+    }
+    computed = cv.Circulant_from_Toeplitz(Toeplitz, full=True)
+    ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
+
+
+##### generic_BTTB
+
+
+def test_general_BTTB_compare_known_values_symm_symm():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array(
         [
-            1.0,
-            1.0,
-            1.0,
-            0.0,
-            1.0,
-            1.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            2.0,
-            2.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            2.0,
-            2.0,
-            2.0,
-            0.0,
-            2.0,
-            2.0,
+            [1, 2, 3],
+            [10, 20, 30],
         ]
     )
-    c0 = cv.embedding_BCCB_first_column(b0, Q, P, symmetry)
-    aae(c0, c0_true, decimal=15)
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [1, 2, 3, 10, 20, 30],
+            [2, 1, 2, 20, 10, 20],
+            [3, 2, 1, 30, 20, 10],
+            [10, 20, 30, 1, 2, 3],
+            [20, 10, 20, 2, 1, 2],
+            [30, 20, 10, 3, 2, 1],
+        ]
+    )
+    ae(computed, reference)
 
 
-def test_eigenvalues_BCCB_bad_c0():
-    "must raise ValueError for invalid c0"
-    Q = 4
-    P = 3
-    ordering = "row"
-    # set c0 as a float
-    c0 = 3.5
-    with raises(ValueError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
-    # set c0 as a matrix
-    c0 = np.ones((3, 3))
-    with raises(ValueError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_general_BTTB_compare_known_values_symm_skew():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [1, -2, -3, 10, -20, -30],
+            [2, 1, -2, 20, 10, -20],
+            [3, 2, 1, 30, 20, 10],
+            [10, -20, -30, 1, -2, -3],
+            [20, 10, -20, 2, 1, -2],
+            [30, 20, 10, 3, 2, 1],
+        ]
+    )
+    ae(computed, reference)
 
 
-def test_eigenvalues_BCCB_bad_QP():
-    "must raise AssertionError for invalids Q and P"
-    c0 = np.zeros(4)
-    ordering = "row"
-    # set Q negative
-    Q = -4
-    P = 3
-    with raises(AssertionError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
-    # set P negative
-    Q = 4
-    P = -3
-    with raises(AssertionError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
-    # set Q as a float
-    Q = 4.1
-    P = 3
-    with raises(AssertionError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
-    # set P as a float
-    Q = 4
-    P = 3.2
-    with raises(AssertionError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_general_BTTB_compare_known_values_symm_gene():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [0, 18, 32, 10, 20, 30],
+            [-2, 0, 18, 40, 10, 20],
+            [7, -2, 0, 50, 40, 10],
+            [10, 20, 30, 0, 18, 32],
+            [40, 10, 20, -2, 0, 18],
+            [50, 40, 10, 7, -2, 0],
+        ]
+    )
+    ae(computed, reference)
 
 
-def test_eigenvalues_BCCB_bad_c0_QP():
-    "must raise ValueError if c0.size is not 4*Q*P"
-    Q = 4
-    P = 3
-    ordering = "row"
-    # set c0.size greater than 4*Q*P
-    c0 = np.zeros(4 * Q * P + 2)
-    with raises(ValueError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
-    # set c0.size smaller than 4*Q*P
-    c0 = np.zeros(4 * Q * P - 1)
-    with raises(ValueError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
+def test_general_BTTB_compare_known_values_skew_symm():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [1, 2, 3, -10, -20, -30],
+            [2, 1, 2, -20, -10, -20],
+            [3, 2, 1, -30, -20, -10],
+            [10, 20, 30, 1, 2, 3],
+            [20, 10, 20, 2, 1, 2],
+            [30, 20, 10, 3, 2, 1],
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_general_BTTB_compare_known_values_skew_skew():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [-10, -20, -30],
+        ]
+    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [1, -2, -3, 10, -20, -30],
+            [2, 1, -2, 20, 10, -20],
+            [3, 2, 1, 30, 20, 10],
+            [-10, 20, 30, 1, -2, -3],
+            [-20, -10, 20, 2, 1, -2],
+            [-30, -20, -10, 3, 2, 1],
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_general_BTTB_compare_known_values_skew_gene():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [0, 18, 32, -10, -20, -30],
+            [-2, 0, 18, -40, -10, -20],
+            [7, -2, 0, -50, -40, -10],
+            [10, 20, 30, 0, 18, 32],
+            [40, 10, 20, -2, 0, 18],
+            [50, 40, 10, 7, -2, 0],
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_general_BTTB_compare_known_values_gene_symm():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array([[0, -2, 32], [60, -70, 80], [10, -40, -30]])
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [0, -2, 32, 10, -40, -30],
+            [-2, 0, -2, -40, 10, -40],
+            [32, -2, 0, -30, -40, 10],
+            [60, -70, 80, 0, -2, 32],
+            [-70, 60, -70, -2, 0, -2],
+            [80, -70, 60, 32, -2, 0],
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_general_BTTB_compare_known_values_gene_skew():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array([[0, -2, 32], [-60, -70, 80], [10, -40, -30]])
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [0, 2, -32, 10, 40, 30],
+            [-2, 0, 2, -40, 10, 40],
+            [32, -2, 0, -30, -40, 10],
+            [-60, 70, -80, 0, 2, -32],
+            [-70, -60, 70, -2, 0, 2],
+            [80, -70, -60, 32, -2, 0],
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_general_BTTB_compare_known_values_gene_gene():
+    "verify if the computed BTTB is equal to the reference"
+    columns = np.array([[0, -2, 7], [60, -90, 100], [10, 40, 50]])
+    rows = np.array([[18, 32], [70, -80], [20, 30]])
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.generic_BTTB(BTTB)
+    reference = np.array(
+        [
+            [0, 18, 32, 10, 20, 30],
+            [-2, 0, 18, 40, 10, 20],
+            [7, -2, 0, 50, 40, 10],
+            [60, 70, -80, 0, 18, 32],
+            [-90, 60, 70, -2, 0, 18],
+            [100, -90, 60, 7, -2, 0],
+        ]
+    )
+    ae(computed, reference)
+
+
+# ##### embedding_BCCB
+
+
+def test_embedding_BCCB_compare_known_values_symm_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            3,
+            2,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_symm_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            -3,
+            -2,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_symm_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            3,
+            2,
+            10,
+            20,
+            30,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -20,
+            -30,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [1, 2, 3],
+            [10, 20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            1,
+            2,
+            3,
+            0,
+            -3,
+            -2,
+            10,
+            20,
+            30,
+            0,
+            -30,
+            -20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -20,
+            -30,
+            0,
+            30,
+            20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_skew_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50]])
+    rows = np.array(
+        [
+            [18, 32],
+            [20, 30],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -10,
+            -40,
+            -50,
+            0,
+            -30,
+            -20,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_symm():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            7,
+            -2,
+            10,
+            40,
+            50,
+            0,
+            50,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            3,
+            12,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_skew():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": None,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            -7,
+            2,
+            10,
+            40,
+            50,
+            0,
+            -50,
+            -40,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            -3,
+            -12,
+        ]
+    )
+    ae(computed, reference)
+
+
+def test_embedding_BCCB_compare_known_values_gene_gene():
+    "verify if the computed BCCB is equal to the reference"
+    # define the columns/rows of the generating BTTB
+    columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
+    rows = np.array([[18, 32], [20, 30], [1, 2]])
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 2,
+        "columns": columns,
+        "rows": rows,
+    }
+    computed = cv.embedding_BCCB(BTTB)
+    # define the reference
+    reference = np.array(
+        [
+            0,
+            -2,
+            7,
+            0,
+            32,
+            18,
+            10,
+            40,
+            50,
+            0,
+            30,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28,
+            12,
+            3,
+            0,
+            2,
+            1,
+        ]
+    )
+    ae(computed, reference)
+
+
+##### eigenvalues_BCCB
 
 
 def test_eigenvalues_BCCB_bad_ordering():
     "must raise ValueError for invalid symmetry"
-    Q = 4
-    P = 3
-    c0 = np.zeros(4 * Q * P)
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.zeros((2, 3)),
+        "rows": None,
+    }
     ordering = "invalid-ordering"
     with raises(ValueError):
-        cv.eigenvalues_BCCB(c0, Q, P, ordering)
+        cv.eigenvalues_BCCB(BTTB, ordering)
 
 
 def test_eigenvalues_BCCB_known_values():
     "compare result with reference"
-    Q = 4  # number of blocks along rows/columns of BTTB matrix
-    P = 3  # number of rows/columns in each block of BTTB matrix
-    # matrix containing the columns of each block  of BTTB matrix
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-    BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
     # define unitaty DFT matrices
     F2Q = dft(n=2 * Q, scale="sqrtn")
     F2P = dft(n=2 * P, scale="sqrtn")
     # compute the Kronecker product between them
     F2Q_kron_F2P = np.kron(F2Q, F2P)
     # compute the reference eigenvalues of BCCB from its first column
-    lambda_ref = np.sqrt(4 * Q * P) * np.dot(F2Q_kron_F2P, BCCB[:, 0])
+    lambda_ref = np.sqrt(4 * Q * P) * F2Q_kron_F2P @ BCCB[:, 0]
     # compute eigenvalues with ordering='row'
-    L_row = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
+    L_row = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
     lambda_row = L_row.ravel()
     aae(lambda_row, lambda_ref, decimal=10)
     # compute eigenvalues with ordering='column'
-    L_col = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
+    L_col = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
     lambda_col = L_col.T.ravel()
     aae(lambda_col, lambda_ref, decimal=10)
 
 
-def test_product_BCCB_vector_bad_L():
-    "must raise AssertionError for bad L"
-    Q = 4
-    P = 3
-    v = np.zeros(Q * P)
-    # L float
+def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
+    "verify the relationship between the eigenvalues and transposition"
+    # define the BTTB matrix
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    # define the BTTB matrix transposed
+    BTTB_T = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    # compute the eigenvalues
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    # compare BTTB matrices
+    ae(BTTB_matrix.T, BTTB_matrix_T)
+    # compare eigenvalues
+    aae(np.conj(L), L_T, decimal=12)
+
+
+def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
+    "verify the relationship between eigenvalues and transposition"
+    # define the BTTB matrix
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    # define the BTTB matrix transposed
+    BTTB_T = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, -2, -3],
+                [10, -20, -30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    # compute the eigenvalues
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    # compare BTTB matrices
+    ae(BTTB_matrix.T, BTTB_matrix_T)
+    # compare eigenvalues
+    aae(np.conj(L), L_T, decimal=12)
+
+
+def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
+    "verify the relationship between eigenvalues and transposition"
+    # define the BTTB matrix
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    # define the BTTB matrix transposed
+    BTTB_T = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "symm",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [-10, -20, -30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    # compute the eigenvalues
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    # compare BTTB matrices
+    ae(BTTB_matrix.T, BTTB_matrix_T)
+    # compare eigenvalues
+    aae(np.conj(L), L_T, decimal=12)
+
+
+def test_eigenvalues_BCCB_compare_eigenvalues_skew_skew():
+    "verify the relationship between eigenvalues and transposition"
+    # define the BTTB matrix
+    BTTB = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, 2, 3],
+                [10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    # define the BTTB matrix transposed
+    BTTB_T = {
+        "symmetry_structure": "skew",
+        "symmetry_blocks": "skew",
+        "nblocks": 2,
+        "columns": np.array(
+            [
+                [1, -2, -3],
+                [-10, 20, 30],
+            ]
+        ),
+        "rows": None,
+    }
+    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    # compute the eigenvalues
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    # compare BTTB matrices
+    ae(BTTB_matrix.T, BTTB_matrix_T)
+    # compare eigenvalues
+    aae(np.conj(L), L_T, decimal=12)
+
+
+##### product_BCCB_vector
+
+
+def test_product_BCCB_vector_bad_eigenvalues():
+    "must raise AssertionError for bad eigenvalues matrix"
+    v = np.zeros(12)
+    # float
     L = 1.3
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v)
-    # L vector
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # vector
     L = np.ones(3)
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v)
-    # L matrix with shape different from (2*Q, 2*P) and ordering='row'
-    L = np.zeros((2 * Q + 1, 2 * P - 1))
-    ordering = "row"
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
-    # L matrix with shape different from (2*P, 2*Q) and ordering='column'
-    L = np.zeros((2 * P + 1, 2 * Q - 1))
-    ordering = "column"
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
-
-
-def test_product_BCCB_vector_bad_QP():
-    "must raise AssertionError for bad Q and P"
-    # define L and v considering Q = 4 and P = 3
-    L = np.zeros((8, 6))  # shape (2*Q, 2*P)
-    v = np.zeros(12)  # size Q*P
-    ordering = "row"
-    # Q negative
-    Q = -4
-    P = 3
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
-    # P negative
-    Q = 4
-    P = -3
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
-    # Q float
-    Q = 4.1
-    P = 3
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
-    # P float
-    Q = 4
-    P = 3.0
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
+    # matrix with size different from 4 * v.size
+    L = np.zeros((5, 4))
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
 
 
 def test_product_BCCB_vector_bad_v():
@@ -773,19 +1126,18 @@ def test_product_BCCB_vector_bad_v():
     Q = 4
     P = 3
     L = np.zeros((2 * Q, 2 * P))
-    ordering = "row"
     # v float
     v = 1.3
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
     # v matrix
     v = np.ones((3, 3))
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
     # v vector with size different from Q*P
     v = np.ones(Q * P + 5)
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
 
 
 def test_product_BCCB_vector_bad_ordering():
@@ -794,31 +1146,130 @@ def test_product_BCCB_vector_bad_ordering():
     P = 3
     L = np.zeros((2 * Q, 2 * P))
     v = np.ones(Q * P)
-    ordering = "invalid-ordering"
-    with raises(AssertionError):
-        cv.product_BCCB_vector(L, Q, P, v, ordering)
+    with raises(ValueError):
+        cv.product_BCCB_vector(eigenvalues=L, ordering="invalid-ordering", v=v)
 
 
 def test_product_BCCB_vector_compare_matrix_vector():
     "compare values with that obtained via matrix-vector product"
-    Q = 4  # number of blocks along rows/columns of BTTB matrix
-    P = 3  # number of rows/columns in each block of BTTB matrix
-    # matrix containing the columns of each block  of BTTB matrix
-    columns = np.arange((2 * Q - 1) * P).reshape((2 * Q - 1, P))
-    rows = np.arange((2 * Q - 1) * (P - 1)).reshape((2 * Q - 1, P - 1)) + 100
-    BTTB = cv.general_BTTB(Q, columns, rows)
-    BCCB = cv.BCCB_from_BTTB(Q, columns, rows)
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
     # define a vector v
     np.random.seed(5)
     v = np.random.rand(Q * P)
     # define reference
-    w_matvec = BTTB @ v
+    w_matvec = BTTB_matrix @ v
     # compute the product with function convolve.product_BCCB_vector
     # ordering='row'
-    L = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="row")
-    w_conv_row = cv.product_BCCB_vector(L, Q, P, v, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    w_conv_row = cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
     aae(w_conv_row, w_matvec, decimal=12)
     # ordering='column'
-    L = cv.eigenvalues_BCCB(BCCB[:, 0], Q, P, ordering="column")
-    w_conv_col = cv.product_BCCB_vector(L, Q, P, v, ordering="column")
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    w_conv_col = cv.product_BCCB_vector(eigenvalues=L, ordering="column", v=v)
+    aae(w_conv_col, w_matvec, decimal=12)
+
+
+def test_product_BCCB_vector_compare_transposed():
+    "compare values with that obtained via transposed-matrix-vector product"
+    # define the columns/rows of the generating BTTB
+    columns = np.array(
+        [
+            [0, -2, 7, 10, 1],
+            [10, 40, 50, 30, 1.1],
+            [28, 12, 3, 17.2, 2.5],
+            [65, 54, 31, 20, 11.1],
+            [10, 12.3, 5, 8, 2],
+            [3, 6.5, 7.0, 8, 12],
+            [56, 76, 43, 23, 12],
+            [31, 42, 53, 64, 75],
+            [87, 65, 32, 10, 29],
+            [6, 3, 8, 5, 6],
+            [1, 4, 2, 6, 3.9],
+        ]
+    )
+    rows = np.array(
+        [
+            [13, 18, 32, 11],
+            [65, 20, 30, 82],
+            [7, 1, 2, 4.5],
+            [32, 10, -4, -23.7],
+            [2, 3, 4, 7.8],
+            [76, 48, 76, 13],
+            [7, 8, 4, 3],
+            [1, 9, 2, 7.12],
+            [86, 23, 41.5, 30],
+            [91, 2, 46, 3],
+            [6, 14, 3, 98.9],
+        ]
+    )
+    # compute the BCCB
+    BTTB = {
+        "symmetry_structure": "gene",
+        "symmetry_blocks": "gene",
+        "nblocks": 6,
+        "columns": columns,
+        "rows": rows,
+    }
+    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    Q = 6  # number of blocks along rows/columns of BTTB matrix
+    P = 5  # number of rows/columns in each block of BTTB matrix
+    # define a vector v
+    np.random.seed(5)
+    v = np.random.rand(Q * P)
+    # define reference product with transposed BTTB matrix
+    w_matvec = BTTB_matrix.T @ v
+    # compute the product with function convolve.product_BCCB_vector
+    # ordering='row'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    w_conv_row = cv.product_BCCB_vector(
+        eigenvalues=np.conj(L), ordering="row", v=v
+    )
+    aae(w_conv_row, w_matvec, decimal=12)
+    # ordering='column'
+    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    w_conv_col = cv.product_BCCB_vector(
+        eigenvalues=np.conj(L), ordering="column", v=v
+    )
     aae(w_conv_col, w_matvec, decimal=12)
