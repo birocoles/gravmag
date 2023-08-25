@@ -114,7 +114,13 @@ def model_boundaries(model, color="k", style="--", width="2", m2km=True):
         x = np.array([x1, x2, x2, x1, x1])
         y = np.array([y1, y1, y2, y2, y1])
         if m2km is True:
-            plt.plot(0.001 * y, 0.001 * x, color=color, linestyle=style, linewidth=width)
+            plt.plot(
+                0.001 * y,
+                0.001 * x,
+                color=color,
+                linestyle=style,
+                linewidth=width,
+            )
         else:
             plt.plot(y, x, color=color, linestyle=style, linewidth=width)
 

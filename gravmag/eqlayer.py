@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
+from scipy.fft import fft2, ifft2
 import warnings
 from . import inverse_distance as idist
 from . import check, utils, constants, convolve
@@ -561,3 +562,47 @@ def method_iterative_deconvolution_TOB20(
         m += 1
 
     return deltas, parameters
+
+
+def method_direct_deconvolution(
+    sensitivity_matrix, data, zeta, check_input=True
+):
+    if check_input == True:
+        check.BTTB_metadata(BTTB=sensitivity_matrix)
+        check.is_array(
+            x=data,
+            ndim=1,
+            shape=(
+                sensitivity_matrix["columns"].shape[1]
+                * sensitivity_matrix["nblocks"],
+            ),
+        )
+        # check if zeta is a positive scalar
+        check.is_scalar(x=zeta, positive=True)
+
+    # compute the eigenvalues matrix
+    L = convolve.eigenvalues_BCCB(BTTB=sensitivity_matrix, ordering="row")
+
+    # rearrange data vector into a matrix W and pad with zeros
+    # presume that ordering of eigenvalues matrix is 'row'
+    # define the number of blocks and points per block of the
+    # BTTB matrix associated with the BCCB matrix
+    nblocks_BTTB = L.shape[0] // 2
+    npoints_per_block_BTTB = L.shape[1] // 2
+    # matrix containing the elements of vector a arranged along its rows
+    W = np.reshape(data, (nblocks_BTTB, npoints_per_block_BTTB))
+    W = np.hstack([W, np.zeros((nblocks_BTTB, npoints_per_block_BTTB))])
+    W = np.vstack([W, np.zeros((nblocks_BTTB, 2 * npoints_per_block_BTTB))])
+
+    # set the Wiener filter
+    L = np.conj(L) / (np.conj(L) * L + zeta)
+
+    # estimate the parameter in the Fourier domain
+    L = L * fft2(x=W, norm="ortho")
+
+    # get the parameters in the space domain
+    # presume that ordering of eigenvalues matrix is 'row'
+    v = ifft2(x=L, norm="ortho")[:nblocks_BTTB, :npoints_per_block_BTTB].real
+    v = v.ravel()
+
+    return v
