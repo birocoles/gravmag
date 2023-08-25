@@ -567,6 +567,29 @@ def method_iterative_deconvolution_TOB20(
 def method_direct_deconvolution(
     sensitivity_matrix, data, zeta, check_input=True
 ):
+    """
+    Solves the overdetermined problem to estimate the physical-property
+    distribution on the equivalent layer via direct deconvolution with Wiener
+    filter.
+
+    parameters
+    ----------
+    sensitivity_matrix: dictionary 
+        Dictionary with all required information to define a BTTB matrix representing the 
+        kernel of the equivalent layer integral. For details, see the function 
+        'convolve.generic_BTTB'.
+    data : numpy array 1d
+        Potential-field data.
+    zeta : float
+        Small positive scalar used to regularize the Wierner filter in Fourier domain.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    parameters : numpy array 1d
+        Physical property distribution on the equivalent layer.
+    """
     if check_input == True:
         check.BTTB_metadata(BTTB=sensitivity_matrix)
         check.is_array(
