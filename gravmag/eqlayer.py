@@ -574,9 +574,9 @@ def method_direct_deconvolution(
 
     parameters
     ----------
-    sensitivity_matrix: dictionary 
-        Dictionary with all required information to define a BTTB matrix representing the 
-        kernel of the equivalent layer integral. For details, see the function 
+    sensitivity_matrix: dictionary
+        Dictionary with all required information to define a BTTB matrix representing the
+        kernel of the equivalent layer integral. For details, see the function
         'convolve.generic_BTTB'.
     data : numpy array 1d
         Potential-field data.
