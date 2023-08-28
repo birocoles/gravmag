@@ -947,7 +947,7 @@ def test_eigenvalues_BCCB_known_values():
 
 def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
     "verify the relationship between the eigenvalues and transposition"
-    # define the BTTB matrix
+    # define the data structure for the generating BTTB matrix
     BTTB = {
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
@@ -961,7 +961,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
         "rows": None,
     }
     BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
-    # define the BTTB matrix transposed
+    # define the data structure for the generating BTTB matrix transposed
     BTTB_T = {
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
@@ -986,7 +986,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
 
 def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
     "verify the relationship between eigenvalues and transposition"
-    # define the BTTB matrix
+    # define the data structure for the generating BTTB matrix
     BTTB = {
         "symmetry_structure": "symm",
         "symmetry_blocks": "skew",
@@ -1000,7 +1000,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
         "rows": None,
     }
     BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
-    # define the BTTB matrix transposed
+    # define the data structure for the generating BTTB matrix transposed
     BTTB_T = {
         "symmetry_structure": "symm",
         "symmetry_blocks": "skew",
@@ -1025,7 +1025,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
 
 def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
     "verify the relationship between eigenvalues and transposition"
-    # define the BTTB matrix
+    # define the data structure for the generating BTTB matrix
     BTTB = {
         "symmetry_structure": "skew",
         "symmetry_blocks": "symm",
@@ -1039,7 +1039,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
         "rows": None,
     }
     BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
-    # define the BTTB matrix transposed
+    # define the data structure for the generating BTTB matrix transposed
     BTTB_T = {
         "symmetry_structure": "skew",
         "symmetry_blocks": "symm",
@@ -1064,7 +1064,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
 
 def test_eigenvalues_BCCB_compare_eigenvalues_skew_skew():
     "verify the relationship between eigenvalues and transposition"
-    # define the BTTB matrix
+    # define the data structure for the generating BTTB matrix
     BTTB = {
         "symmetry_structure": "skew",
         "symmetry_blocks": "skew",
@@ -1078,7 +1078,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_skew():
         "rows": None,
     }
     BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
-    # define the BTTB matrix transposed
+    # define the data structure for the generating BTTB matrix transposed
     BTTB_T = {
         "symmetry_structure": "skew",
         "symmetry_blocks": "skew",

@@ -174,7 +174,7 @@ def generic_BTTB(BTTB, check_input=True):
     There are two symmetries:
     * symmetry_structure - between all blocks above and below the main block diagonal.
     * symmetry_blocks    - between all elements above and below the main diagonal within each block.
-    Each symmetry pattern have three possible types:
+    Each symmetry pattern has three possible types:
     * gene - it denotes 'generic' and it means that there is no symmetry.
     * symm - it denotes 'symmetric' and it means that there is a perfect symmetry.
     * skew - it denotes 'skew-symmetric' and it means that the elements above the main diagonal
