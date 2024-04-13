@@ -9,6 +9,7 @@
 *.egg-info
 .coverage.*
 *htmlcov/
+*.virtual_documents/
 
 # Tex files
 *.synctex.gz
