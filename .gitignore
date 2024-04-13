@@ -10,6 +10,7 @@
 .coverage.*
 *htmlcov/
 *.virtual_documents/
+TODO.txt
 
 # Tex files
 *.synctex.gz
