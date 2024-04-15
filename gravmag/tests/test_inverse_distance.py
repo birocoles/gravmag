@@ -89,15 +89,8 @@ def test_sedm_BTTB_compare_sedm_xy():
     grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "xy"}
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    SEDM_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": y.size,
-        "columns": np.reshape(a=SEDM_BTTB_1st_col, newshape=(y.size, x.size)),
-        "rows": None,
-    }
-    SEDM_BTTB_full = conv.generic_BTTB(BTTB=SEDM_BTTB)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
@@ -115,15 +108,8 @@ def test_sedm_BTTB_compare_sedm_yx():
     grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "yx"}
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB_1st_col = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    SEDM_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": x.size,
-        "columns": np.reshape(a=SEDM_BTTB_1st_col, newshape=(x.size, y.size)),
-        "rows": None,
-    }
-    SEDM_BTTB_full = conv.generic_BTTB(BTTB=SEDM_BTTB)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
