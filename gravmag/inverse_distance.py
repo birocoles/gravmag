@@ -107,9 +107,11 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     returns
     -------
-    SEDM: numpy array 1d
-        First column of the N x N SEDM between data points and source points,
-        where N = Nx x Ny is the total number of data (and source) points.
+    SEDM: dictionary
+        Returns a dictionary containing the metadata associated with the full matrix 
+        (see input of function 'check.BTTB_metadata').
+        The dictionary contains the first column of the N x N SEDM between data points 
+        and source points, where N = Nx x Ny is the total number of data (and source) points.
     """
 
     if check_input is True:

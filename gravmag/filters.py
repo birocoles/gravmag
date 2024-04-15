@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.fft import fft2, ifft2, fftfreq
+from scipy.fft import fft2, ifft2, fftfreq, fftshift
 from . import utils
 from . import check
 
@@ -26,20 +26,14 @@ def wavenumbers(shape, dx, dy, check_input=True):
     """
 
     if check_input is True:
-        assert isinstance(shape, tuple), "shape must be a tuple"
-        assert len(shape) == 2, "shape must have 2 elements"
-        assert isinstance(shape[0], int) and (
-            shape[0] > 0
-        ), "shape[0] must be a positive integer"
-        assert isinstance(shape[1], int) and (
-            shape[1] > 0
-        ), "shape[1] must be a positive integer"
-        assert isinstance(dx, (float, int)) and (
-            dx > 0
-        ), "dx must be a positive scalar"
-        assert isinstance(dy, (float, int)) and (
-            dy > 0
-        ), "dy must be a positive scalar"
+        if type(shape) != tuple:
+            raise ValueError("shape must be a tuple")
+        if len(shape) != 2:
+            raise ValueError("shape must have 2 elements")
+        check.is_integer(x=shape[0], positive=True)
+        check.is_integer(x=shape[1], positive=True)
+        check.is_scalar(x=dx, positive=True)
+        check.is_scalar(x=dy, positive=True)
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
     kx = 2 * np.pi * fftfreq(n=shape[0], d=dx)
@@ -49,7 +43,18 @@ def wavenumbers(shape, dx, dy, check_input=True):
     # this is valid for potential fields on a plane
     kz = np.sqrt(kx**2 + ky**2)
 
-    return kx, ky, kz
+    # shift the wavenumbers according to the FFT routines 
+    kx = fftshift(kx)
+    ky = fftshift(ky)
+    kz = fftshift(kz)
+
+    wavenumbers_dict = {
+        'x': kx,
+        'y': ky,
+        'z': kz
+    }
+
+    return wavenumbers_dict
 
 
 def direction(kx, ky, kz, inc, dec, check_input=True):

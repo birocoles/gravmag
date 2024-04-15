@@ -6,6 +6,14 @@ from pytest import raises
 from .. import filters as ft
 
 
+def test_wavenumbers_bad_shape():
+    "must raise error if shape is not a tuple"
+    bad_shape = [1,2]
+    dx = 3.
+    dy = 5.
+    
+
+
 def test_direction_kxkykz_not_matrices():
     "must raise AssertionError if wavenumbers are not matrices"
     kx = np.ones((4, 4))

@@ -5,7 +5,7 @@ This file contains Python codes for dealing with 2D discrete convolutions.
 import numpy as np
 from scipy.linalg import toeplitz, circulant
 from scipy.fft import fft2, ifft2
-from . import check
+from . import check, data_structures
 
 
 def compute(FT_data, filters, check_input=True):
@@ -153,16 +153,14 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
         return C
 
 
-def generic_BTTB(BTTB, check_input=True):
+def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate a full Block Toeplitz formed by Toeplitz Blocks (BTTB)
-    matrix T from the first columns and first rows of its non-repeating
-    blocks.
+    Generate the data structure for a full Block Toeplitz formed by Toeplitz Blocks (BTTB)
+    matrix T from the first columns and first rows of its non-repeating blocks.
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
 
-    The first column and row of blocks forming the BTTB matrix T are
-    represented as follows:
+    The first column and row of blocks forming the BTTB matrix T are represented as follows:
 
         |T11 T12 ... T1Q|
         |T21            |
@@ -192,7 +190,7 @@ def generic_BTTB(BTTB, check_input=True):
 
     parameters
     ----------
-    BTTB : dictionary containing the following keys:
+    BTTB_metadata : dictionary containing the following keys:
         symmetry_structure : string
             Defines the type of symmetry between all blocks above and below the main block diagonal.
             It can be 'gene', 'symm' or 'skew' (see the explanation above).
@@ -208,7 +206,7 @@ def generic_BTTB(BTTB, check_input=True):
         rows : None or numpy array 2D
             If not None, it is a matrix whose rows are the first rows rij of the
             non-repeating blocks Tij of T, without the diagonal term. They must
-            be ordered as follows: r11, r21, ..., rM1, r12, ..., r1M.
+            be ordered as follows: r11, r21, ..., rQ1, r12, ..., r1Q.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -219,14 +217,14 @@ def generic_BTTB(BTTB, check_input=True):
     """
 
     if check_input == True:
-        check.BTTB_metadata(BTTB)
+        check.BTTB_metadata(BTTB=BTTB_metadata)
 
     # get the parameters defining the BTTB matrix
-    symmetry_structure = BTTB["symmetry_structure"]
-    symmetry_blocks = BTTB["symmetry_blocks"]
-    nblocks = BTTB["nblocks"]
-    columns = BTTB["columns"]
-    rows = BTTB["rows"]
+    symmetry_structure = BTTB_metadata["symmetry_structure"]
+    symmetry_blocks = BTTB_metadata["symmetry_blocks"]
+    nblocks = BTTB_metadata["nblocks"]
+    columns = BTTB_metadata["columns"]
+    rows = BTTB_metadata["rows"]
 
     # number of points per block row/column
     npoints_per_block = columns.shape[1]
@@ -398,17 +396,18 @@ def generic_BTTB(BTTB, check_input=True):
     return T
 
 
-def embedding_BCCB(BTTB, full=False, check_input=True):
+
+def embedding_BCCB(BTTB_metadata, full=False, check_input=True):
     """
     Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)
     matrix that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB).
 
-    See details in the function 'generic_BTTB'.
+    See details in the function 'data_structures.BTTB_metadata'.
 
     parameters
     ----------
-    BTTB : dictionary
-        See function 'generic_BTTB' for a description of the input parameters.
+    BTTB_metadata : dictionary
+        See function 'check.BTTB_metadata' for a description of the input parameters.
     full : boolean
         If True, returns the full BCCB matrix C. Otherwise, returns only its first column. Default is False.
     check_input : boolean
@@ -421,16 +420,16 @@ def embedding_BCCB(BTTB, full=False, check_input=True):
     """
 
     if check_input == True:
-        check.BTTB_metadata(BTTB)
+        check.BTTB_metadata(BTTB_metadata)
         if full not in [True, False]:
             raise ValueError("invalid parameter full ({})".format(full))
 
     # get the parameters defining the BTTB matrix
-    symmetry_structure = BTTB["symmetry_structure"]
-    symmetry_blocks = BTTB["symmetry_blocks"]
-    nblocks = BTTB["nblocks"]
-    columns = BTTB["columns"]
-    rows = BTTB["rows"]
+    symmetry_structure = BTTB_metadata["symmetry_structure"]
+    symmetry_blocks = BTTB_metadata["symmetry_blocks"]
+    nblocks = BTTB_metadata["nblocks"]
+    columns = BTTB_metadata["columns"]
+    rows = BTTB_metadata["rows"]
 
     nblocks_C = 2 * nblocks
     npoints_per_block_C = 2 * columns.shape[1]
@@ -502,7 +501,7 @@ def embedding_BCCB(BTTB, full=False, check_input=True):
     return C
 
 
-def eigenvalues_BCCB(BTTB, ordering="row", check_input=True):
+def eigenvalues_BCCB(BTTB_metadata, ordering="row", check_input=True):
     """
     Compute the eigenvalues of a Block Circulant formed by Circulant Blocks (BCCB) matrix C
     that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB) matrix. The eigenvalues
@@ -510,8 +509,8 @@ def eigenvalues_BCCB(BTTB, ordering="row", check_input=True):
 
     parameters
     ----------
-    BTTB : dictionary
-        See function 'generic_BTTB' for a description of the input parameters.
+    BTTB_metadata : dictionary
+        See function 'check.BTTB_metadata' for a description of the input parameters.
     ordering: string
         If "row", the eigenvalues will be arranged along the rows of a matrix L;
         if "column", they will be arranged along the columns of a matrix L.
@@ -527,22 +526,22 @@ def eigenvalues_BCCB(BTTB, ordering="row", check_input=True):
 
     if check_input == True:
         # check if the associated BTTB is valid
-        check.BTTB_metadata(BTTB)
+        check.BTTB_metadata(BTTB_metadata)
         # check if ordering is valid
         if ordering not in ["row", "column"]:
             raise ValueError("invalid {} ordering".format(ordering))
 
     # get the parameters defining the associated BTTB matrix
-    symmetry_structure = BTTB["symmetry_structure"]
-    symmetry_blocks = BTTB["symmetry_blocks"]
-    nblocks_BTTB = BTTB["nblocks"]
-    columns_BTTB = BTTB["columns"]
-    rows_BTTB = BTTB["rows"]
+    symmetry_structure = BTTB_metadata["symmetry_structure"]
+    symmetry_blocks = BTTB_metadata["symmetry_blocks"]
+    nblocks_BTTB = BTTB_metadata["nblocks"]
+    columns_BTTB = BTTB_metadata["columns"]
+    rows_BTTB = BTTB_metadata["rows"]
 
     npoints_per_block_BTTB = columns_BTTB.shape[1]
 
     # compute the first column of the BCCB matrix
-    c0 = embedding_BCCB(BTTB, full=False, check_input=False)
+    c0 = embedding_BCCB(BTTB_metadata, full=False, check_input=False)
 
     # reshape c0 according to ordering
     if ordering == "row":

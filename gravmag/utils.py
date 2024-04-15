@@ -311,8 +311,8 @@ def prisms_volume(prisms):
     """
 
     # Verify the input parameters
-    check.rectangular_prisms(prisms)
+    check.are_rectangular_prisms(prisms)
 
-    volume = np.prod(prisms[:, [1, 3, 5]] - prisms[:, [0, 2, 4]], axis=1)
+    volume = (prisms['x2'] - prisms['x1'])*(prisms['y2'] - prisms['y1'])*(prisms['z2'] - prisms['z1'])
 
     return volume

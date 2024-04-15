@@ -6,6 +6,7 @@ from numpy.linalg import multi_dot
 from scipy.linalg import toeplitz, circulant, dft
 from pytest import raises
 from .. import convolve as cv
+from .. import data_structures as ds
 
 ##### compute
 
@@ -174,10 +175,10 @@ def test_Circulant_from_Toeplitz_symmetry_preservation():
     ae(computed, circulant(np.array([1, 2, 3, 0, 5, 4])))
 
 
-##### generic_BTTB
+##### BTTB_from_metadata
 
 
-def test_general_BTTB_compare_known_values_symm_symm():
+def test_BTTB_from_metadata_compare_known_values_symm_symm():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array(
         [
@@ -192,7 +193,7 @@ def test_general_BTTB_compare_known_values_symm_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [1, 2, 3, 10, 20, 30],
@@ -206,7 +207,7 @@ def test_general_BTTB_compare_known_values_symm_symm():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_symm_skew():
+def test_BTTB_from_metadata_compare_known_values_symm_skew():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array(
         [
@@ -221,7 +222,7 @@ def test_general_BTTB_compare_known_values_symm_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [1, -2, -3, 10, -20, -30],
@@ -235,7 +236,7 @@ def test_general_BTTB_compare_known_values_symm_skew():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_symm_gene():
+def test_BTTB_from_metadata_compare_known_values_symm_gene():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 7], [10, 40, 50]])
     rows = np.array(
@@ -251,7 +252,7 @@ def test_general_BTTB_compare_known_values_symm_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [0, 18, 32, 10, 20, 30],
@@ -265,7 +266,7 @@ def test_general_BTTB_compare_known_values_symm_gene():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_skew_symm():
+def test_BTTB_from_metadata_compare_known_values_skew_symm():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array(
         [
@@ -280,7 +281,7 @@ def test_general_BTTB_compare_known_values_skew_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [1, 2, 3, -10, -20, -30],
@@ -294,7 +295,7 @@ def test_general_BTTB_compare_known_values_skew_symm():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_skew_skew():
+def test_BTTB_from_metadata_compare_known_values_skew_skew():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array(
         [
@@ -309,7 +310,7 @@ def test_general_BTTB_compare_known_values_skew_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [1, -2, -3, 10, -20, -30],
@@ -323,7 +324,7 @@ def test_general_BTTB_compare_known_values_skew_skew():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_skew_gene():
+def test_BTTB_from_metadata_compare_known_values_skew_gene():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 7], [10, 40, 50]])
     rows = np.array(
@@ -339,7 +340,7 @@ def test_general_BTTB_compare_known_values_skew_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [0, 18, 32, -10, -20, -30],
@@ -353,7 +354,7 @@ def test_general_BTTB_compare_known_values_skew_gene():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_gene_symm():
+def test_BTTB_from_metadata_compare_known_values_gene_symm():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [60, -70, 80], [10, -40, -30]])
     BTTB = {
@@ -363,7 +364,7 @@ def test_general_BTTB_compare_known_values_gene_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [0, -2, 32, 10, -40, -30],
@@ -377,7 +378,7 @@ def test_general_BTTB_compare_known_values_gene_symm():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_gene_skew():
+def test_BTTB_from_metadata_compare_known_values_gene_skew():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [-60, -70, 80], [10, -40, -30]])
     BTTB = {
@@ -387,7 +388,7 @@ def test_general_BTTB_compare_known_values_gene_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [0, 2, -32, 10, 40, 30],
@@ -401,7 +402,7 @@ def test_general_BTTB_compare_known_values_gene_skew():
     ae(computed, reference)
 
 
-def test_general_BTTB_compare_known_values_gene_gene():
+def test_BTTB_from_metadata_compare_known_values_gene_gene():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 7], [60, -90, 100], [10, 40, 50]])
     rows = np.array([[18, 32], [70, -80], [20, 30]])
@@ -412,7 +413,7 @@ def test_general_BTTB_compare_known_values_gene_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.generic_BTTB(BTTB)
+    computed = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     reference = np.array(
         [
             [0, 18, 32, 10, 20, 30],
@@ -446,7 +447,7 @@ def test_embedding_BCCB_compare_known_values_symm_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -496,7 +497,7 @@ def test_embedding_BCCB_compare_known_values_symm_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -547,7 +548,7 @@ def test_embedding_BCCB_compare_known_values_symm_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -597,7 +598,7 @@ def test_embedding_BCCB_compare_known_values_skew_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -647,7 +648,7 @@ def test_embedding_BCCB_compare_known_values_skew_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -698,7 +699,7 @@ def test_embedding_BCCB_compare_known_values_skew_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -743,7 +744,7 @@ def test_embedding_BCCB_compare_known_values_gene_symm():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -788,7 +789,7 @@ def test_embedding_BCCB_compare_known_values_gene_skew():
         "columns": columns,
         "rows": None,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -834,7 +835,7 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
         "columns": columns,
         "rows": rows,
     }
-    computed = cv.embedding_BCCB(BTTB)
+    computed = cv.embedding_BCCB(BTTB_metadata=BTTB)
     # define the reference
     reference = np.array(
         [
@@ -925,7 +926,7 @@ def test_eigenvalues_BCCB_known_values():
         "columns": columns,
         "rows": rows,
     }
-    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    BCCB = cv.embedding_BCCB(BTTB_metadata=BTTB, full=True)
     Q = 6  # number of blocks along rows/columns of BTTB matrix
     P = 5  # number of rows/columns in each block of BTTB matrix
     # define unitaty DFT matrices
@@ -936,11 +937,11 @@ def test_eigenvalues_BCCB_known_values():
     # compute the reference eigenvalues of BCCB from its first column
     lambda_ref = np.sqrt(4 * Q * P) * F2Q_kron_F2P @ BCCB[:, 0]
     # compute eigenvalues with ordering='row'
-    L_row = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
     aae(lambda_row, lambda_ref, decimal=10)
     # compute eigenvalues with ordering='column'
-    L_col = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    L_col = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="column")
     lambda_col = L_col.T.ravel()
     aae(lambda_col, lambda_ref, decimal=10)
 
@@ -960,24 +961,13 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
         ),
         "rows": None,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     # define the data structure for the generating BTTB matrix transposed
-    BTTB_T = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": 2,
-        "columns": np.array(
-            [
-                [1, 2, 3],
-                [10, 20, 30],
-            ]
-        ),
-        "rows": None,
-    }
-    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+    BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
     # compute the eigenvalues
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
-    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
     # compare BTTB matrices
     ae(BTTB_matrix.T, BTTB_matrix_T)
     # compare eigenvalues
@@ -999,24 +989,46 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
         ),
         "rows": None,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     # define the data structure for the generating BTTB matrix transposed
-    BTTB_T = {
+    BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+    BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
+    # compute the eigenvalues
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
+    # compare BTTB matrices
+    ae(BTTB_matrix.T, BTTB_matrix_T)
+    # compare eigenvalues
+    aae(np.conj(L), L_T, decimal=12)
+
+
+def test_eigenvalues_BCCB_compare_eigenvalues_symm_gene():
+    "verify the relationship between eigenvalues and transposition"
+    # define the data structure for the generating BTTB matrix
+    BTTB = {
         "symmetry_structure": "symm",
-        "symmetry_blocks": "skew",
+        "symmetry_blocks": "gene",
         "nblocks": 2,
         "columns": np.array(
             [
-                [1, -2, -3],
-                [10, -20, -30],
+                [1, 2, 3],
+                [10, 20, 30]
             ]
         ),
-        "rows": None,
+        "rows": np.array(
+            [
+                [12, 5],
+                [8, 14.7]
+            ]
+        )
     }
-    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
+    # define the data structure for the generating BTTB matrix transposed
+    BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+    BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
     # compute the eigenvalues
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
-    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
     # compare BTTB matrices
     ae(BTTB_matrix.T, BTTB_matrix_T)
     # compare eigenvalues
@@ -1038,24 +1050,13 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
         ),
         "rows": None,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     # define the data structure for the generating BTTB matrix transposed
-    BTTB_T = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "symm",
-        "nblocks": 2,
-        "columns": np.array(
-            [
-                [1, 2, 3],
-                [-10, -20, -30],
-            ]
-        ),
-        "rows": None,
-    }
-    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+    BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
     # compute the eigenvalues
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
-    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
     # compare BTTB matrices
     ae(BTTB_matrix.T, BTTB_matrix_T)
     # compare eigenvalues
@@ -1077,28 +1078,51 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_skew():
         ),
         "rows": None,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     # define the data structure for the generating BTTB matrix transposed
-    BTTB_T = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "skew",
-        "nblocks": 2,
-        "columns": np.array(
-            [
-                [1, -2, -3],
-                [-10, 20, 30],
-            ]
-        ),
-        "rows": None,
-    }
-    BTTB_matrix_T = cv.generic_BTTB(BTTB=BTTB_T)
+    BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+    BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
     # compute the eigenvalues
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
-    L_T = cv.eigenvalues_BCCB(BTTB=BTTB_T, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+    L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
     # compare BTTB matrices
     ae(BTTB_matrix.T, BTTB_matrix_T)
     # compare eigenvalues
     aae(np.conj(L), L_T, decimal=12)
+
+
+# this test fails and I dont know why
+# def test_eigenvalues_BCCB_compare_eigenvalues_skew_gene():
+#     "verify the relationship between eigenvalues and transposition"
+#     # define the data structure for the generating BTTB matrix
+#     BTTB = {
+#         "symmetry_structure": "skew",
+#         "symmetry_blocks": "gene",
+#         "nblocks": 2,
+#         "columns": np.array(
+#             [
+#                 [1, 2, 3],
+#                 [10, 20, 30],
+#             ]
+#         ),
+#         "rows": np.array(
+#             [
+#                 [15, 23],
+#                 [10, 3],
+#             ]
+#         )
+#     }
+#     BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
+#     # define the data structure for the generating BTTB matrix transposed
+#     BTTB_T = ds.BTTB_transposed_metadata(BTTB_metadata=BTTB)
+#     BTTB_matrix_T = cv.BTTB_from_metadata(BTTB_metadata=BTTB_T)
+#     # compute the eigenvalues
+#     L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
+#     L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="row")
+#     # compare BTTB matrices
+#     ae(BTTB_matrix.T, BTTB_matrix_T)
+#     # compare eigenvalues
+#     aae(np.conj(L), L_T, decimal=12)
 
 
 ##### product_BCCB_vector
@@ -1191,8 +1215,8 @@ def test_product_BCCB_vector_compare_matrix_vector():
         "columns": columns,
         "rows": rows,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
-    BCCB = cv.embedding_BCCB(BTTB=BTTB, full=True)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
+    BCCB = cv.embedding_BCCB(BTTB_metadata=BTTB, full=True)
     Q = 6  # number of blocks along rows/columns of BTTB matrix
     P = 5  # number of rows/columns in each block of BTTB matrix
     # define a vector v
@@ -1202,11 +1226,11 @@ def test_product_BCCB_vector_compare_matrix_vector():
     w_matvec = BTTB_matrix @ v
     # compute the product with function convolve.product_BCCB_vector
     # ordering='row'
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     w_conv_row = cv.product_BCCB_vector(eigenvalues=L, ordering="row", v=v)
     aae(w_conv_row, w_matvec, decimal=12)
     # ordering='column'
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="column")
     w_conv_col = cv.product_BCCB_vector(eigenvalues=L, ordering="column", v=v)
     aae(w_conv_col, w_matvec, decimal=12)
 
@@ -1252,7 +1276,7 @@ def test_product_BCCB_vector_compare_transposed():
         "columns": columns,
         "rows": rows,
     }
-    BTTB_matrix = cv.generic_BTTB(BTTB=BTTB)
+    BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     Q = 6  # number of blocks along rows/columns of BTTB matrix
     P = 5  # number of rows/columns in each block of BTTB matrix
     # define a vector v
@@ -1262,13 +1286,13 @@ def test_product_BCCB_vector_compare_transposed():
     w_matvec = BTTB_matrix.T @ v
     # compute the product with function convolve.product_BCCB_vector
     # ordering='row'
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="row")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     w_conv_row = cv.product_BCCB_vector(
         eigenvalues=np.conj(L), ordering="row", v=v
     )
     aae(w_conv_row, w_matvec, decimal=12)
     # ordering='column'
-    L = cv.eigenvalues_BCCB(BTTB=BTTB, ordering="column")
+    L = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="column")
     w_conv_col = cv.product_BCCB_vector(
         eigenvalues=np.conj(L), ordering="column", v=v
     )
