@@ -87,7 +87,7 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_planar_grid(coordinates):
+def is_regular_grid_xy(coordinates):
     """
     Check if coordinates is a dictionary containing the x, y and z
     coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
@@ -112,9 +112,9 @@ def is_planar_grid(coordinates):
     """
     if type(coordinates) != dict:
         raise ValueError("coordinates must be a dictionary")
-    if list(coordinates.keys()) != ["x", "y", "z", "ordering"]:
+    if list(coordinates.keys()) != ["x", "y", "z", "ordering", "area", "shape"]:
         raise ValueError(
-            "coordinates must have the following 4 keys: 'x', 'y', 'z', 'ordering'"
+            "coordinates must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'area', 'shape'"
         )
     for key in ["x", "y"]:
         if type(coordinates[key]) != np.ndarray:
@@ -127,13 +127,57 @@ def is_planar_grid(coordinates):
         raise ValueError("'x' key must have shape[1] = 1")
     if coordinates["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
-    if isinstance(coordinates["z"], (float, int)) is False:
-        raise ValueError("'z' key must be float or int")
-    if coordinates["ordering"] not in ["xy", "yx"]:
-        raise ValueError("'ordering' key must be 'xy' or 'yx'")
+    is_scalar(coordinates["z"], positive=False)
+    is_ordering(coordinates["ordering"])
+    is_shape(coordinates["shape"])
+    is_area(coordinates["area"])
+    if (coordinates["x"].size, coordinates["y"].size) != coordinates["shape"]:
+        raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
     D = (coordinates["x"].size) * (coordinates["y"].size)
 
     return D
+
+
+def is_regular_grid_wavenumbers(wavenumbers):
+    """
+    Check if wavenumbers is a dictionary containing the x, y and z
+    wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys 
+    'shape,' 'spacing', 'ordering'. See docstring of function 
+    'data_structures.regular_grid_wavenumbers'.
+
+    parameters
+    ----------
+    wavenumbers : dictionaty
+        Dictionary containing metadata associated with a wavenumbers grid.
+
+    """
+    if type(wavenumbers) != dict:
+        raise ValueError("wavenumbers must be a dictionary")
+    if list(wavenumbers.keys()) != ["x", "y", "z", "ordering", "shape", "spacing"]:
+        raise ValueError(
+            "wavenumbers must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'shape', 'spacing'"
+        )
+    for key in ["x", "y", "z"]:
+        if type(wavenumbers[key]) != np.ndarray:
+            raise ValueError(
+                "'x', 'y' and 'z' keys of wavenumbers must be numpy arrays"
+            )
+    if wavenumbers["x"].ndim != 2:
+        raise ValueError("'x' key must have ndim = 2")
+    if wavenumbers["x"].shape[1] != 1:
+        raise ValueError("'x' key must have shape[1] = 1")
+    if wavenumbers["y"].ndim != 1:
+        raise ValueError("'y' key must have ndim = 1")
+    if wavenumbers["z"].ndim != 2:
+        raise ValueError("'z' key must have ndim = 2")
+    if wavenumbers["z"].shape != (wavenumbers["x"].size, wavenumbers["y"].size):
+        raise ValueError("shape of 'z' key must consistent with sizes of keys 'x' and 'y'")
+    is_scalar(wavenumbers["z"], positive=True)
+    is_shape(wavenumbers['shape'])
+    is_spacing(wavenumbers['spacing'])
+    is_ordering(wavenumbers["ordering"])
+    if (wavenumbers["x"].size, wavenumbers["y"].size) != wavenumbers["shape"]:
+        raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
 
 
 def is_scalar(x, positive=True):
@@ -210,40 +254,73 @@ def is_array(x, ndim=None, shape=None):
             )
 
 
-# wavenumbers
-
-
-def are_wavenumbers(wavenumbers):
+def is_area(area):
     """
-    Check if wavenumbers is a dictionary formed by 3 numpy arrays 2d.
-    (See function 'gravmag.transforms.wavenumbers').
+    Check if area is a list containing min x, max x, min y and max y 
+    coordinates of a given region.
 
     parameters
     ----------
-    wavenumbers: generic objects
-        Python objects to be verified.
+    area : generic object
+        Python object to be verified.
     """
-    if type(wavenumbers) != dict:
-        raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != ["x", "y", "z"]:
-        raise ValueError(
-            "wavenumbers must have the following 3 keys: 'x', 'y', 'z'"
-        )
-    for key in wavenumbers.keys():
-        if type(wavenumbers[key]) != np.ndarray:
-            raise ValueError("all keys in wavenumbers must be numpy arrays")
-    for key in wavenumbers.keys():
-        if wavenumbers[key].ndim != 2:
-            raise ValueError("all keys in wavenumbers must be a numpy array 2d")
-    shape = wavenumbers["x"].shape
-    if (wavenumbers["y"].shape != shape) or (wavenumbers["z"].shape != shape):
-        raise ValueError("all keys in wavenumbers must have the same shape")
-    if np.any(wavenumbers["x"][0, :] != 0):
-        raise ValueError("first line of key 'x' must be 0")
-    if np.any(wavenumbers["y"][:, 0] != 0):
-        raise ValueError("first column of key 'y' must be 0")
-    if np.any(wavenumbers["z"] < 0):
-        raise ValueError("all elements of key 'z' must be positive or zero")
+    if type(area) != list:
+        raise ValueError("'area' must be a list")
+    if len(area) != 4:
+        raise ValueError("'area' must have 4 elements")
+    if (area[0] >= area[1]) or (area[2] >= area[3]):
+        raise ValueError("'area[0]' must be smaller than 'area[1]' and 'area[2]' must be smaller than 'area[3]'")
+
+
+def is_shape(shape):
+    '''
+    Check is shape is a tuple containing two positive integers.
+
+    parameters
+    ----------
+    shape : generic object
+        Python object to be verified.
+    '''
+    if type(shape) != tuple:
+        raise ValueError("'shape' must be a tuple")
+    if len(shape) != 2:
+        raise ValueError("'shape' must have 2 elements")
+    is_integer(x=shape[0], positive=True)
+    is_integer(x=shape[1], positive=True)
+
+
+def is_spacing(spacing):
+    '''
+    Check is spacing is a tuple containing two positive scalar.
+
+    parameters
+    ----------
+    spacing : generic object
+        Python object to be verified.
+    '''
+    if type(spacing) != tuple:
+        raise ValueError("spacing must be a tuple")
+    if len(spacing) != 2:
+        raise ValueError("spacing must have 2 elements")
+    is_scalar(x=spacing[0], positive=True)
+    is_scalar(x=spacing[1], positive=True)
+
+
+def is_ordering(ordering):
+    '''
+    Check if ordering is a string 'xy' or 'yx'.
+
+    parameters
+    ----------
+    ordering : generic object
+        Python object to be verified.
+    '''
+    if type(ordering) != str:
+        raise ValueError("ordering must be a string")
+    if len(ordering) != 2:
+        raise ValueError("ordering must have 2 elements")
+    if ordering not in ["xy", "yx"]:
+        raise ValueError("invalid ordering {}".format(ordering))
 
 
 def sensitivity_matrix_and_data(matrix, data):

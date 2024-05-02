@@ -48,10 +48,63 @@ def test_regular_grid_xy_output():
         'x': np.array([[1], [2], [3], [4], [5]]),
         'y': np.array([14.5, 15.5, 16.5, 17.5]),
         'z': 10,
-        'ordering': 'xy'
+        'ordering': 'xy',
+        'area': area,
+        'shape': shape
     }
     computed = ds.regular_grid_xy(area=area, shape=shape, z0=z0, ordering=ordering)
     ae(reference, computed)
+
+
+# regular_grid_wavenumbers
+
+def test_regular_grid_wavenumbers_bad_input():
+    "must raise error if receive bad input"
+    # good parameters
+    shape = (12, 11)
+    spacing = (1., 1.1)
+    ordering='yx'
+
+    # shape not tuple
+    with raises(ValueError):
+        ds.regular_grid_wavenumbers(shape=[12,11], spacing=spacing, ordering=ordering)
+    # len shape different from 2
+    with raises(ValueError):
+        ds.regular_grid_wavenumbers(shape=(12, 11, 10), spacing=spacing, ordering=ordering)
+    # shape not tuple
+    with raises(ValueError):
+        ds.regular_grid_wavenumbers(shape=shape, spacing=[1., 1.1], ordering=ordering)
+    # len spacing different from 2
+    with raises(ValueError):
+        ds.regular_grid_wavenumbers(shape=shape, spacing=(1., 1.1, 3.), ordering=ordering)
+    # invalid ordering
+    with raises(ValueError):
+        ds.regular_grid_wavenumbers(shape=shape, spacing=spacing, ordering='invalid-ordering')
+
+
+def test_regular_grid_wavenumbers_output():
+    "compare output with reference"
+    shape = (5, 4)
+    spacing = (1.3, 1.1)
+    ordering='xy'
+    x_reference = 2 * np.pi * np.array([[-2], [-1], [0], [1], [2]]) / (5 * 1.3)
+    y_reference = 2 * np.pi * np.array([-2, -1, 0, 1]) / (4 * 1.1)
+    z_reference = np.sqrt(x_reference**2 + y_reference**2)
+    reference = {
+        'x': x_reference,
+        'y': y_reference,
+        'z': z_reference,
+        'ordering': 'xy',
+        'shape': shape,
+        'spacing': spacing
+    }
+    computed = ds.regular_grid_wavenumbers(shape=shape, spacing=spacing, ordering=ordering)
+    aae(reference['x'], computed['x'], decimal=12)
+    aae(reference['y'], computed['y'], decimal=12)
+    aae(reference['z'], computed['z'], decimal=12)
+    ae(shape, computed['shape'])
+    ae(spacing, computed['spacing'])
+    ae(ordering, computed['ordering'])
 
 
 # BTTB_transposed_metadata

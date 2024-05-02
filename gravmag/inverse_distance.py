@@ -311,7 +311,7 @@ def grad_BTTB(
         "z": -delta_z,
     }
 
-    PAREI AQUI
+    #PAREI AQUI
 
     # compute the gradient components defined in components
     Ka = []

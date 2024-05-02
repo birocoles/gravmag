@@ -3,15 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from numpy.testing import assert_raises as ar
 from pytest import raises
-from .. import filters as ft
-
-
-def test_wavenumbers_bad_shape():
-    "must raise error if shape is not a tuple"
-    bad_shape = [1,2]
-    dx = 3.
-    dy = 5.
-    
+from .. import filters as ft    
 
 
 def test_direction_kxkykz_not_matrices():

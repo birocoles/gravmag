@@ -4,59 +4,6 @@ from . import utils
 from . import check
 
 
-def wavenumbers(shape, dx, dy, check_input=True):
-    """
-    Compute the wavenumbers associated with a regular grid of data.
-
-    parameters
-    ----------
-    dx, dy : floats
-        Grid spacing along x and y directions.
-    shape : tuple of ints
-        Tuple containing the number of points of data grid
-        along x and y directions.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    wnum: dictionary formed by numpy arrays 2D
-        Dictionary having 3 keys, 'x', 'y' and 'z', representing the
-        wavenumbers along 'x', 'y' and 'z' directions, respectively.
-    """
-
-    if check_input is True:
-        if type(shape) != tuple:
-            raise ValueError("shape must be a tuple")
-        if len(shape) != 2:
-            raise ValueError("shape must have 2 elements")
-        check.is_integer(x=shape[0], positive=True)
-        check.is_integer(x=shape[1], positive=True)
-        check.is_scalar(x=dx, positive=True)
-        check.is_scalar(x=dy, positive=True)
-
-    # wavenumbers kx = 2pi fx and ky = 2pi fy
-    kx = 2 * np.pi * fftfreq(n=shape[0], d=dx)
-    ky = 2 * np.pi * fftfreq(n=shape[1], d=dy)
-    ky, kx = np.meshgrid(ky, kx)
-
-    # this is valid for potential fields on a plane
-    kz = np.sqrt(kx**2 + ky**2)
-
-    # shift the wavenumbers according to the FFT routines 
-    kx = fftshift(kx)
-    ky = fftshift(ky)
-    kz = fftshift(kz)
-
-    wavenumbers_dict = {
-        'x': kx,
-        'y': ky,
-        'z': kz
-    }
-
-    return wavenumbers_dict
-
-
 def direction(kx, ky, kz, inc, dec, check_input=True):
     """
     Compute the 2D directional derivative filter associated with the real

@@ -6,43 +6,6 @@ from pytest import raises
 from .. import transforms as tr
 
 
-def test_wavenumbers_bad_shape():
-    "must raise AssertionError if shape not a tuple of positive integers"
-    dx = 1.0
-    dy = 1.0
-    # shape not tuple
-    with raises(AssertionError):
-        tr.wavenumbers(np.ones(4), dx, dy)
-    # shape tuple with more than 2 elements
-    with raises(AssertionError):
-        tr.wavenumbers((3, 4, 5), dx, dy)
-    # shape with a float
-    with raises(AssertionError):
-        tr.wavenumbers((3.0, 4), dx, dy)
-    # shape with negative integer
-    with raises(AssertionError):
-        tr.wavenumbers((-3, 4), dx, dy)
-
-
-def test_wavenumbers_bad_dxdy():
-    "must raise AssertionError if dx/dy are not positive scalars"
-    shape = (3, 4)
-    dx = 1.0
-    dy = 1.0
-    # dx not scalar
-    with raises(AssertionError):
-        tr.wavenumbers(shape, np.ones(3), dy)
-    # dy not scalar
-    with raises(AssertionError):
-        tr.wavenumbers(shape, dx, "not-scalar")
-    # dx negative
-    with raises(AssertionError):
-        tr.wavenumbers(shape, -1.0, dy)
-    # dy negative
-    with raises(AssertionError):
-        tr.wavenumbers(shape, dx, -1.0)
-
-
 def test_DFT_data_not_matrix():
     "must raise AssertionError if data not a matrix"
     # data as a float

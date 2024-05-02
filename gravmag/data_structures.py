@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.fft import fftfreq, fftshift
 from . import check
 
 
@@ -33,32 +34,100 @@ def regular_grid_xy(area, shape, z0, ordering="xy", check_input=True):
             of the grid.
         'ordering' : string
             The input parameter 'ordering'
+        'area' : list 
+            List of min x, max x, min y and max y (the same as input)
+        'shape' : tuple 
+            Tuple defining the total number of points along x and y directions, 
+            respectively (the same as input).
     """
     if check_input == True:
-        if type(area) != list:
-            raise ValueError("'area' must be a list")
-        if len(area) != 4:
-            raise ValueError("'area' must have 4 elements")
-        if (area[0] >= area[1]) or (area[2] >= area[3]):
-            raise ValueError("'area[0]' must be smaller than 'area[1]' and 'area[2]' must be smaller than 'area[3]'")
-        if type(shape) != tuple:
-            raise ValueError("'shape' must be a tuple")
-        if len(shape) != 2:
-            raise ValueError("'shape' must have 2 elements")
-        check.is_integer(x=shape[0], positive=True)
-        check.is_integer(x=shape[1], positive=True)
+        check.is_area(area=area)
+        check.is_shape(shape=shape)
         check.is_scalar(x=z0, positive=False)
-        if ordering not in ["xy", "yx"]:
-            raise ValueError("invalid ordering {}".format(ordering))
+        check.is_ordering(ordering=ordering)
 
     grid = {
         'x' : np.linspace(area[0], area[1], shape[0])[:,np.newaxis],
         'y' : np.linspace(area[2], area[3], shape[1]),
         'z' : z0,
-        'ordering' : ordering
+        'ordering' : ordering,
+        'area' : area,
+        'shape' : shape
     }
 
     return grid
+
+
+def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
+    """
+    Compute the wavenumbers associated with a regular grid of data.
+
+    parameters
+    ----------
+    shape : tuple of ints
+        Tuple containing the number of points of data grid
+        along x and y directions.
+    spacing : tuple of floats
+        Tuple containing the grid spacing along x and y directions.
+    ordering : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+        Default is 'xy'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    wavenumbers: dictionary containing the following keys
+        'x' : numpy array 2d 
+            Matrix with a single column, i.e., with shape = (N, 1),
+            where Nx is the number of data along x-axis.
+            This numpy array contains the discrete wavenumbers along the x-axis.
+        'y' : numpy array 1d 
+            Vector with shape = (Ny, ), where Ny is the number of
+            data long y-axis. This numpy array contains the discrete wavenumbers along 
+            the y-axis.
+        'z' : numpy array 2d 
+            Matrix with shape (kx.size, ky.size) containing the wavenumbers along
+            the z-axis by considering that the generating data grid in space domain
+            contains potential-field data on a horizontal plane.
+        'ordering' : string
+            The input parameter 'ordering'
+        'shape' : tuple 
+            The input parameter 'shape'
+        'spacing' : tuple
+            The input parameter 'spacing'
+    """
+
+    if check_input is True:
+        check.is_shape(shape=shape)
+        check.is_spacing(spacing=spacing)
+        check.is_ordering(ordering=ordering)
+
+    # wavenumbers kx = 2pi fx and ky = 2pi fy
+    kx = (2 * np.pi * fftfreq(n=shape[0], d=spacing[0]))[:,np.newaxis]
+    ky = 2 * np.pi * fftfreq(n=shape[1], d=spacing[1])
+
+    # this is valid for potential fields on a plane
+    # the line below generates a numpy array 2d with shape (kx.size, ky.size)
+    kz = np.sqrt(kx**2 + ky**2)
+
+    # shift the wavenumbers so that their values goes from negative to positive values
+    kx = fftshift(kx)
+    ky = fftshift(ky)
+    kz = fftshift(kz)
+
+    wavenumbers = {
+        'x': kx,
+        'y': ky,
+        'z': kz,
+        'ordering': ordering,
+        'shape': shape,
+        'spacing': spacing
+    }
+
+    return wavenumbers
 
 
 def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
