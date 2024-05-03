@@ -5,6 +5,7 @@ from pytest import raises
 from .. import inverse_distance as idist
 from .. import convolve as conv
 
+
 ##### SEDM
 
 
@@ -950,7 +951,14 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
     zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 0.0, "ordering": "yx"}
+    grid = {
+        "x": x[:, np.newaxis], 
+        "y": y, 
+        "z": 0.0, 
+        "ordering": "yx",
+        "area": [100.3, 105.7, 100.0, 104.3],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
     SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
@@ -961,81 +969,22 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
         SEDM=SEDM,
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
-    GRAD_BTTB_1st_col = idist.grad_tensor_BTTB(
+    GRAD_BTTB = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
     # component xx
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[0], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[0], component_BTTB_full, decimal=12)
+    aae(GRAD[0], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[0]), decimal=12)
     # component xy
-    component_BTTB = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "skew",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[1], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[1], component_BTTB_full, decimal=12)
+    aae(GRAD[1], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[1]), decimal=12)
     # component xz
-    component_BTTB = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "symm",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[2], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[2], component_BTTB_full, decimal=12)
+    aae(GRAD[2], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[2]), decimal=12)
     # component yy
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[3], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[3], component_BTTB_full, decimal=12)
+    aae(GRAD[3], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[3]), decimal=12)
     # component yz
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "skew",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[4], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[4], component_BTTB_full, decimal=12)
+    aae(GRAD[4], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[4]), decimal=12)
     # component zz
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": x.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[5], newshape=(x.size, y.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[5], component_BTTB_full, decimal=12)
+    aae(GRAD[5], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[5]), decimal=12)
+    

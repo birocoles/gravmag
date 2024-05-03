@@ -172,7 +172,8 @@ def is_regular_grid_wavenumbers(wavenumbers):
         raise ValueError("'z' key must have ndim = 2")
     if wavenumbers["z"].shape != (wavenumbers["x"].size, wavenumbers["y"].size):
         raise ValueError("shape of 'z' key must consistent with sizes of keys 'x' and 'y'")
-    is_scalar(wavenumbers["z"], positive=True)
+    if np.any(wavenumbers["z"] < 0):
+        raise ValueError("'z' key must contain all-positive elements")
     is_shape(wavenumbers['shape'])
     is_spacing(wavenumbers['spacing'])
     is_ordering(wavenumbers["ordering"])

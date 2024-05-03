@@ -6,6 +6,7 @@ between a set of data points and a set of source points.
 import numpy as np
 from scipy.spatial import distance
 from . import check
+from . import convolve as cv
 
 
 def sedm(data_points, source_points, check_input=True):
@@ -110,13 +111,11 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
     SEDM: dictionary
         Returns a dictionary containing the metadata associated with the full matrix 
         (see input of function 'check.BTTB_metadata').
-        The dictionary contains the first column of the N x N SEDM between data points 
-        and source points, where N = Nx x Ny is the total number of data (and source) points.
     """
 
     if check_input is True:
         # check shape and ndim of points
-        check.is_planar_grid(coordinates=data_grid)
+        check.is_regular_grid_xy(coordinates=data_grid)
         check.is_scalar(x=delta_z, positive=True)
 
     Nx = data_grid['x'].size
@@ -140,19 +139,28 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     D = D.ravel()
 
-    # dictionary containing metadata associated with the full SEDM
-    BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "rows": None,
-    }
-
+    # get the symmetries of the BTTB matrix
+    symmetries = cv.BTTB_idist_symmetries(
+        ordering=data_grid["ordering"], 
+        component="potential"
+        )
     if data_grid["ordering"] == "xy":
-        BTTB["nblocks"] = Ny
-        BTTB["columns"] = np.reshape(a=D, newshape=(Ny, Nx))
+        # dictionary containing metadata associated with the full SEDM
+        BTTB = {
+            "symmetry_structure": symmetries[0],
+            "symmetry_blocks": symmetries[1],
+            "nblocks": Ny,
+            "columns": np.reshape(a=D, newshape=(Ny, Nx)),
+            "rows": None,
+        }
     else:  # data_grid['ordering'] == 'yx'
-        BTTB["nblocks"] = Nx
-        BTTB["columns"] = np.reshape(a=D, newshape=(Nx, Ny))
+        BTTB = {
+            "symmetry_structure": symmetries[0],
+            "symmetry_blocks": symmetries[1],
+            "nblocks": Nx,
+            "columns": np.reshape(a=D, newshape=(Nx, Ny)),
+            "rows": None,
+        }
 
     return BTTB
 
@@ -283,14 +291,14 @@ def grad_BTTB(
 
     returns
     -------
-    Ka: list of numpy arrays 1d
-        List of vectors defining the first columns of N x M matrices containing the
-        partial derivatives of first order along x, y and z directions.
+    Ka: list of dictionaries
+        List of dictionaries containing the metadata associated with the full matrix 
+        (see input of function 'check.BTTB_metadata').
     """
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_planar_grid(data_grid)
+        D = check.is_regular_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
@@ -301,8 +309,12 @@ def grad_BTTB(
         if SEDM["columns"].size != D:
             raise ValueError("SEDM does not match data_points")
 
+    # number of points along x and y directions
+    Nx = data_grid['x'].size
+    Ny = data_grid['y'].size
+
     # compute the cube of inverse distance function from the SEDM
-    R3 = SEDM["columns"] * np.sqrt(SEDM["columns"]).ravel()
+    R3 = SEDM["columns"] * np.sqrt(SEDM["columns"])
 
     # dictionary setting parameters for broadcast_to
     broadcast_to_args = {
@@ -311,24 +323,50 @@ def grad_BTTB(
         "z": -delta_z,
     }
 
-    #PAREI AQUI
-
     # compute the gradient components defined in components
     Ka = []
     if data_grid["ordering"] == "xy":
         for component in components:
+            # get the symmetries of the full BTTB matrix
+            symmetries = cv.BTTB_idist_symmetries(
+                ordering=data_grid["ordering"], 
+                component=component
+                )
+            # define columns
             delta = np.broadcast_to(
                 array=broadcast_to_args[component],
                 shape=(data_grid["x"].size, data_grid["y"].size),
             )
-            Ka.append(-(delta.T).ravel() / R3)
+            # dictionary containing metadata associated with the full BTTB
+            BTTB = {
+                "symmetry_structure": symmetries[0],
+                "symmetry_blocks": symmetries[1],
+                "nblocks": Ny,
+                "columns": -(delta.T) / R3,
+                "rows": None,
+            }
+            Ka.append(BTTB)
     else:  # data_grid['ordering'] == 'yx'
         for component in components:
+            # get the symmetries of the full BTTB matrix
+            symmetries = cv.BTTB_idist_symmetries(
+                ordering=data_grid["ordering"], 
+                component=component
+                )
+            # define columns
             delta = np.broadcast_to(
                 array=broadcast_to_args[component],
                 shape=(data_grid["x"].size, data_grid["y"].size),
             )
-            Ka.append(-delta.ravel() / R3)
+            # dictionary containing metadata associated with the full BTTB
+            BTTB = {
+                "symmetry_structure": symmetries[0],
+                "symmetry_blocks": symmetries[1],
+                "nblocks": Nx,
+                "columns": -delta / R3,
+                "rows": None,
+            }
+            Ka.append(BTTB)
 
     return Ka
 
@@ -389,7 +427,7 @@ def grad_tensor(
                 "SEDM does not match data_points and source_points"
             )
 
-        # compute the inverse distance function to the powers 3 and 5
+    # compute the inverse distance function to the powers 3 and 5
     R3 = SEDM * np.sqrt(SEDM)
     R5 = R3 * SEDM
 
@@ -467,10 +505,8 @@ def grad_tensor_BTTB(
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    SEDM: numpy array 1d
-        First column of the N x N SEDM between data points and source points,
-        where N = Nx x Ny is the total number of data (and source) points.
-        Computed according to function 'sedm_BTTB'.
+    SEDM: dictionary
+        Output of the function 'sedm_BTTB'.
     components : list of strings
         List of strings defining the tensor components to be computed.
         Default is ['xx', 'xy', 'xz', 'yy', 'yz', 'zz'], which contains all
@@ -488,19 +524,24 @@ def grad_tensor_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_planar_grid(data_grid)
+        D = check.is_regular_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
-        # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 1:
-            raise ValueError("SEDM must be have ndim = 1")
-        if SEDM.size != D:
+        # check the SEDM
+        check.BTTB_metadata(BTTB=SEDM)
+        if SEDM["columns"].size != D:
             raise ValueError("SEDM does not match data_points")
+
+    # number of points along x and y directions
+    Nx = data_grid['x'].size
+    Ny = data_grid['y'].size
+
+    # compute the inverse distance function to the powers 3 and 5
+    R3 = SEDM["columns"] * np.sqrt(SEDM["columns"])
+    R5 = R3 * SEDM["columns"]
 
     # dictionary setting parameters for broadcast_to
     broadcast_to_args = {
@@ -508,10 +549,6 @@ def grad_tensor_BTTB(
         "y": (data_grid["y"] - data_grid["y"][0]),
         "z": -delta_z,
     }
-
-    # compute the inverse distance function to the powers 3 and 5
-    R3 = SEDM * np.sqrt(SEDM)
-    R5 = R3 * SEDM
 
     # compute the gradient tensor components defined in components
     Kab = []
@@ -521,6 +558,12 @@ def grad_tensor_BTTB(
         aux = 0
     if data_grid["ordering"] == "xy":
         for component in components:
+            # get the symmetries of the full BTTB matrix
+            symmetries = cv.BTTB_idist_symmetries(
+                ordering=data_grid["ordering"], 
+                component=component
+                )
+            # define columns
             delta1 = np.broadcast_to(
                 array=broadcast_to_args[component[0]],
                 shape=(data_grid["x"].size, data_grid["y"].size),
@@ -530,11 +573,26 @@ def grad_tensor_BTTB(
                 shape=(data_grid["x"].size, data_grid["y"].size),
             )
             if component in ["xx", "yy", "zz"]:
-                Kab.append((3 * (delta1 * delta2).T.ravel()) / R5 - aux)
+                columns = (3 * (delta1 * delta2).T) / R5 - aux
             else:
-                Kab.append((3 * (delta1 * delta2).T.ravel()) / R5)
+                columns = (3 * (delta1 * delta2).T) / R5
+            # dictionary containing metadata associated with the full BTTB
+            BTTB = {
+                "symmetry_structure": symmetries[0],
+                "symmetry_blocks": symmetries[1],
+                "nblocks": Ny,
+                "columns": columns,
+                "rows": None,
+            }
+            Kab.append(BTTB)
     else:  # data_grid['ordering'] == 'yx'
         for component in components:
+            # get the symmetries of the full BTTB matrix
+            symmetries = cv.BTTB_idist_symmetries(
+                ordering=data_grid["ordering"], 
+                component=component
+                )
+            # define columns
             delta1 = np.broadcast_to(
                 array=broadcast_to_args[component[0]],
                 shape=(data_grid["x"].size, data_grid["y"].size),
@@ -544,8 +602,17 @@ def grad_tensor_BTTB(
                 shape=(data_grid["x"].size, data_grid["y"].size),
             )
             if component in ["xx", "yy", "zz"]:
-                Kab.append((3 * (delta1 * delta2).ravel()) / R5 - aux)
+                columns = (3 * (delta1 * delta2)) / R5 - aux
             else:
-                Kab.append((3 * (delta1 * delta2).ravel()) / R5)
+                columns = (3 * (delta1 * delta2)) / R5
+            # dictionary containing metadata associated with the full BTTB
+            BTTB = {
+                "symmetry_structure": symmetries[0],
+                "symmetry_blocks": symmetries[1],
+                "nblocks": Nx,
+                "columns": columns,
+                "rows": None,
+            }
+            Kab.append(BTTB)
 
     return Kab

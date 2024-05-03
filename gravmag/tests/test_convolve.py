@@ -427,6 +427,24 @@ def test_BTTB_from_metadata_compare_known_values_gene_gene():
     ae(computed, reference)
 
 
+##### BTTB_idist_symmetries
+
+
+def test_BTTB_symmetries_invalid_input():
+    "verify if raise ValueError for invalid input"
+    # invalid ordering
+    ordering = 'Xy'
+    component = 'potential'
+    with raises(ValueError):
+        cv.BTTB_idist_symmetries(ordering=ordering, component=component)
+    # invalid component
+    ordering = 'xy'
+    component = 'xh'
+    with raises(ValueError):
+        cv.BTTB_idist_symmetries(ordering=ordering, component=component)
+
+
+
 # ##### embedding_BCCB
 
 

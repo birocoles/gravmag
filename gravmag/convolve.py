@@ -155,8 +155,8 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
 
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate the data structure for a full Block Toeplitz formed by Toeplitz Blocks (BTTB)
-    matrix T from the first columns and first rows of its non-repeating blocks.
+    Generate the full BTTB matrix T from the dictionary containing its metadata
+    (For details, see the function 'check.BTTB_metadata').
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
 
@@ -394,6 +394,71 @@ def BTTB_from_metadata(BTTB_metadata, check_input=True):
     T = np.hstack(np.hstack(concatenated_blocks[indices]))
 
     return T
+
+
+def BTTB_idist_symmetries(ordering, component, check_input=True):
+    '''
+    Return the symmetries of the BTTB matrix defined in terms of the inverse 
+    distance function or its derivatives of first and second order.
+
+    BTTB matrices associated with inverse distance function and its first-
+    or second-order derivatives have symmetry structure and symmetry blocks
+    equal to "symm" or "skew". Because of that, they never have a not-None key 'rows'.
+    For details, see function 'check.BTTB_metadata'.
+
+    parameters
+    ----------
+    ordering : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    component : string
+        Strings defining the specific derivative of inverse distance to be computed.
+        The possible entries are 'potential', 'x', 'y', 'z', 'xx', 'xy', 'xz', 'yy', 
+        'yz' and 'zz'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    symmetries : tuple
+        Tuple containing (symmetry_structure, symmetry_blocks) defined by component and ordering. 
+        For details, see function 'check.BTTB_metadata'.
+
+    '''
+    if check_input is True:
+        check.is_ordering(ordering=ordering)
+        if type(component) != str:
+            raise ValueError("component must be a string")
+        if component not in ["potential", "x", "y", "z", "xx", "xy", "xz", "yy", "yz", "zz"]:
+            raise ValueError("invalid component {}".format(component))
+
+    dictionary = {
+        "potential-xy" : ("symm", "symm"), 
+        "potential-yx" : ("symm", "symm"), 
+        "x-xy" : ("symm", "skew"), 
+        "x-yx" : ("skew", "symm"), 
+        "y-xy" : ("skew", "symm"), 
+        "y-yx" : ("symm", "skew"), 
+        "z-xy" : ("symm", "symm"), 
+        "z-yx" : ("symm", "symm"), 
+        "xx-xy" : ("symm", "symm"), 
+        "xx-yx" : ("symm", "symm"), 
+        "xy-xy" : ("skew", "skew"), 
+        "xy-yx" : ("skew", "skew"), 
+        "xz-xy" : ("symm", "skew"), 
+        "xz-yx" : ("skew", "symm"), 
+        "yy-xy" : ("symm", "symm"), 
+        "yy-yx" : ("symm", "symm"), 
+        "yz-xy" : ("skew", "symm"), 
+        "yz-yx" : ("symm", "skew"), 
+        "zz-xy" : ("symm", "symm"), 
+        "zz-yx" : ("symm", "symm"), 
+    }
+
+    symmetries = dictionary[component+"-"+ordering]
+
+    return symmetries
 
 
 

@@ -538,11 +538,24 @@ def test_is_regular_grid_wavenumbers_invalid_keys():
     }
     with pytest.raises(ValueError):
         check.is_regular_grid_wavenumbers(wavenumbers)
-    # set dict with invalid z key
+    # set dict with invalid z key (scalar instead numpy array 2d)
     wavenumbers = {
         "x": x,
         "y": y,
         "z": 3.,
+        "ordering": ordering,
+        "shape": shape,
+        "spacing": spacing
+    }
+    with pytest.raises(ValueError):
+        check.is_regular_grid_wavenumbers(wavenumbers)
+    # set dict with invalid z key with a negative element
+    z_with_negative = np.copy(z)
+    z_with_negative[1,1] *= -1 
+    wavenumbers = {
+        "x": x,
+        "y": y,
+        "z": z_with_negative,
         "ordering": ordering,
         "shape": shape,
         "spacing": spacing
@@ -850,6 +863,26 @@ def test_spacing_inconsistent_elements():
     spacing = (4, 0)
     with pytest.raises(ValueError):
         check.is_spacing(spacing=spacing)
+
+
+###### is ordering
+def test_ordering_inconsistent_elements():
+    "Check if passing an inconsistent ordering raises an error"
+    ordering = "Xy"
+    with pytest.raises(ValueError):
+        check.is_ordering(ordering=ordering)
+    ordering = "xY"
+    with pytest.raises(ValueError):
+        check.is_ordering(ordering=ordering)
+    ordering = "x"
+    with pytest.raises(ValueError):
+        check.is_ordering(ordering=ordering)
+    ordering = "y"
+    with pytest.raises(ValueError):
+        check.is_ordering(ordering=ordering)
+    ordering = "xyz"
+    with pytest.raises(ValueError):
+        check.is_ordering(ordering=ordering)
 
 
 ##### sensitivity matrix and data vector
