@@ -10,7 +10,7 @@ from . import check
 
 def sedm(data_points, source_points, check_input=True):
     """
-    Compute Squared Euclidean Distance Matrix (SEDM) between the data points
+    Compute the full Squared Euclidean Distance Matrix (SEDM) between the data points
     and the source points.
 
     parameters
@@ -107,15 +107,20 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
 
     returns
     -------
-    SEDM: numpy array 1d
-        First column of the N x N SEDM between data points and source points,
-        where N = Nx x Ny is the total number of data (and source) points.
+    SEDM: dictionary
+        Returns a dictionary containing the metadata associated with the full matrix 
+        (see input of function 'check.BTTB_metadata').
+        The dictionary contains the first column of the N x N SEDM between data points 
+        and source points, where N = Nx x Ny is the total number of data (and source) points.
     """
 
     if check_input is True:
         # check shape and ndim of points
         check.is_planar_grid(coordinates=data_grid)
         check.is_scalar(x=delta_z, positive=True)
+
+    Nx = data_grid['x'].size
+    Ny = data_grid['y'].size
 
     # compute the SEDM using numpy
     DX = (
@@ -133,10 +138,23 @@ def sedm_BTTB(data_grid, delta_z, check_input=True):
     # use broadcasting rules to add DX, DY and DZ
     D = DX + DY[np.newaxis, :] + DZ
 
+    D = D.ravel()
+
+    # dictionary containing metadata associated with the full SEDM
+    BTTB = {
+        "symmetry_structure": "symm",
+        "symmetry_blocks": "symm",
+        "rows": None,
+    }
+
     if data_grid["ordering"] == "xy":
-        return (D.T).ravel()
+        BTTB["nblocks"] = Ny
+        BTTB["columns"] = np.reshape(a=D, newshape=(Ny, Nx))
     else:  # data_grid['ordering'] == 'yx'
-        return D.ravel()
+        BTTB["nblocks"] = Nx
+        BTTB["columns"] = np.reshape(a=D, newshape=(Nx, Ny))
+
+    return BTTB
 
 
 def grad(
@@ -255,10 +273,8 @@ def grad_BTTB(
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    SEDM: numpy array 1d
-        First column of the N x N SEDM between data points and source points,
-        where N = Nx x Ny is the total number of data (and source) points.
-        Computed according to function 'sedm_BTTB'.
+    SEDM: dictionary
+        Output of the function 'sedm_BTTB'.
     components : list of strings
         List of strings defining the Cartesian components to be computed.
         Default is ['x', 'y', 'z'], which contains all possible components.
@@ -280,16 +296,13 @@ def grad_BTTB(
         for component in components:
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
-        # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 1:
-            raise ValueError("SEDM must be have ndim = 1")
-        if SEDM.size != D:
+        # check the SEDM
+        check.BTTB_metadata(BTTB=SEDM)
+        if SEDM["columns"].size != D:
             raise ValueError("SEDM does not match data_points")
 
     # compute the cube of inverse distance function from the SEDM
-    R3 = SEDM * np.sqrt(SEDM)
+    R3 = SEDM["columns"] * np.sqrt(SEDM["columns"]).ravel()
 
     # dictionary setting parameters for broadcast_to
     broadcast_to_args = {
@@ -297,6 +310,8 @@ def grad_BTTB(
         "y": (data_grid["y"] - data_grid["y"][0]),
         "z": -delta_z,
     }
+
+    #PAREI AQUI
 
     # compute the gradient components defined in components
     Ka = []

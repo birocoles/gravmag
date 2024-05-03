@@ -121,9 +121,9 @@ def kernel_matrix_dipoles(
             warnings.warn(
                 "verify if the surface containing data cross the equivalent layer"
             )
-        if type(inc) not in [float, int]:
+        if isinstance(inc, (float, int)) is False:
             raise ValueError("inc must be a scalar")
-        if type(dec) not in [float, int]:
+        if isinstance(dec, (float, int)) is False:
             raise ValueError("dec must be a scalar")
         # check if field is valid
         if field not in ["potential", "x", "y", "z", "t"]:
@@ -194,6 +194,76 @@ def kernel_matrix_dipoles(
         G = axx * Gxx + axy * Gxy + axz * Gxz + ayy * Gyy + ayz * Gyz
 
     return G
+
+
+def cosine_matrix(
+    data_points,
+    source_points,
+    inc1,
+    dec1,
+    inc2,
+    dec2,
+    check_input=True,
+):
+    """
+    Compute the matrix with element ij equal to the cosine change.
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    inc1, dec1 : ints or floats
+        Scalars defining the constant inclination and declination of the present dipoles magnetization.
+    inc2, dec2 : ints or floats
+        Scalars defining the constant inclination and declination of the modified dipoles magnetization.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Dc: numpy array 2d
+        N x M matrix defined by the cosine change values.
+    """
+
+    if check_input is True:
+        check.are_coordinates(data_points)
+        check.are_coordinates(source_points)
+        if np.max(data_points["z"]) >= np.min(source_points["z"]):
+            warnings.warn(
+                "verify if the surface containing data cross the equivalent layer"
+            )
+        check.is_scalar(x=inc1, positive=False)
+        check.is_scalar(x=dec1, positive=False)
+        check.is_scalar(x=inc2, positive=False)
+        check.is_scalar(x=dec2, positive=False)
+
+    # compute Squared Euclidean Distance Matrix (SEDM)
+    R2 = idist.sedm(data_points, source_points, check_input=False)
+    # compute the unit vector defined by inc1 and dec1
+    u1 = utils.unit_vector(inc1, dec1, check_input=False)
+    # compute the unit vector defined by inc2 and dec2
+    u2 = utils.unit_vector(inc2, dec2, check_input=False)
+    # compute the difference vector
+    Du = u2 - u1
+
+    # compute the gradient components
+    Gx, Gy, Gz = idist.grad(
+        data_points=data_points,
+        source_points=source_points,
+        SEDM=R2,
+        components=["x", "y", "z"],
+        check_input=False,
+    )
+
+    G_norm = np.sqrt(Gx**2 + Gy**2 + Gz**2)
+
+    Dc = (Du[0] * Gx + Du[1] * Gy + Du[2] * Gz) / G_norm
+
+    return Dc
 
 
 def method_CGLS(
