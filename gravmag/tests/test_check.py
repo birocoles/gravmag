@@ -179,281 +179,255 @@ def test_invalid_coordinates():
 
 def test_is_regular_grid_xy_n_points():
     "Check if return the correct number of points"
-    coordinates = {
-        "x": np.arange(4)[:, np.newaxis],
+    grid = {
+        "x": np.arange(4),
         "y": np.ones(3),
         "z": 18.2,
-        "ordering": "xy",
         "area": [0, 1, 2, 3],
         "shape": (4, 3)
     }
-    D = check.is_regular_grid_xy(coordinates)
+    D = check.is_regular_grid_xy(grid)
     assert D == 12
 
 
 def test_is_regular_grid_xy_non_dict_input():
     "Check if passing a non-dictionary grid raises an error"
     # array
-    coordinates = np.array([0, 0, 0])
+    grid = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # array
-    coordinates = np.zeros((4, 3))
+    grid = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # tuple
-    coordinates = (1, 5)
+    grid = (1, 5)
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # list
-    coordinates = [1, 2, 3.0]
+    grid = [1, 2, 3.0]
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # float
-    coordinates = 10.2
+    grid = 10.2
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
 
 
 def test_is_regular_grid_xy_invalid_keys():
     "Check if passing a dictionary with invalid keys raises an error"
     # correct keys
-    x = np.arange(4)[:, np.newaxis]
+    x = np.arange(4)
     y = np.ones(3)
     z = 18.2
-    ordering = 'xy'
     area = [0, 1, 2, 3]
     shape = (4, 3)
     # dictionary with one extra key
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": shape,
         "k": np.array([-100, 100, -100, 100, 100, 200]),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with one wrong key (y in uppercase)
-    coordinates = {
+    grid = {
         "x": x,
         "Y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with 'z' key not float or int
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": 18.2 + 3j,
-        "ordering": ordering,
         "area": area,
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    # using a tuple with one element also works
-    # and do not raise error
-    # coordinates = {
-    #     "x": x,
-    #     "y": y,
-    #     "z": (18.2),
-    #     "ordering": ordering,
-    #     "area": area,
-    #     "shape": shape,
-    # }
-    # with pytest.raises(ValueError):
-    #     check.is_regular_grid_xy(coordinates)
-    coordinates = {
+        check.is_regular_grid_xy(grid)
+    grid = {
         "x": x,
         "y": y,
         "z": np.array([18.2]),
-        "ordering": ordering,
         "area": area,
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    # dictionary with 'ordering' key neither 'xy' nor 'yx'
-    coordinates = {
-        "x": x,
-        "y": y,
-        "z": z,
-        "ordering": "y",
-        "area": area,
-        "shape": shape,
-    }
-    with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    coordinates = {
-        "x": x,
-        "y": y,
-        "z": z,
-        "ordering": "Xy",
-        "area": area,
-        "shape": shape,
-    }
-    with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with 'area' key not list
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": np.array(area),
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    coordinates = {
+        check.is_regular_grid_xy(grid)
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": (0, 2, 4, 5),
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with inconsistent 'area' key
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": [0, -4, 3, 6],
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    coordinates = {
+        check.is_regular_grid_xy(grid)
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": [1, 4, 7, 5],
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with 'shape' key not tuple
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": [x.size, y.size],
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    coordinates = {
+        check.is_regular_grid_xy(grid)
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": np.array(shape),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # dictionary with inconsistent 'shape' key
-    coordinates = {
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": (-1, 4),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
-    coordinates = {
+        check.is_regular_grid_xy(grid)
+    grid = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "area": area,
         "shape": (3, 3),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)    
+        check.is_regular_grid_xy(grid)    
 
 
 def test_is_regular_grid_xy_invalid_x_key():
     "Check if passing an invalid x key raises an error"
-    # array 1d
-    coordinates = {
-        "x": np.arange(4),
-        "y": np.ones(3),
-        "z": 18.2,
-        "ordering": "xy",
+    # correct keys
+    y = np.ones(3)
+    z = 18.2
+    area = [0, 1, 2, 3]
+    shape = (4, 3)
+    # array 2d
+    grid = {
+        "x": np.arange(4)[:, np.newaxis],
+        "y": y,
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # list
-    coordinates = {
+    grid = {
         "x": [0, 1, 2, 3, 4],
-        "y": np.ones(3),
-        "z": 18.2,
-        "ordering": "xy",
+        "y": y,
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # tuple
-    coordinates = {
+    grid = {
         "x": (0, 1, 2, 3, 4),
-        "y": np.ones(3),
-        "z": 18.2,
-        "ordering": "xy",
+        "y": y,
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
 
 
 def test_is_regular_grid_xy_invalid_y_key():
     "Check if passing an invalid y key raises an error"
+    # correct keys
+    x = np.arange(4)
+    z = 18.2
+    area = [0, 1, 2, 3]
+    shape = (4, 3)
     # array 2d
-    coordinates = {
-        "x": np.arange(4)[:, np.newaxis],
+    grid = {
+        "x": x,
         "y": np.ones(3)[np.newaxis, :],
-        "z": 18.2,
-        "ordering": "xy",
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # list
-    coordinates = {
-        "x": np.ones(3),
+    grid = {
+        "x": x,
         "y": [0, 1, 2, 3, 4],
-        "z": 18.2,
-        "ordering": "xy",
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # tuple
-    coordinates = {
-        "x": np.ones(4),
+    grid = {
+        "x": x,
         "y": (0, 1, 2, 3),
-        "z": 18.2,
-        "ordering": "xy",
+        "z": z,
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
 
 
 def test_is_regular_grid_xy_invalid_z_key():
     "Check if passing an invalid z key raises an error"
+    # correct keys
+    x = np.arange(4)
+    y = np.ones(3)
+    area = [0, 1, 2, 3]
+    shape = (4, 3)
     # array 2d
     coordinates = {
-        "x": np.arange(4)[:, np.newaxis],
+        "x": np.arange(4),
         "y": np.ones(3),
         "z": np.array(18.2),
         "ordering": "xy",
@@ -461,23 +435,25 @@ def test_is_regular_grid_xy_invalid_z_key():
     with pytest.raises(ValueError):
         check.is_regular_grid_xy(coordinates)
     # list
-    coordinates = {
-        "x": np.ones(4),
-        "y": np.ones(3),
+    grid = {
+        "x": x,
+        "y": y,
         "z": [18.2],
-        "ordering": "xy",
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
     # tuple
-    coordinates = {
-        "x": np.ones(4),
-        "y": np.ones(3),
+    grid = {
+        "x": x,
+        "y": y,
         "z": (18.2,),
-        "ordering": "xy",
+        "area": area,
+        "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_regular_grid_xy(grid)
 
 
 ##### regular_grid_wavenumbers

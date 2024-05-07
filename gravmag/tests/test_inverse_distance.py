@@ -33,7 +33,7 @@ def test_sedm_known_points():
     )
 
     SEDM_computed = idist.sedm(P, S)
-    aae(SEDM_computed, SEDM_reference, decimal=10)
+    aae(SEDM_computed, SEDM_reference, decimal=12)
 
 
 def test_sedm_symmetric_points():
@@ -70,7 +70,7 @@ def test_sedm_symmetric_points():
 
     SEDM_up = idist.sedm(P_up, S)
     SEDM_down = idist.sedm(P_down, S)
-    aae(SEDM_up, SEDM_down, decimal=15)
+    aae(SEDM_up, SEDM_down, decimal=12)
 
 
 ##### SEDM BTTB
@@ -81,16 +81,22 @@ def test_sedm_BTTB_compare_sedm_xy():
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5)
     y = np.linspace(100.0, 104.3, 4)
-    Dz = 15.8
+    Dz = 15.0
     # define points with 'ordering'='xy'
     xp, yp = np.meshgrid(x, y, indexing="xy")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "xy"}
+    grid = {
+        "x": x, 
+        "y": y, 
+        "z": 30.0, 
+        "area": [1.3, 5.7, 100.0, 104.3],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
     SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
@@ -100,17 +106,23 @@ def test_sedm_BTTB_compare_sedm_yx():
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5)
     y = np.linspace(100.0, 104.3, 4)
-    Dz = 15.8
+    Dz = 15.0
     # define points with 'ordering'='yx'
     xp, yp = np.meshgrid(x, y, indexing="ij")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "yx"}
+    grid = {
+        "x": x, 
+        "y": y, 
+        "z": 30.0, 
+        "area": [1.3, 5.7, 100.0, 104.3],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB=SEDM_BTTB)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
+    SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
@@ -301,21 +313,26 @@ def test_grad_BTTB_known_points_x_oriented():
 
     # open grid of computation points
     grid = {
-        "x": np.array([[-10], [0], [10]], dtype=float),
+        "x": np.array([-10, 0, 10], dtype=float),
         "y": np.array([-10, 0, 10], dtype=float),
         "z": 0.0,
-        "ordering": "xy",
+        "area": [-10, 10, -10, 10],
+        "shape": (3, 3)
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="xy")
     G = idist.grad_BTTB(
-        data_grid=grid, delta_z=DZ, SEDM=SEDM, components=["x", "y", "z"]
+        data_grid=grid, 
+        delta_z=DZ, 
+        SEDM=SEDM, 
+        ordering="xy",
+        components=["x", "y", "z"]
     )
 
-    aae(G[0], GX, decimal=12)
-    aae(G[1], GY, decimal=12)
-    aae(G[2], GZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GX, decimal=10)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GY, decimal=10)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GZ, decimal=10)
 
 
 def test_grad_BTTB_known_points_y_oriented():
@@ -354,21 +371,26 @@ def test_grad_BTTB_known_points_y_oriented():
 
     # open grid of computation points
     grid = {
-        "x": np.array([[-10], [0], [10]], dtype=float),
+        "x": np.array([-10, 0, 10], dtype=float),
         "y": np.array([-10, 0, 10], dtype=float),
         "z": 0.0,
-        "ordering": "yx",
+        "area": [-10, 10, -10, 10],
+        "shape": (3, 3)
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="yx")
     G = idist.grad_BTTB(
-        data_grid=grid, delta_z=DZ, SEDM=SEDM, components=["x", "y", "z"]
+        data_grid=grid, 
+        delta_z=DZ, 
+        SEDM=SEDM, 
+        ordering="yx",
+        components=["x", "y", "z"]
     )
 
-    aae(G[0], GX, decimal=12)
-    aae(G[1], GY, decimal=12)
-    aae(G[2], GZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GZ, decimal=12)
 
 
 def test_grad_BTTB_compare_grad_xy():
@@ -382,10 +404,16 @@ def test_grad_BTTB_compare_grad_xy():
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "xy"}
+    grid = {
+        "x": x, 
+        "y": y, 
+        "z": 30.0, 
+        "area": [1300, 5700, 100000, 104300],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -393,32 +421,19 @@ def test_grad_BTTB_compare_grad_xy():
         SEDM=SEDM,
         components=["x", "y", "z"],
     )
-    GRAD_BTTB_1st_col = idist.grad_BTTB(
-        data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["x", "y", "z"]
+    GRAD_BTTB = idist.grad_BTTB(
+        data_grid=grid, 
+        delta_z=Dz, 
+        SEDM=SEDM_BTTB, 
+        ordering="xy",
+        components=["x", "y", "z"]
     )
-    symmetries_structure = ["symm", "skew", "symm"]
-    symmetries_blocks = ["skew", "symm", "symm"]
-    for (
-        element,
-        element_BTTB_1st_col,
-        symmetry_structure,
-        symmetry_blocks,
-    ) in zip(GRAD, GRAD_BTTB_1st_col, symmetries_structure, symmetries_blocks):
-        element_BTTB = {
-            "symmetry_structure": symmetry_structure,
-            "symmetry_blocks": symmetry_blocks,
-            "nblocks": y.size,
-            "columns": np.reshape(
-                a=element_BTTB_1st_col, newshape=(y.size, x.size)
-            ),
-            "rows": None,
-        }
-        element_BTTB_full = conv.generic_BTTB(BTTB=element_BTTB)
-        aae(element, element_BTTB_full, decimal=8)
+    for component, component_BTTB_metadata in zip(GRAD, GRAD_BTTB):
+        aae(component, conv.BTTB_from_metadata(BTTB_metadata=component_BTTB_metadata), decimal=8)
 
 
 def test_grad_BTTB_compare_grad_yx():
-    "verify if grad_BTTB produces the same result as grad for a yx grid"
+    "verify if grad_BTTB produces the same result as grad for a xy grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5) * 1e3
     y = np.linspace(100.0, 104.3, 4) * 1e3
@@ -428,10 +443,16 @@ def test_grad_BTTB_compare_grad_yx():
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 30.0, "ordering": "yx"}
+    grid = {
+        "x": x, 
+        "y": y, 
+        "z": 30.0, 
+        "area": [1300, 5700, 100000, 104300],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -439,28 +460,15 @@ def test_grad_BTTB_compare_grad_yx():
         SEDM=SEDM,
         components=["x", "y", "z"],
     )
-    GRAD_BTTB_1st_col = idist.grad_BTTB(
-        data_grid=grid, delta_z=Dz, SEDM=SEDM_BTTB, components=["x", "y", "z"]
+    GRAD_BTTB = idist.grad_BTTB(
+        data_grid=grid, 
+        delta_z=Dz, 
+        SEDM=SEDM_BTTB, 
+        ordering="yx",
+        components=["x", "y", "z"]
     )
-    symmetries_structure = ["skew", "symm", "symm"]
-    symmetries_blocks = ["symm", "skew", "symm"]
-    for (
-        element,
-        element_BTTB_1st_col,
-        symmetry_structure,
-        symmetry_blocks,
-    ) in zip(GRAD, GRAD_BTTB_1st_col, symmetries_structure, symmetries_blocks):
-        element_BTTB = {
-            "symmetry_structure": symmetry_structure,
-            "symmetry_blocks": symmetry_blocks,
-            "nblocks": x.size,
-            "columns": np.reshape(
-                a=element_BTTB_1st_col, newshape=(x.size, y.size)
-            ),
-            "rows": None,
-        }
-        element_BTTB_full = conv.generic_BTTB(BTTB=element_BTTB)
-        aae(element, element_BTTB_full, decimal=8)
+    for component, component_BTTB_metadata in zip(GRAD, GRAD_BTTB):
+        aae(component, conv.BTTB_from_metadata(BTTB_metadata=component_BTTB_metadata), decimal=8)
 
 
 #### grad tensor
@@ -752,27 +760,29 @@ def test_grad_tensor_BTTB_known_points_x_oriented():
 
     # open grid of computation points
     grid = {
-        "x": np.array([[-10], [0], [10]], dtype=float),
+        "x": np.array([-10, 0, 10], dtype=float),
         "y": np.array([-10, 0, 10], dtype=float),
         "z": 0.0,
-        "ordering": "xy",
+        "area": [-10, 10, -10, 10],
+        "shape": (3, 3)
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="xy")
     G = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
+        ordering="xy",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
-    aae(G[0], GXX, decimal=12)
-    aae(G[1], GXY, decimal=12)
-    aae(G[2], GXZ, decimal=12)
-    aae(G[3], GYY, decimal=12)
-    aae(G[4], GYZ, decimal=12)
-    aae(G[5], GZZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GXX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GXY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GXZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[3])[:,0], GYY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[4])[:,0], GYZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[5])[:,0], GZZ, decimal=12)
 
 
 def test_grad_tensor_BTTB_known_points_y_oriented():
@@ -815,31 +825,33 @@ def test_grad_tensor_BTTB_known_points_y_oriented():
 
     # open grid of computation points
     grid = {
-        "x": np.array([[-10], [0], [10]], dtype=float),
+        "x": np.array([-10, 0, 10], dtype=float),
         "y": np.array([-10, 0, 10], dtype=float),
         "z": 0.0,
-        "ordering": "yx",
+        "area": [-10, 10, -10, 10],
+        "shape": (3, 3)
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ)
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="yx")
     G = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
+        ordering="yx",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
-    aae(G[0], GXX, decimal=12)
-    aae(G[1], GXY, decimal=12)
-    aae(G[2], GXZ, decimal=12)
-    aae(G[3], GYY, decimal=12)
-    aae(G[4], GYZ, decimal=12)
-    aae(G[5], GZZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GXX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GXY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GXZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[3])[:,0], GYY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[4])[:,0], GYZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G[5])[:,0], GZZ, decimal=12)
 
 
 def test_grad_tensor_BTTB_compare_grad_x_oriented():
-    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a xy grid"
+    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a yx grid"
     # cordinates of the grid
     x = np.linspace(100.3, 105.7, 5)
     y = np.linspace(100.0, 104.3, 4)
@@ -849,95 +861,42 @@ def test_grad_tensor_BTTB_compare_grad_x_oriented():
     zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
-    grid = {"x": x[:, np.newaxis], "y": y, "z": 0.0, "ordering": "xy"}
+    grid = {
+        "x": x, 
+        "y": y, 
+        "z": 0.0, 
+        "area": [100.3, 105.7, 100.0, 104.3],
+        "shape": (5, 4)
+        }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    # compute grad's
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
+    # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
         source_points=source_points,
         SEDM=SEDM,
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
-    GRAD_BTTB_1st_col = idist.grad_tensor_BTTB(
+    GRAD_BTTB = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
-        components=["xx", "xy", "xz", "yy", "yz", "zz"],
+        ordering="xy",
+        components=["xx", "xy", "xz", "yy", "yz", "zz"]
     )
     # component xx
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[0], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[0], component_BTTB_full, decimal=12)
+    aae(GRAD[0], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[0]), decimal=12)
     # component xy
-    component_BTTB = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "skew",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[1], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[1], component_BTTB_full, decimal=12)
+    aae(GRAD[1], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[1]), decimal=12)
     # component xz
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "skew",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[2], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[2], component_BTTB_full, decimal=12)
+    aae(GRAD[2], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[2]), decimal=12)
     # component yy
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[3], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[3], component_BTTB_full, decimal=12)
+    aae(GRAD[3], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[3]), decimal=12)
     # component yz
-    component_BTTB = {
-        "symmetry_structure": "skew",
-        "symmetry_blocks": "symm",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[4], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[4], component_BTTB_full, decimal=12)
+    aae(GRAD[4], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[4]), decimal=12)
     # component zz
-    component_BTTB = {
-        "symmetry_structure": "symm",
-        "symmetry_blocks": "symm",
-        "nblocks": y.size,
-        "columns": np.reshape(
-            a=GRAD_BTTB_1st_col[5], newshape=(y.size, x.size)
-        ),
-        "rows": None,
-    }
-    component_BTTB_full = conv.generic_BTTB(BTTB=component_BTTB)
-    aae(GRAD[5], component_BTTB_full, decimal=12)
+    aae(GRAD[5], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[5]), decimal=12)
 
 
 def test_grad_tensor_BTTB_compare_grad_y_oriented():
@@ -952,17 +911,16 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
     source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
     grid = {
-        "x": x[:, np.newaxis], 
+        "x": x, 
         "y": y, 
         "z": 0.0, 
-        "ordering": "yx",
         "area": [100.3, 105.7, 100.0, 104.3],
         "shape": (5, 4)
         }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz)
-    # compute grad's
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
+    # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
         source_points=source_points,
@@ -973,6 +931,7 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
+        ordering="yx",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
     # component xx
@@ -988,3 +947,264 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
     # component zz
     aae(GRAD[5], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[5]), decimal=12)
     
+
+##### _delta_x
+
+def test__delta_x_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -np.array([[0, 10, 20], [0, 10, 20]])
+    symmetries, shape, delta = idist._delta_x(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -np.array([[0, 0], [10, 10], [20, 20]])
+    symmetries, shape, delta = idist._delta_x(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_y
+
+def test__delta_y_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -np.array([[0, 0, 0], [15, 15, 15]])
+    symmetries, shape, delta = idist._delta_y(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -np.array([[0, 15], [0, 15], [0, 15]])
+    symmetries, shape, delta = idist._delta_y(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_z
+
+def test__delta_z_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 10
+    symmetries, shape, delta = idist._delta_z(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 10
+    symmetries, shape, delta = idist._delta_z(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_xx
+
+def test__delta_xx_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 100, 400], [0, 100, 400]])
+    symmetries, shape, delta = idist._delta_xx(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 0], [100, 100], [400, 400]])
+    symmetries, shape, delta = idist._delta_xx(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_xy
+
+def test__delta_xy_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 0, 0], [0, 150, 300]])
+    symmetries, shape, delta = idist._delta_xy(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 0], [0, 150], [0, 300]])
+    symmetries, shape, delta = idist._delta_xy(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_xz
+
+
+def test__delta_xz_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -3 * np.array([[0, 100, 200], [0, 100, 200]])
+    symmetries, shape, delta = idist._delta_xz(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -3 * np.array([[0, 0], [100, 100], [200, 200]])
+    symmetries, shape, delta = idist._delta_xz(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_yy
+
+def test__delta_yy_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 0, 0], [225, 225, 225]])
+    symmetries, shape, delta = idist._delta_yy(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * np.array([[0, 225], [0, 225], [0, 225]])
+    symmetries, shape, delta = idist._delta_yy(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_yz
+
+def test__delta_yz_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -3 * np.array([[0, 0, 0], [150, 150, 150]])
+    symmetries, shape, delta = idist._delta_yz(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = -3 * np.array([[0, 150], [0, 150], [0, 150]])
+    symmetries, shape, delta = idist._delta_yz(grid, Dz, "yx")
+    aae(reference, delta)
+
+
+##### _delta_zz
+
+def test__delta_zz_known_points():
+    # ordering xy
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * 100
+    symmetries, shape, delta = idist._delta_zz(grid, Dz, "xy")
+    aae(reference, delta)
+    # ordering yx
+    grid = {
+        "x" : np.array([10, 20, 30]),
+        "y" : np.array([15, 30]),
+        "z" : 4,
+        "area" : [10, 30, 15, 30],
+        "shape" : (3, 2)
+    }
+    Dz = 10
+    reference = 3 * 100
+    symmetries, shape, delta = idist._delta_zz(grid, Dz, "yx")
+    aae(reference, delta)

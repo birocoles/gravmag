@@ -3,7 +3,7 @@ from scipy.fft import fftfreq, fftshift
 from . import check
 
 
-def regular_grid_xy(area, shape, z0, ordering="xy", check_input=True):
+def regular_grid_xy(area, shape, z0, check_input=True):
     """
     Define the data structure for a horizontal grid of points x and y.
 
@@ -15,25 +15,15 @@ def regular_grid_xy(area, shape, z0, ordering="xy", check_input=True):
         Tuple defining the total number of points along x and y directions, respectively.
     z0 : scalar
         Constant vertical coordinate of the grid.
-    ordering : string
-        Defines how the points are ordered after the first point (min x, min y).
-        If 'xy', the points vary first along x and then along y.
-        If 'yx', the points vary first along y and then along x.
-        Default is 'xy'.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
     returns
     -------
     grid : dictionary containing the following keys
-        'x' : numpy array 2d with a single column, i.e., with shape = (N, 1),
-            where Nx is the number of data along x-axis.
-        'y' : numpy array 1d with shape = (Ny, ), where Ny is the number of
-            data long y-axis.
-        'z' : scalar (float or int) defining the constant vertical coordinate 
-            of the grid.
-        'ordering' : string
-            The input parameter 'ordering'
+        'x' : numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
+        'y' : numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
+        'z' : scalar (float or int) defining the constant vertical coordinate of the grid.
         'area' : list 
             List of min x, max x, min y and max y (the same as input)
         'shape' : tuple 
@@ -44,13 +34,11 @@ def regular_grid_xy(area, shape, z0, ordering="xy", check_input=True):
         check.is_area(area=area)
         check.is_shape(shape=shape)
         check.is_scalar(x=z0, positive=False)
-        check.is_ordering(ordering=ordering)
 
     grid = {
-        'x' : np.linspace(area[0], area[1], shape[0])[:,np.newaxis],
+        'x' : np.linspace(area[0], area[1], shape[0]),
         'y' : np.linspace(area[2], area[3], shape[1]),
         'z' : z0,
-        'ordering' : ordering,
         'area' : area,
         'shape' : shape
     }

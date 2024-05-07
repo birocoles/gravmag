@@ -13,29 +13,25 @@ def test_regular_grid_xy_bad_input():
     area = [1, 2.2, -3.1, 4]
     shape = (12, 11)
     z0 = 12.3
-    ordering='yx'
 
     # area not list
     with raises(ValueError):
-        ds.regular_grid_xy(area=(1, 2.2, -3.1, 4), shape=shape, z0=z0, ordering=ordering)
+        ds.regular_grid_xy(area=(1, 2.2, -3.1, 4), shape=shape, z0=z0)
     # len area different from 4
     with raises(ValueError):
-        ds.regular_grid_xy(area=[1, 2.2, -3.1], shape=shape, z0=z0, ordering=ordering)
+        ds.regular_grid_xy(area=[1, 2.2, -3.1], shape=shape, z0=z0)
     # shape not tuple
     with raises(ValueError):
-        ds.regular_grid_xy(area=area, shape=[12,11], z0=z0, ordering=ordering)
+        ds.regular_grid_xy(area=area, shape=[12,11], z0=z0)
     # len shape different from 2
     with raises(ValueError):
-        ds.regular_grid_xy(area=area, shape=(12, 11, 10), z0=z0, ordering=ordering)
+        ds.regular_grid_xy(area=area, shape=(12, 11, 10), z0=z0)
     # z0 complex
     with raises(ValueError):
-        ds.regular_grid_xy(area=area, shape=shape, z0=12.3+5j, ordering=ordering)
+        ds.regular_grid_xy(area=area, shape=shape, z0=12.3+5j)
     # z0 list
     with raises(ValueError):
-        ds.regular_grid_xy(area=area, shape=shape, z0=[12.3], ordering=ordering)
-    # invalid ordering
-    with raises(ValueError):
-        ds.regular_grid_xy(area=area, shape=shape, z0=z0, ordering='invalid-ordering')
+        ds.regular_grid_xy(area=area, shape=shape, z0=[12.3])
 
 
 def test_regular_grid_xy_output():
@@ -43,16 +39,14 @@ def test_regular_grid_xy_output():
     area = [1, 5, 14.5, 17.5]
     shape = (5, 4)
     z0 = 10
-    ordering='xy'
     reference = {
-        'x': np.array([[1], [2], [3], [4], [5]]),
+        'x': np.array([1, 2, 3, 4, 5]),
         'y': np.array([14.5, 15.5, 16.5, 17.5]),
         'z': 10,
-        'ordering': 'xy',
         'area': area,
         'shape': shape
     }
-    computed = ds.regular_grid_xy(area=area, shape=shape, z0=z0, ordering=ordering)
+    computed = ds.regular_grid_xy(area=area, shape=shape, z0=z0)
     ae(reference, computed)
 
 

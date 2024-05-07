@@ -87,22 +87,20 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_regular_grid_xy(coordinates):
+def is_regular_grid_xy(grid):
     """
     Check if coordinates is a dictionary containing the x, y and z
     coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
     defining how the points are ordered after the first point (min x, min y).
     If 'ordering' = 'xy', the points vary first along x and then along y.
     If 'ordering' = 'yx', the points vary first along y and then along x.
-    Key 'x' must be a numpy array 2d with a single column, i.e., with shape = (N, 1),
-    where Nx is the number of data along x-axis.
-    Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of
-    data long y-axis.
+    Key 'x' must be a numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
+    Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
     Key 'z' must be a scalar (float or int) defining the constant vertical coordinate of the grid.
 
     parameters
     ----------
-    coordinates : generic object
+    grid : generic object
         Python object to be verified.
 
     returns
@@ -110,30 +108,27 @@ def is_regular_grid_xy(coordinates):
     D : int
         Total number of points forming the grid.
     """
-    if type(coordinates) != dict:
-        raise ValueError("coordinates must be a dictionary")
-    if list(coordinates.keys()) != ["x", "y", "z", "ordering", "area", "shape"]:
+    if type(grid) != dict:
+        raise ValueError("grid must be a dictionary")
+    if list(grid.keys()) != ["x", "y", "z", "area", "shape"]:
         raise ValueError(
-            "coordinates must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'area', 'shape'"
+            "grid must have the following 5 keys: 'x', 'y', 'z', 'area', 'shape'"
         )
     for key in ["x", "y"]:
-        if type(coordinates[key]) != np.ndarray:
+        if type(grid[key]) != np.ndarray:
             raise ValueError(
-                "'x' and 'y' keys in coordinates must be numpy arrays"
+                "'x' and 'y' keys in grid must be numpy arrays"
             )
-    if coordinates["x"].ndim != 2:
-        raise ValueError("'x' key must have ndim = 2")
-    if coordinates["x"].shape[1] != 1:
-        raise ValueError("'x' key must have shape[1] = 1")
-    if coordinates["y"].ndim != 1:
+    if grid["x"].ndim != 1:
+        raise ValueError("'x' key must have ndim = 1")
+    if grid["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
-    is_scalar(coordinates["z"], positive=False)
-    is_ordering(coordinates["ordering"])
-    is_shape(coordinates["shape"])
-    is_area(coordinates["area"])
-    if (coordinates["x"].size, coordinates["y"].size) != coordinates["shape"]:
+    is_scalar(grid["z"], positive=False)
+    is_shape(grid["shape"])
+    is_area(grid["area"])
+    if (grid["x"].size, grid["y"].size) != grid["shape"]:
         raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
-    D = (coordinates["x"].size) * (coordinates["y"].size)
+    D = (grid["x"].size) * (grid["y"].size)
 
     return D
 
