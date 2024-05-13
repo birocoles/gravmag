@@ -161,8 +161,8 @@ def grad(
 
     returns
     -------
-    Ka: list of numpy arrays 2d
-        List of N x M matrices containing the partial derivatives of first order
+    Ka: Dictionary of numpy arrays 2d
+        Dictionary of N x M matrices containing the partial derivatives of first order
         along x, y and z directions.
     """
 
@@ -188,10 +188,10 @@ def grad(
     R3 = SEDM * np.sqrt(SEDM)
 
     # compute the gradient components defined in components
-    Ka = []
+    Ka = dict()
     for component in components:
         delta = data_points[component][:, np.newaxis] - source_points[component]
-        Ka.append(-delta / R3)
+        Ka[component] = -delta / R3
 
     return Ka
 
@@ -234,8 +234,8 @@ def grad_BTTB(
 
     returns
     -------
-    Ka: list of dictionaries
-        List of dictionaries containing the metadata associated with the full matrix 
+    Ka: Dictionary of dictionaries
+        Dictionary of dictionaries containing the metadata associated with the full matrix 
         (see input of function 'check.BTTB_metadata').
     """
 
@@ -261,7 +261,7 @@ def grad_BTTB(
     }
 
     # compute the gradient components defined in components
-    Ka = []
+    Ka = dict()
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
@@ -273,7 +273,7 @@ def grad_BTTB(
             "columns": delta / R3,
             "rows": None,
         }
-        Ka.append(BTTB)
+        Ka[component] = BTTB
 
     return Ka
 
@@ -311,8 +311,8 @@ def grad_tensor(
 
     returns
     -------
-    Kab: list numpy arrays 2d
-        List of N x M matrices containing the computed partial derivatives of
+    Kab: Dictionary numpy arrays 2d
+        Dictionary of N x M matrices containing the computed partial derivatives of
         second order.
     """
 
@@ -339,7 +339,7 @@ def grad_tensor(
     R5 = R3 * SEDM
 
     # compute the gradient tensor components defined in components
-    Kab = []
+    Kab = dict()
     if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
     else:
@@ -354,9 +354,9 @@ def grad_tensor(
             - source_points[component[1]]
         )
         if component in ["xx", "yy", "zz"]:
-            Kab.append((3 * delta1 * delta2) / R5 - aux)
+            Kab[component] = ((3 * delta1 * delta2) / R5) - aux
         else:
-            Kab.append((3 * delta1 * delta2) / R5)
+            Kab[component] = (3 * delta1 * delta2) / R5
 
     return Kab
 
@@ -401,8 +401,8 @@ def grad_tensor_BTTB(
 
     returns
     -------
-    Kab: list numpy arrays 2d
-        List of N x M matrices containing the computed partial derivatives of
+    Kab: Dictionary of numpy arrays 2d
+        Dictionary of N x M matrices containing the computed partial derivatives of
         second order.
     """
 
@@ -436,7 +436,7 @@ def grad_tensor_BTTB(
     }
 
     # compute the gradient tensor components defined in components
-    Kab = []
+    Kab = dict()
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
@@ -450,7 +450,7 @@ def grad_tensor_BTTB(
         }
         if component in ["xx", "yy", "zz"]:
             BTTB["columns"] -= 1 / R3
-        Kab.append(BTTB)
+        Kab[component] = BTTB
 
     return Kab
 
@@ -922,16 +922,3 @@ def _delta_zz(data_grid, delta_z, ordering):
         shape = data_grid["shape"]
 
     return symmetries, shape, delta
-
-
-# parameters = {
-#         "xy-xy" : ("skew", "skew"), 
-#         "xy-yx" : ("skew", "skew"), 
-#         "xz-xy" : ("symm", "skew"), 
-#         "xz-yx" : ("skew", "symm"), 
-#         "yy-xy" : ("symm", "symm"), 
-#         "yy-yx" : ("symm", "symm"), 
-#         "yz-xy" : ("skew", "symm"), 
-#         "yz-yx" : ("symm", "skew"),
-
-#     }
