@@ -440,3 +440,32 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
         reduced_data = np.delete(reduced_data, nan_elements)
 
     return reduced_data
+
+def grid_spacing(area, shape, check_input=True):
+    """
+    Compute the grid spacing along the x and y directions.
+
+    parameters
+    ----------
+    area : list
+        List of min x, max x, min y and max y.
+    shape : tuple
+        Tuple defining the total number of points along x and y directions, respectively.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    spacing : tuple
+        Tuple containing the grid spacing along the x and y directions, respectively.
+    """
+    if check_input == True:
+        check.is_area(area=area)
+        check.is_shape(shape=shape)
+
+    spacing = (
+        (area[1] - area[0]) / (shape[0] - 1),
+        (area[3] - area[2]) / (shape[1] - 1),
+    )
+
+    return spacing

@@ -46,6 +46,48 @@ def regular_grid_xy(area, shape, z0, check_input=True):
     return grid
 
 
+def grid_to_full(grid, ordering, check_input=True):
+    """
+    Compute the full grid of coordinates xy from the metadata obtained from
+    'data_structures.regular_grid_xy'.
+
+    parameters
+    ----------
+    grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'ordering'. Output of the function 'data_structures.regular_grid_xy'.
+    ordering : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    full_grid : dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z', respectively. 
+        All keys are numpy arrays 1d having the same number of elements.
+    """
+    if check_input == True:
+        check.is_regular_grid_xy(grid)
+        check.is_ordering(ordering)
+
+    if ordering == 'xy':
+        x, y = np.meshgrid(grid['x'], grid['y'], indexing='xy')
+    else: # ordering == 'yx'
+        x, y = np.meshgrid(grid['x'], grid['y'], indexing='ij')
+
+    full_grid = {
+        'x' : np.ravel(x),
+        'y' : np.ravel(y),
+        'z' : np.zeros(x.size, dtype=float) + grid['z']
+    }
+
+    return full_grid
+
+
 def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
     """
     Compute the wavenumbers associated with a regular grid of data.
@@ -94,12 +136,12 @@ def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
         check.is_ordering(ordering=ordering)
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
-    kx = (2 * np.pi * fftfreq(n=shape[0], d=spacing[0]))[:,np.newaxis]
+    kx = 2 * np.pi * fftfreq(n=shape[0], d=spacing[0])
     ky = 2 * np.pi * fftfreq(n=shape[1], d=spacing[1])
 
     # this is valid for potential fields on a plane
     # the line below generates a numpy array 2d with shape (kx.size, ky.size)
-    kz = np.sqrt(kx**2 + ky**2)
+    kz = np.sqrt(kx[:,np.newaxis]**2 + ky**2)
 
     # shift the wavenumbers so that their values goes from negative to positive values
     kx = fftshift(kx)

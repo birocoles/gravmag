@@ -36,7 +36,7 @@ def direction(wavenumbers, inc, dec, check_input=True):
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # compute the filter
-    theta = (wavenumbers['z'] * u[2]) + 1j * (wavenumbers['x'] * u[0] + wavenumbers['y'] * u[1])
+    theta = (wavenumbers['z'] * u[2]) + 1j * (wavenumbers['x'][:, np.newaxis] * u[0] + wavenumbers['y'] * u[1])
 
     return theta
 
@@ -120,7 +120,7 @@ def derivative(wavenumbers, axes, check_input=True):
     exponents = [axes.count("x"), axes.count("y"), axes.count("z")]
     deriv_filter = []
     if exponents[0] > 0:
-        deriv_filter.append((1j * wavenumbers['x']) ** exponents[0])
+        deriv_filter.append((1j * wavenumbers['x'][:,np.newaxis]) ** exponents[0])
     if exponents[1] > 0:
         deriv_filter.append((1j * wavenumbers['y']) ** exponents[1])
     if exponents[2] > 0:

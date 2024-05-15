@@ -141,3 +141,12 @@ def test_magnetization_components():
     aae(mx, mx_ref, decimal=13)
     aae(my, my_ref, decimal=13)
     aae(mz, mz_ref, decimal=13)
+
+
+def test_grid_spacing():
+    "compare result with reference values obtained for specific input"
+    area = [0, 10, 5.5, 7.5]
+    shape = (5, 3)
+    reference = (2.5, 1.)
+    computed = utils.grid_spacing(area=area, shape=shape)
+    ae(computed, reference)

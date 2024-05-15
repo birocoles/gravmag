@@ -486,7 +486,7 @@ def test_is_regular_grid_wavenumbers_non_dict_input():
 def test_is_regular_grid_wavenumbers_invalid_keys():
     "Check if passing a dictionary with invalid keys raises an error"
     # correct keys
-    x = np.arange(4)[:, np.newaxis]
+    x = np.arange(4)
     y = np.ones(3)
     z = np.zeros((4,3)) + 1.2
     ordering = 'xy'
@@ -494,7 +494,7 @@ def test_is_regular_grid_wavenumbers_invalid_keys():
     spacing = (1.1, 1.3)
     # set dict with invalid x key
     wavenumbers = {
-        "x": np.arange(4),
+        "x": np.arange(4)[:,np.newaxis],
         "y": y,
         "z": z,
         "ordering": ordering,

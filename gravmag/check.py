@@ -157,10 +157,8 @@ def is_regular_grid_wavenumbers(wavenumbers):
             raise ValueError(
                 "'x', 'y' and 'z' keys of wavenumbers must be numpy arrays"
             )
-    if wavenumbers["x"].ndim != 2:
-        raise ValueError("'x' key must have ndim = 2")
-    if wavenumbers["x"].shape[1] != 1:
-        raise ValueError("'x' key must have shape[1] = 1")
+    if wavenumbers["x"].ndim != 1:
+        raise ValueError("'x' key must have ndim = 1")
     if wavenumbers["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
     if wavenumbers["z"].ndim != 2:

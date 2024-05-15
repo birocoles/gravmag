@@ -50,6 +50,32 @@ def test_regular_grid_xy_output():
     ae(reference, computed)
 
 
+def test_grid_to_full_known_values():
+    "compare results with reference values obtained for specific input"
+    # reference grid
+    grid = {
+        'x' : np.arange(3),
+        'y' : np.array([10.3, 12.4]),
+        'z' : 10.,
+        'area' : [0, 3, 10.3, 12.4],
+        'shape' : (3, 2)
+    }
+    reference_xy = {
+        'x' : np.array([0, 1, 2, 0, 1, 2]),
+        'y' : np.array([10.3, 10.3, 10.3, 12.4, 12.4, 12.4]),
+        'z' : np.array([10., 10., 10., 10., 10., 10.])
+    }
+    reference_yx = {
+        'x' : np.array([0, 0, 1, 1, 2, 2]),
+        'y' : np.array([10.3, 12.4, 10.3, 12.4, 10.3, 12.4]),
+        'z' : np.array([10., 10., 10., 10., 10., 10.])
+    }
+    computed_xy = ds.grid_to_full(grid=grid, ordering='xy')
+    computed_yx = ds.grid_to_full(grid=grid, ordering='yx')
+    ae(computed_xy, reference_xy)
+    ae(computed_yx, reference_yx)
+
+
 # regular_grid_wavenumbers
 
 def test_regular_grid_wavenumbers_bad_input():
@@ -81,9 +107,9 @@ def test_regular_grid_wavenumbers_output():
     shape = (5, 4)
     spacing = (1.3, 1.1)
     ordering='xy'
-    x_reference = 2 * np.pi * np.array([[-2], [-1], [0], [1], [2]]) / (5 * 1.3)
+    x_reference = 2 * np.pi * np.array([-2, -1, 0, 1, 2]) / (5 * 1.3)
     y_reference = 2 * np.pi * np.array([-2, -1, 0, 1]) / (4 * 1.1)
-    z_reference = np.sqrt(x_reference**2 + y_reference**2)
+    z_reference = np.sqrt(x_reference[:, np.newaxis]**2 + y_reference**2)
     reference = {
         'x': x_reference,
         'y': y_reference,
