@@ -155,8 +155,8 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
 
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate the data structure for a full Block Toeplitz formed by Toeplitz Blocks (BTTB)
-    matrix T from the first columns and first rows of its non-repeating blocks.
+    Generate the full BTTB matrix T from the dictionary containing its metadata
+    (For details, see the function 'check.BTTB_metadata').
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
 

@@ -316,3 +316,127 @@ def prisms_volume(prisms):
     volume = (prisms['x2'] - prisms['x1'])*(prisms['y2'] - prisms['y1'])*(prisms['z2'] - prisms['z1'])
 
     return volume
+
+
+def block_data(x, y, area, shape):
+    """
+    Split a dataset into a grid of Nx X Ny blocks within a predefined area.
+    
+    parameters
+    ----------
+    x, y : numpy arrays 1d
+        Vectors containing the x and y coordinates of a scattered set of points.
+    area : list
+        List formed by [x1, x2, y1, y2], where x2 > x1 and y2 > y1 define the
+        boundaries along the x and y directions, respectively.
+    shape : tuple of ints
+        Positive integers defining the number of blocks along the x and y directions, respectively.
+    
+    returns
+    -------
+    blocks_indices : list of lists
+        Lists containing the indices of the data at each block.
+    """
+    if (type(x) != np.ndarray) or (type(y) != np.ndarray):
+        raise ValueError("x and y must be numpy arrays")
+    if (x.ndim != 1) or (y.ndim != 1):
+        raise ValueError("x and y must have ndim = 1")
+    if (x.size != y.size):
+        raise ValueError("x and y must have the same size")
+    if type(area) != list:
+        raise ValueError("area must be a list")
+    if len(area) != 4:
+        raise ValueError("area must have four elements")
+    if area[1] <= area [0]:
+        raise ValueError("area[1] must be greater than area[0]")
+    if area[3] <= area [2]:
+        raise ValueError("area[3] must be greater than area[2]")
+    if (isinstance(shape, tuple) == False):
+        raise ValueError("shape must be a tuple")
+    if len(shape) != 2:
+        raise ValueError("shape must have 2 elements")
+    if (isinstance(shape[0], int) == False) or (shape[0] <= 0):
+        raise ValueError("shape[0] must be a positive integer")
+    if (isinstance(shape[1], int) == False) or (shape[1] <= 0):
+        raise ValueError("shape[1] must be a positive integer")
+    
+    # compute spacing along x and y
+    dx = (area[1] - area[0]) / shape[0]
+    dy = (area[3] - area[2]) / shape[1]
+
+    # reduced_data = np.empty(shape=(Nx,Ny), dtype=float)
+    x_indices = np.array((x - area[0]) / dx, dtype = int)
+    y_indices = np.array((y - area[2]) / dy, dtype = int)
+
+    #blocks = shape[0]*[shape[1]*[[]]]
+    blocks_indices = []
+    for i in range(shape[0]):
+        blocks_indices.append([])
+    for block_row in blocks_indices:
+        for j in range(shape[1]):
+            block_row.append([])
+    for index, (i, j) in enumerate(zip(x_indices, y_indices)):
+        if (i < shape[0]) and (i >= 0) and (j < shape[1]) and (j >= 0):
+            blocks_indices[i][j].append(index)
+
+    return blocks_indices
+
+
+def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
+    """
+    Apply func to the values at each element in blocks.
+    
+    parameters
+    ----------
+    data : numpy array 1d
+        Vector containing the data at the scattered set of points.
+    blocks_indices : list of lists
+        Lists containing the indices of the data at each block.
+    function : string
+        Function to be applied to compute the reduced data at the
+        center of each block. The possibilities are "mean" or "median".
+    remove_nan : boolean
+        If True, keep the elements containing nan values and return a 2d array of reduced data.
+        Otherwise, remove elements containing nan values and return an 1d array of reduced data.
+        Default is False.
+    
+    returns
+    -------
+    reduced_data : numpy array 1d or 2d
+        Matrix containing the reduced data at each block.        
+    """
+    if type(data) != np.ndarray:
+        raise ValueError("data must be numpy arrays")
+    if data.ndim != 1:
+        raise ValueError("data must have ndim = 1")
+    if type(blocks_indices) != list:
+        raise ValueError("blocks_indices must be a list")
+    if type(function) != str:
+        raise ValueError("function must be string")
+    if function not in ["mean", "median"]:
+        raise ValueError("invalid function {}".format(function))
+    if remove_nan not in [True, False]:
+        raise ValueError("{} does not have a valid format".format(remove_nan))
+
+    if function == "mean":
+        func = np.mean
+    else: # function == "median"
+        func = np.median
+
+    Nx = len(blocks_indices)
+    Ny = len(blocks_indices[0])
+ 
+    reduced_data = np.empty(shape = (Nx, Ny), dtype = float)
+    for i in range(Nx):
+        for j in range(Ny):
+            if len(blocks_indices[i][j]) == 0:
+                reduced_data[i, j] = np.nan
+            else:
+                reduced_data[i, j] = func(data[blocks_indices[i][j]])
+
+    if remove_nan == True:
+        reduced_data = reduced_data.ravel()
+        nan_elements = np.isnan(reduced_data)
+        reduced_data = np.delete(reduced_data, nan_elements)
+
+    return reduced_data
