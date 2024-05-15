@@ -67,133 +67,133 @@ from . import check, utils, constants, convolve
 #     return G
 
 
-def kernel_matrix_dipoles(
-    data_points,
-    source_points,
-    inc,
-    dec,
-    field="z",
-    inct=None,
-    dect=None,
-    check_input=True,
-):
-    """
-    Compute the kernel matrix produced by a planar layer of dipoles with
-    constant magnetization direction.
+# def kernel_matrix_dipoles(
+#     data_points,
+#     source_points,
+#     inc,
+#     dec,
+#     field="z",
+#     inct=None,
+#     dect=None,
+#     check_input=True,
+# ):
+#     """
+#     Compute the kernel matrix produced by a planar layer of dipoles with
+#     constant magnetization direction.
 
-    parameters
-    ----------
-    data_points: dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
-        respectively. Each key is a numpy array 1d having the same number of elements.
-    source_points: dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
-        respectively. Each key is a numpy array 1d having the same number of elements.
-    inc, dec : ints or floats
-        Scalars defining the constant inclination and declination of the
-        dipoles magnetization.
-    field : string
-        Defines the field produced by the layer. The available options are:
-            - "potential" : magnetic scalar potential
-            - "x", "y", "z" : Cartesian components of the magnetic induction
-            - "t" : Component of magnetic induction along a constant direction
-                with inclination and declination defined by "inct" and "dect",
-                respectively. It approximates the total-field anomaly when
-                "inct" and "dect" define the constant inclination and
-                declination of the main field at the study area.
-    inct, dect : ints or floats
-        Scalars defining the constant inclination and declination of the
-        magnetic field component. They must be not None if "field" is "t".
-        Otherwise, they are ignored.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
+#     parameters
+#     ----------
+#     data_points: dictionary
+#         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+#         respectively. Each key is a numpy array 1d having the same number of elements.
+#     source_points: dictionary
+#         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+#         respectively. Each key is a numpy array 1d having the same number of elements.
+#     inc, dec : ints or floats
+#         Scalars defining the constant inclination and declination of the
+#         dipoles magnetization.
+#     field : string
+#         Defines the field produced by the layer. The available options are:
+#             - "potential" : magnetic scalar potential
+#             - "x", "y", "z" : Cartesian components of the magnetic induction
+#             - "t" : Component of magnetic induction along a constant direction
+#                 with inclination and declination defined by "inct" and "dect",
+#                 respectively. It approximates the total-field anomaly when
+#                 "inct" and "dect" define the constant inclination and
+#                 declination of the main field at the study area.
+#     inct, dect : ints or floats
+#         Scalars defining the constant inclination and declination of the
+#         magnetic field component. They must be not None if "field" is "t".
+#         Otherwise, they are ignored.
+#     check_input : boolean
+#         If True, verify if the input is valid. Default is True.
 
-    returns
-    -------
-    G: numpy array 2d
-        N x M matrix defined by the kernel of the equivalent layer integral.
-    """
+#     returns
+#     -------
+#     G: numpy array 2d
+#         N x M matrix defined by the kernel of the equivalent layer integral.
+#     """
 
-    if check_input is True:
-        check.are_coordinates(data_points)
-        check.are_coordinates(source_points)
-        if np.max(data_points["z"]) >= np.min(source_points["z"]):
-            warnings.warn(
-                "verify if the surface containing data cross the equivalent layer"
-            )
-        if isinstance(inc, (float, int)) is False:
-            raise ValueError("inc must be a scalar")
-        if isinstance(dec, (float, int)) is False:
-            raise ValueError("dec must be a scalar")
-        # check if field is valid
-        if field not in ["potential", "x", "y", "z", "t"]:
-            raise ValueError("invalid field {}".format(field))
-        if field == "t":
-            if type(inct) not in [float, int]:
-                raise ValueError("inct must be a scalar because field is 't'")
-            if type(dect) not in [float, int]:
-                raise ValueError("dect must be a scalar because field is 't'")
+#     if check_input is True:
+#         check.are_coordinates(data_points)
+#         check.are_coordinates(source_points)
+#         if np.max(data_points["z"]) >= np.min(source_points["z"]):
+#             warnings.warn(
+#                 "verify if the surface containing data cross the equivalent layer"
+#             )
+#         if isinstance(inc, (float, int)) is False:
+#             raise ValueError("inc must be a scalar")
+#         if isinstance(dec, (float, int)) is False:
+#             raise ValueError("dec must be a scalar")
+#         # check if field is valid
+#         if field not in ["potential", "x", "y", "z", "t"]:
+#             raise ValueError("invalid field {}".format(field))
+#         if field == "t":
+#             if type(inct) not in [float, int]:
+#                 raise ValueError("inct must be a scalar because field is 't'")
+#             if type(dect) not in [float, int]:
+#                 raise ValueError("dect must be a scalar because field is 't'")
 
-    # compute Squared Euclidean Distance Matrix (SEDM)
-    R2 = idist.sedm(data_points, source_points, check_input=False)
-    # compute the unit vector defined by inc and dec
-    u = utils.unit_vector(inc, dec, check_input=False)
+#     # compute Squared Euclidean Distance Matrix (SEDM)
+#     R2 = idist.sedm(data_points, source_points, check_input=False)
+#     # compute the unit vector defined by inc and dec
+#     u = utils.unit_vector(inc, dec, check_input=False)
 
-    # compute the kernel matrix according to "field"
-    if field == "potential":
-        Gx, Gy, Gz = idist.grad(
-            data_points=data_points,
-            source_points=source_points,
-            SEDM=R2,
-            components=["x", "y", "z"],
-            check_input=False,
-        )
-        G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
-    elif field == "x":
-        Gxx, Gxy, Gxz = idist.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
-            SEDM=R2,
-            components=["xx", "xy", "xz"],
-            check_input=False,
-        )
-        G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
-    elif field == "y":
-        Gxy, Gyy, Gyz = idist.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
-            SEDM=R2,
-            components=["xy", "yy", "yz"],
-            check_input=False,
-        )
-        G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
-    elif field == "z":
-        Gxz, Gyz, Gzz = idist.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
-            SEDM=R2,
-            components=["xz", "yz", "zz"],
-            check_input=False,
-        )
-        G = u[0] * Gxz + u[1] * Gyz + u[2] * Gzz
-    else:  # field is "t"
-        # compute the unit vector defined by inct and dect
-        t = utils.unit_vector(inct, dect, check_input=False)
-        Gxx, Gxy, Gxz, Gyy, Gyz = idist.grad_tensor(
-            data_points=data_points,
-            source_points=source_points,
-            SEDM=R2,
-            components=["xx", "xy", "xz", "yy", "yz"],
-            check_input=False,
-        )
-        axx = u[0] * t[0] - u[2] * t[2]
-        axy = u[0] * t[1] + u[1] * t[0]
-        axz = u[0] * t[2] + u[2] * t[0]
-        ayy = u[1] * t[1] - u[2] * t[2]
-        ayz = u[1] * t[2] + u[2] * t[1]
-        G = axx * Gxx + axy * Gxy + axz * Gxz + ayy * Gyy + ayz * Gyz
+#     # compute the kernel matrix according to "field"
+#     if field == "potential":
+#         Gx, Gy, Gz = idist.grad(
+#             data_points=data_points,
+#             source_points=source_points,
+#             SEDM=R2,
+#             components=["x", "y", "z"],
+#             check_input=False,
+#         )
+#         G = -(u[0] * Gx + u[1] * Gy + u[2] * Gz)
+#     elif field == "x":
+#         Gxx, Gxy, Gxz = idist.grad_tensor(
+#             data_points=data_points,
+#             source_points=source_points,
+#             SEDM=R2,
+#             components=["xx", "xy", "xz"],
+#             check_input=False,
+#         )
+#         G = u[0] * Gxx + u[1] * Gxy + u[2] * Gxz
+#     elif field == "y":
+#         Gxy, Gyy, Gyz = idist.grad_tensor(
+#             data_points=data_points,
+#             source_points=source_points,
+#             SEDM=R2,
+#             components=["xy", "yy", "yz"],
+#             check_input=False,
+#         )
+#         G = u[0] * Gxy + u[1] * Gyy + u[2] * Gyz
+#     elif field == "z":
+#         Gxz, Gyz, Gzz = idist.grad_tensor(
+#             data_points=data_points,
+#             source_points=source_points,
+#             SEDM=R2,
+#             components=["xz", "yz", "zz"],
+#             check_input=False,
+#         )
+#         G = u[0] * Gxz + u[1] * Gyz + u[2] * Gzz
+#     else:  # field is "t"
+#         # compute the unit vector defined by inct and dect
+#         t = utils.unit_vector(inct, dect, check_input=False)
+#         Gxx, Gxy, Gxz, Gyy, Gyz = idist.grad_tensor(
+#             data_points=data_points,
+#             source_points=source_points,
+#             SEDM=R2,
+#             components=["xx", "xy", "xz", "yy", "yz"],
+#             check_input=False,
+#         )
+#         axx = u[0] * t[0] - u[2] * t[2]
+#         axy = u[0] * t[1] + u[1] * t[0]
+#         axz = u[0] * t[2] + u[2] * t[0]
+#         ayy = u[1] * t[1] - u[2] * t[2]
+#         ayz = u[1] * t[2] + u[2] * t[1]
+#         G = axx * Gxx + axy * Gxy + axz * Gxz + ayy * Gyy + ayz * Gyz
 
-    return G
+#     return G
 
 
 def cosine_matrix(
@@ -267,12 +267,12 @@ def cosine_matrix(
 
 
 def method_CGLS(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via conjugate gradient normal equation residual
-    (CGNR) (Golub and Van Loan, 2013, sec. 11.3) or conjugate gradient least squares (CGLS)
+    (CGNR) method (Golub and Van Loan, 2013, sec. 11.3), also called conjugate gradient least squares (CGLS)
     (Aster et al., 2019, p. 165) method.
 
     parameters
@@ -285,6 +285,8 @@ def method_CGLS(
         Tolerance for evaluating convergence criterion.
     ITMAX : int
         Maximum number of iterations. Default is 50.
+    p0 : numpy aray 1d or None
+        If not None, it is the initial approximation for the parameter vector.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -308,10 +310,17 @@ def method_CGLS(
             )
         for G, data in zip(sensitivity_matrices, data_vectors):
             check.sensitivity_matrix_and_data(matrix=G, data=data)
+        nparams = sensitivity_matrices[0].shape[1]
+        for G in sensitivity_matrices[1:]:
+            if G.shape[1] != nparams:
+                raise ValueError("All sensitivity matrices must have the same number of columns")
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
+        # check if p0 is a consistent array
+        if p0 is not None:
+            check.is_array(x=p0, ndim=1, shape=(nparams,))
 
     # get number of data for each dataset and initialize residuals list
     ndatasets = len(data_vectors)
@@ -321,6 +330,7 @@ def method_CGLS(
         ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
     ndata = np.sum(ndata_per_dataset)
+    nparams = sensitivity_matrices[0].shape[1]
 
     # compute the first delta and initialize the deltas list
     deltas = []
@@ -331,7 +341,10 @@ def method_CGLS(
     deltas.append(delta)
 
     # initialize the parameter vector
-    parameters = np.zeros(ndata_per_dataset, dtype=float)
+    if p0 is not None:
+        parameters = p0.copy()
+    else: # p0 is None
+        parameters = np.zeros(nparams, dtype=float)
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
@@ -453,7 +466,7 @@ def method_column_action_C92(
 
 
 def method_iterative_SOB17(
-    sensitivity_matrix, data, epsilon, ITMAX=50, check_input=True
+    sensitivity_matrix, data, epsilon, ITMAX=50, p0=None, check_input=True
 ):
     """
     Solves the unconstrained problem to estimate the physical-property
@@ -469,6 +482,8 @@ def method_iterative_SOB17(
         Tolerance for evaluating convergence criterion.
     ITMAX : int
         Maximum number of iterations. Default is 50.
+    p0 : numpy aray 1d or None
+        If not None, it is the initial approximation for the parameter vector.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -487,12 +502,18 @@ def method_iterative_SOB17(
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
+        # check if p0 is a consistent numpy array
+        if p0 is not None:
+            check.is_array(x=p0, ndim=1, shape=(sensitivity_matrix.shape[1],))
 
     # initializations
     D = data.size
     data_aux = sensitivity_matrix @ data
     scale = (data_aux @ data) / (data_aux @ data_aux)
-    parameters = data * scale
+    if p0 is not None:
+        parameters = p0.copy()
+    else: # p0 is None
+        parameters = data * scale
     residuals = data - sensitivity_matrix @ parameters
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
@@ -513,7 +534,7 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, check_input=True
+    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -531,6 +552,8 @@ def method_iterative_deconvolution_TOB20(
         Tolerance for evaluating convergence criterion.
     ITMAX : int
         Maximum number of iterations. Default is 50.
+    p0 : numpy aray 1d or None
+        If not None, it is the initial approximation for the parameter vector.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -560,10 +583,17 @@ def method_iterative_deconvolution_TOB20(
             check.is_array(
                 x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
             )
+        nparams = sensitivity_matrices[0]["columns"].shape[1] * sensitivity_matrices[0]["nblocks"]
+        for G in sensitivity_matrices[1:]:
+            if G["columns"].shape[1] * G["nblocks"] != nparams:
+                raise ValueError("All sensitivity matrices must have the same number of columns")
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
+        # check if p0 is a consistent array
+        if p0 is not None:
+            check.is_array(x=p0, ndim=1, shape=(nparams,))
 
     # get number of data for each dataset and initialize residuals list
     ndatasets = len(data_vectors)
@@ -588,7 +618,10 @@ def method_iterative_deconvolution_TOB20(
     deltas.append(delta)
 
     # initialize the parameter vector
-    parameters = np.zeros(ndata_per_dataset, dtype=float)
+    if p0 is not None:
+        parameters = p0.copy()
+    else: # p0 is None
+        parameters = np.zeros(nparams, dtype=float)
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)

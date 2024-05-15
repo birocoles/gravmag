@@ -313,7 +313,7 @@ def test_kernel_potential_numbaXnumpy():
             )
     # compute with numpy
     result_numpy = rp.iterate_over_vertices(
-        coords, model, rho, rp.kernel_potential
+        coords, model, rho, rp.kernel_potential_grav
     )
     aae(result_numba, result_numpy, decimal=8)
 

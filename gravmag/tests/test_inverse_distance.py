@@ -137,42 +137,23 @@ def test_grad_single_versus_joint_computation():
     P = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([-10.0])}
     R2 = idist.sedm(P, S)
     # compute separated components
-    X0 = idist.grad(P, S, R2, ["x"])[0]
-    Y0 = idist.grad(P, S, R2, ["y"])[0]
-    Z0 = idist.grad(P, S, R2, ["z"])[0]
+    X0 = idist.grad(P, S, R2, ["x"])
+    Y0 = idist.grad(P, S, R2, ["y"])
+    Z0 = idist.grad(P, S, R2, ["z"])
 
     # compute x, y and z components
-    X, Y, Z = idist.grad(P, S, R2, ["x", "y", "z"])
-    ae(X0, X)
-    ae(Y0, Y)
-    ae(Z0, Z)
+    Grad = idist.grad(P, S, R2, ["x", "y", "z"])
+    ae(X0["x"], Grad["x"])
+    ae(Y0["y"], Grad["y"])
+    ae(Z0["z"], Grad["z"])
     # compute x and z components
-    X, Z = idist.grad(P, S, R2, ["x", "z"])
-    ae(X0, X)
-    ae(Z0, Z)
+    Grad = idist.grad(P, S, R2, ["x", "z"])
+    ae(X0["x"], Grad["x"])
+    ae(Z0["z"], Grad["z"])
     # compute y and z components
-    Y, Z = idist.grad(P, S, R2, ["y", "z"])
-    ae(Y0, Y)
-    ae(Z0, Z)
-
-
-def test_grad_repeated_components():
-    "verify if repeated are equal to each other"
-    # single source
-    S = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([0.0])}
-    # singe data point
-    P = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([-10.0])}
-    R2 = idist.sedm(P, S)
-
-    # repeat x component
-    computed = idist.grad(P, S, R2, ["x", "x"])
-    ae(computed[0], computed[1])
-    # repeat y component
-    computed = idist.grad(P, S, R2, ["y", "y"])
-    ae(computed[0], computed[1])
-    # repeat z component
-    computed = idist.grad(P, S, R2, ["z", "z"])
-    ae(computed[0], computed[1])
+    Grad = idist.grad(P, S, R2, ["y", "z"])
+    ae(Y0["y"], Grad["y"])
+    ae(Z0["z"], Grad["z"])
 
 
 def test_grad_invalid_component():
@@ -253,25 +234,25 @@ def test_grad_known_points():
     R2 = idist.sedm(P, S)
 
     # all components
-    Vx, Vy, Vz = idist.grad(P, S, R2)
-    aae(Vx, Vx_ref, decimal=15)
-    aae(Vy, Vy_ref, decimal=15)
-    aae(Vz, Vz_ref, decimal=15)
+    Grad = idist.grad(P, S, R2)
+    aae(Grad["x"], Vx_ref, decimal=15)
+    aae(Grad["y"], Vy_ref, decimal=15)
+    aae(Grad["z"], Vz_ref, decimal=15)
 
     # x and y components
-    Vx, Vy = idist.grad(P, S, R2, ["x", "y"])
-    aae(Vx, Vx_ref, decimal=15)
-    aae(Vy, Vy_ref, decimal=15)
+    Grad = idist.grad(P, S, R2, ["x", "y"])
+    aae(Grad["x"], Vx_ref, decimal=15)
+    aae(Grad["y"], Vy_ref, decimal=15)
 
     # x and z components
-    Vx, Vz = idist.grad(P, S, R2, ["x", "z"])
-    aae(Vx, Vx_ref, decimal=15)
-    aae(Vz, Vz_ref, decimal=15)
+    Grad = idist.grad(P, S, R2, ["x", "z"])
+    aae(Grad["x"], Vx_ref, decimal=15)
+    aae(Grad["z"], Vz_ref, decimal=15)
 
     # z and y components
-    Vz, Vy = idist.grad(P, S, R2, ["z", "y"])
-    aae(Vz, Vz_ref, decimal=15)
-    aae(Vy, Vy_ref, decimal=15)
+    Grad = idist.grad(P, S, R2, ["z", "y"])
+    aae(Grad["z"], Vz_ref, decimal=15)
+    aae(Grad["y"], Vy_ref, decimal=15)
 
 
 ##### grad BTTB
@@ -330,9 +311,9 @@ def test_grad_BTTB_known_points_x_oriented():
         components=["x", "y", "z"]
     )
 
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GX, decimal=10)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GY, decimal=10)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GZ, decimal=10)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["x"])[:,0], GX, decimal=10)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["y"])[:,0], GY, decimal=10)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["z"])[:,0], GZ, decimal=10)
 
 
 def test_grad_BTTB_known_points_y_oriented():
@@ -388,9 +369,9 @@ def test_grad_BTTB_known_points_y_oriented():
         components=["x", "y", "z"]
     )
 
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GX, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GY, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["x"])[:,0], GX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["y"])[:,0], GY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["z"])[:,0], GZ, decimal=12)
 
 
 def test_grad_BTTB_compare_grad_xy():
@@ -428,8 +409,9 @@ def test_grad_BTTB_compare_grad_xy():
         ordering="xy",
         components=["x", "y", "z"]
     )
-    for component, component_BTTB_metadata in zip(GRAD, GRAD_BTTB):
-        aae(component, conv.BTTB_from_metadata(BTTB_metadata=component_BTTB_metadata), decimal=8)
+    aae(GRAD["x"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["x"]), decimal=8)
+    aae(GRAD["y"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["y"]), decimal=8)
+    aae(GRAD["z"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["z"]), decimal=8)
 
 
 def test_grad_BTTB_compare_grad_yx():
@@ -467,9 +449,9 @@ def test_grad_BTTB_compare_grad_yx():
         ordering="yx",
         components=["x", "y", "z"]
     )
-    for component, component_BTTB_metadata in zip(GRAD, GRAD_BTTB):
-        aae(component, conv.BTTB_from_metadata(BTTB_metadata=component_BTTB_metadata), decimal=8)
-
+    aae(GRAD["x"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["x"]), decimal=8)
+    aae(GRAD["y"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["y"]), decimal=8)
+    aae(GRAD["z"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["z"]), decimal=8)
 
 #### grad tensor
 
@@ -482,53 +464,23 @@ def test_grad_tensor_single_versus_joint_computation():
     P = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([-10.0])}
     R2 = idist.sedm(P, S)
     # compute separated components
-    XX0 = idist.grad_tensor(P, S, R2, ["xx"])[0]
-    XY0 = idist.grad_tensor(P, S, R2, ["xy"])[0]
-    XZ0 = idist.grad_tensor(P, S, R2, ["xz"])[0]
-    YY0 = idist.grad_tensor(P, S, R2, ["yy"])[0]
-    YZ0 = idist.grad_tensor(P, S, R2, ["yz"])[0]
-    ZZ0 = idist.grad_tensor(P, S, R2, ["zz"])[0]
+    XX0 = idist.grad_tensor(P, S, R2, ["xx"])
+    XY0 = idist.grad_tensor(P, S, R2, ["xy"])
+    XZ0 = idist.grad_tensor(P, S, R2, ["xz"])
+    YY0 = idist.grad_tensor(P, S, R2, ["yy"])
+    YZ0 = idist.grad_tensor(P, S, R2, ["yz"])
+    ZZ0 = idist.grad_tensor(P, S, R2, ["zz"])
 
-    # compute x, y and z components
-    XX, XY, XZ, YY, YZ, ZZ = idist.grad_tensor(
+    # compute all components
+    Tensor = idist.grad_tensor(
         P, S, R2, ["xx", "xy", "xz", "yy", "yz", "zz"]
     )
-    ae(XX0, XX)
-    ae(XY0, XY)
-    ae(XZ0, XZ)
-    ae(YY0, YY)
-    ae(YZ0, YZ)
-    ae(ZZ0, ZZ)
-    # compute xy and yz components
-    XY, YZ = idist.grad_tensor(P, S, R2, ["xy", "yz"])
-    ae(XY0, XY)
-    ae(YZ0, YZ)
-    # compute yy and xz components
-    YY, XZ = idist.grad_tensor(P, S, R2, ["yy", "xz"])
-    ae(YY0, YY)
-    ae(XZ0, XZ)
-
-
-def test_grad_tensor_repeated_components():
-    "verify if repeated are equal to each other"
-    # single source
-    S = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([0.0])}
-    # singe data point
-    P = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([-10.0])}
-    R2 = idist.sedm(P, S)
-
-    # repeat xx component
-    computed = idist.grad_tensor(P, S, R2, ["xx", "xx"])
-    ae(computed[0], computed[1])
-    # repeat yz component
-    computed = idist.grad_tensor(P, S, R2, ["yz", "yz"])
-    ae(computed[0], computed[1])
-    # repeat xy component
-    computed = idist.grad_tensor(P, S, R2, ["xy", "xy"])
-    ae(computed[0], computed[1])
-    # repeat zz component
-    computed = idist.grad_tensor(P, S, R2, ["zz", "zz"])
-    ae(computed[0], computed[1])
+    ae(XX0["xx"], Tensor["xx"])
+    ae(XY0["xy"], Tensor["xy"])
+    ae(XZ0["xz"], Tensor["xz"])
+    ae(YY0["yy"], Tensor["yy"])
+    ae(YZ0["yz"], Tensor["yz"])
+    ae(ZZ0["zz"], Tensor["zz"])
 
 
 def test_grad_tensor_invalid_component():
@@ -577,7 +529,7 @@ def test_grad_tensor_xx_symmetric_points():
     R2 = idist.sedm(P, S)
     Vxx = idist.grad_tensor(P, S, R2, ["xx"])
 
-    aae(Vxx[0][0, :], Vxx[0][1, :], decimal=15)
+    aae(Vxx["xx"][0, :], Vxx["xx"][1, :], decimal=15)
 
 
 def test_grad_tensor_yy_symmetric_points():
@@ -598,7 +550,7 @@ def test_grad_tensor_yy_symmetric_points():
     R2 = idist.sedm(P, S)
     Vyy = idist.grad_tensor(P, S, R2, ["yy"])
 
-    aae(Vyy[0][0, :], Vyy[0][1, :], decimal=15)
+    aae(Vyy["yy"][0, :], Vyy["yy"][1, :], decimal=15)
 
 
 def test_grad_tensor_zz_symmetric_points():
@@ -619,11 +571,11 @@ def test_grad_tensor_zz_symmetric_points():
     R2 = idist.sedm(P, S)
     Vzz = idist.grad_tensor(P, S, R2, ["zz"])
 
-    aae(Vzz[0][0, :], Vzz[0][1, :], decimal=15)
+    aae(Vzz["zz"][0, :], Vzz["zz"][1, :], decimal=15)
 
 
 def test_grad_tensor_Laplace():
-    "abs values of second derivatives must decay with distance"
+    "components in the main diagonal must satisfy Laplace's equation"
 
     # single source
     S = {"x": np.array([0.0]), "y": np.array([0.0]), "z": np.array([10.0])}
@@ -636,8 +588,8 @@ def test_grad_tensor_Laplace():
     }
     # second derivatives produced by shallow sources
     R2 = idist.sedm(P, S)
-    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = idist.grad_tensor(P, S, R2)
-    aae(Vzz, -Vxx - Vyy, decimal=15)
+    Tensor = idist.grad_tensor(P, S, R2, components=["xx", "yy", "zz"])
+    aae(Tensor["zz"], -Tensor["xx"] - Tensor["yy"], decimal=15)
 
 
 def test_grad_tensor_known_points():
@@ -709,12 +661,12 @@ def test_grad_tensor_known_points():
     )
 
     R2 = idist.sedm(P, S)
-    Vxx, Vxy, Vxz, Vyy, Vyz, Vzz = idist.grad_tensor(P, S, R2)
-    aae(Vxx, Vxx_ref, decimal=15)
-    aae(Vxy, Vxy_ref, decimal=15)
-    aae(Vxz, Vxz_ref, decimal=15)
-    aae(Vyy, Vyy_ref, decimal=15)
-    aae(Vyz, Vyz_ref, decimal=15)
+    Tensor = idist.grad_tensor(P, S, R2)
+    aae(Tensor["xx"], Vxx_ref, decimal=15)
+    aae(Tensor["xy"], Vxy_ref, decimal=15)
+    aae(Tensor["xz"], Vxz_ref, decimal=15)
+    aae(Tensor["yy"], Vyy_ref, decimal=15)
+    aae(Tensor["yz"], Vyz_ref, decimal=15)
 
 
 ##### grad tensor BTTB
@@ -777,12 +729,12 @@ def test_grad_tensor_BTTB_known_points_x_oriented():
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GXX, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GXY, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GXZ, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[3])[:,0], GYY, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[4])[:,0], GYZ, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[5])[:,0], GZZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xx"])[:,0], GXX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xy"])[:,0], GXY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xz"])[:,0], GXZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["yy"])[:,0], GYY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["yz"])[:,0], GYZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["zz"])[:,0], GZZ, decimal=12)
 
 
 def test_grad_tensor_BTTB_known_points_y_oriented():
@@ -842,12 +794,12 @@ def test_grad_tensor_BTTB_known_points_y_oriented():
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[0])[:,0], GXX, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[1])[:,0], GXY, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[2])[:,0], GXZ, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[3])[:,0], GYY, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[4])[:,0], GYZ, decimal=12)
-    aae(conv.BTTB_from_metadata(BTTB_metadata=G[5])[:,0], GZZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xx"])[:,0], GXX, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xy"])[:,0], GXY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["xz"])[:,0], GXZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["yy"])[:,0], GYY, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["yz"])[:,0], GYZ, decimal=12)
+    aae(conv.BTTB_from_metadata(BTTB_metadata=G["zz"])[:,0], GZZ, decimal=12)
 
 
 def test_grad_tensor_BTTB_compare_grad_x_oriented():
@@ -886,17 +838,17 @@ def test_grad_tensor_BTTB_compare_grad_x_oriented():
         components=["xx", "xy", "xz", "yy", "yz", "zz"]
     )
     # component xx
-    aae(GRAD[0], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[0]), decimal=12)
+    aae(GRAD["xx"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xx"]), decimal=12)
     # component xy
-    aae(GRAD[1], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[1]), decimal=12)
+    aae(GRAD["xy"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xy"]), decimal=12)
     # component xz
-    aae(GRAD[2], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[2]), decimal=12)
+    aae(GRAD["xz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xz"]), decimal=12)
     # component yy
-    aae(GRAD[3], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[3]), decimal=12)
+    aae(GRAD["yy"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["yy"]), decimal=12)
     # component yz
-    aae(GRAD[4], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[4]), decimal=12)
+    aae(GRAD["yz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["yz"]), decimal=12)
     # component zz
-    aae(GRAD[5], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[5]), decimal=12)
+    aae(GRAD["zz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["zz"]), decimal=12)
 
 
 def test_grad_tensor_BTTB_compare_grad_y_oriented():
@@ -935,17 +887,17 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
     # component xx
-    aae(GRAD[0], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[0]), decimal=12)
+    aae(GRAD["xx"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xx"]), decimal=12)
     # component xy
-    aae(GRAD[1], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[1]), decimal=12)
+    aae(GRAD["xy"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xy"]), decimal=12)
     # component xz
-    aae(GRAD[2], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[2]), decimal=12)
+    aae(GRAD["xz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["xz"]), decimal=12)
     # component yy
-    aae(GRAD[3], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[3]), decimal=12)
+    aae(GRAD["yy"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["yy"]), decimal=12)
     # component yz
-    aae(GRAD[4], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[4]), decimal=12)
+    aae(GRAD["yz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["yz"]), decimal=12)
     # component zz
-    aae(GRAD[5], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB[5]), decimal=12)
+    aae(GRAD["zz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["zz"]), decimal=12)
     
 
 ##### _delta_x
