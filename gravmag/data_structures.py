@@ -79,10 +79,11 @@ def grid_to_full(grid, ordering, check_input=True):
     else: # ordering == 'yx'
         x, y = np.meshgrid(grid['x'], grid['y'], indexing='ij')
 
+    N = grid['shape'][0] * grid['shape'][1]
     full_grid = {
         'x' : np.ravel(x),
         'y' : np.ravel(y),
-        'z' : np.zeros(x.size, dtype=float) + grid['z']
+        'z' : np.zeros(N, dtype=float) + grid['z']
     }
 
     return full_grid
