@@ -121,6 +121,7 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
         shape = data_grid["shape"]
     # dictionary containing metadata associated with the full SEDM
     BTTB = {
+        "ordering" : ordering,
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
         "nblocks": shape[0],
@@ -189,6 +190,7 @@ def grad(
 
     # compute the gradient components defined in components
     Ka = dict()
+    Ka["header"] = "1st-order partial derivative(s) of the inverse distance function computed at scattered points"
     for component in components:
         delta = data_points[component][:, np.newaxis] - source_points[component]
         Ka[component] = -delta / R3
@@ -262,11 +264,13 @@ def grad_BTTB(
 
     # compute the gradient components defined in components
     Ka = dict()
+    Ka["header"] = "1st-order partial derivative(s) of the inverse distance function computed at gridded points"
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
+            "ordering" : ordering,
             "symmetry_structure": symmetries[0],
             "symmetry_blocks": symmetries[1],
             "nblocks": shape[0],
@@ -340,6 +344,7 @@ def grad_tensor(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
+    Kab["header"] = "2nd-order partial derivative(s) of the inverse distance function computed at scattered points"
     if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
     else:
@@ -437,11 +442,13 @@ def grad_tensor_BTTB(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
+    Kab["header"] = "2nd-order partial derivative(s) of the inverse distance function computed at gridded points"
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
+            "ordering" : ordering,
             "symmetry_structure": symmetries[0],
             "symmetry_blocks": symmetries[1],
             "nblocks": shape[0],
@@ -453,6 +460,172 @@ def grad_tensor_BTTB(
         Kab[component] = BTTB
 
     return Kab
+
+
+def directional_1st_order(
+    data_points,
+    source_points,
+    SEDM,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of first order of the inverse distance
+    function between the data points and the source points. The direcional derivative 
+    is computed along a direction defined by a given inclination and declination. 
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    SEDM: numpy array 2d
+        Squared Euclidean Distance Matrix (SEDM) between the N data
+        points and the M sources computed according to function 'sedm'.
+    inc, dec : ints or floats
+        Scalars defining the constant inclination and declination of the
+        direction along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Kt: Dictionary
+        Dictionary containing the x, y and z components of the computed 1st-orfer directional derivative 
+        along a constant direction with predefined inclination and declination.
+        The x, y and z components are stored at the keys 'tx', 'ty' and 'tz', respectively. 
+        Inclination and declination values at keys 'inclination' and 'declination', respectively.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        P = check.are_coordinates(source_points)
+        # check if SEDM match data_points and source_points
+        if type(SEDM) != np.ndarray:
+            raise ValueError("SEDM must be a numpy array")
+        if SEDM.ndim != 2:
+            raise ValueError("SEDM must be have ndim = 2")
+        if SEDM.shape != (D, P):
+            raise ValueError(
+                "SEDM does not match data_points and source_points"
+            )
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the gradient components along x, y and z directions
+    Grad = grad(
+        data_points=data_points, 
+        source_points=source_points, 
+        SEDM=SEDM, 
+        components=["x", "y", "z"], 
+        check_input=False
+    )
+    
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute the directional derivative of 1st order
+    Kt = dict()
+    Kt["header"] = "1st-order directional derivative of the inverse distance function computed at scattered points"
+    Kt["tx"] = t[0] * Grad['x']
+    Kt["ty"] = t[1] * Grad['y']
+    Kt["tz"] = t[2] * Grad['z']
+    Kt["inclination"] = inc
+    Kt["declination"] = dec
+
+    return Kt
+
+
+def directional_1st_order_BTTB(
+    data_grid,
+    delta_z,
+    SEDM,
+    ordering,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of first order of the inverse distance
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
+    and positive vertical distance.
+    The direcional derivative is computed along a direction defined by a given inclination and declination. 
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    SEDM: dictionary
+        Dictionary containing the metadata associated with the full matrix 
+        (output of function 'inverse_distance.sedm_BTTB').
+    ordering : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    inc, dec : ints or floats
+        Scalars defining the constant inclination and declination of the
+        direction along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Kt: Dictionary
+        Dictionary containing the x, y and z components of the computed 1st-orfer directional derivative 
+        along a constant direction with predefined inclination and declination.
+        The x, y and z components are stored at the keys 'tx', 'ty' and 'tz', respectively, 
+        in the form of BTTB matrices (see input of function 'check.BTTB_metadata').
+        Inclination and declination values at keys 'inclination' and 'declination', respectively.
+        .
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.is_regular_grid_xy(data_grid)
+        check.is_scalar(x=delta_z, positive=True)
+        # check the SEDM
+        check.BTTB_metadata(SEDM)
+        check.is_ordering(ordering)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the gradient components along x, y and z directions
+    Grad = grad_BTTB(
+        data_grid=data_grid,
+        delta_z=delta_z,
+        SEDM=SEDM,
+        ordering=ordering, 
+        components=["x", "y", "z"], 
+        check_input=False
+    )
+    
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute the gradient components defined in components
+    Kt = dict()
+    Kt["header"] = "1st-order partial derivative(s) of the inverse distance function computed at gridded points"
+    Kt["tx"] = Grad['x'].copy()
+    Kt["ty"] = Grad['y'].copy()
+    Kt["tz"] = Grad['z'].copy()
+    Kt["tx"]["columns"] *= t[0]
+    Kt["ty"]["columns"] *= t[1]
+    Kt["tz"]["columns"] *= t[2]
+    Kt["inclination"] = inc
+    Kt["declination"] = dec
+
+    return Kt
 
 
 def _delta_x(data_grid, delta_z, ordering):

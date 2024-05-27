@@ -113,7 +113,7 @@ def safe_log_np(x):
     x = np.asarray(x, dtype=float)
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = np.abs(x) >= 1e-10
+    indices_x = (np.abs(x) >= 1e-10)
     result[indices_x] = np.log(x[indices_x])
     return result
 
@@ -318,7 +318,7 @@ def prisms_volume(prisms):
     return volume
 
 
-def block_data(x, y, area, shape):
+def block_data(x, y, area, shape, check_input=True):
     """
     Split a dataset into a grid of Nx X Ny blocks within a predefined area.
     
@@ -331,34 +331,21 @@ def block_data(x, y, area, shape):
         boundaries along the x and y directions, respectively.
     shape : tuple of ints
         Positive integers defining the number of blocks along the x and y directions, respectively.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
     
     returns
     -------
     blocks_indices : list of lists
         Lists containing the indices of the data at each block.
     """
-    if (type(x) != np.ndarray) or (type(y) != np.ndarray):
-        raise ValueError("x and y must be numpy arrays")
-    if (x.ndim != 1) or (y.ndim != 1):
-        raise ValueError("x and y must have ndim = 1")
-    if (x.size != y.size):
-        raise ValueError("x and y must have the same size")
-    if type(area) != list:
-        raise ValueError("area must be a list")
-    if len(area) != 4:
-        raise ValueError("area must have four elements")
-    if area[1] <= area [0]:
-        raise ValueError("area[1] must be greater than area[0]")
-    if area[3] <= area [2]:
-        raise ValueError("area[3] must be greater than area[2]")
-    if (isinstance(shape, tuple) == False):
-        raise ValueError("shape must be a tuple")
-    if len(shape) != 2:
-        raise ValueError("shape must have 2 elements")
-    if (isinstance(shape[0], int) == False) or (shape[0] <= 0):
-        raise ValueError("shape[0] must be a positive integer")
-    if (isinstance(shape[1], int) == False) or (shape[1] <= 0):
-        raise ValueError("shape[1] must be a positive integer")
+    if check_input is True:
+        check.is_array(x=x, ndim=1)
+        check.is_array(x=y, ndim=1)
+        if (x.size != y.size):
+            raise ValueError("x and y must have the same size")
+        check.is_area(area=area)
+        check.is_shape(shape=shape)
     
     # compute spacing along x and y
     dx = (area[1] - area[0]) / shape[0]
@@ -382,7 +369,7 @@ def block_data(x, y, area, shape):
     return blocks_indices
 
 
-def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
+def reduce_data(data, blocks_indices, function="mean", remove_nan=False, check_input=True):
     """
     Apply func to the values at each element in blocks.
     
@@ -399,24 +386,24 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
         If True, keep the elements containing nan values and return a 2d array of reduced data.
         Otherwise, remove elements containing nan values and return an 1d array of reduced data.
         Default is False.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
     
     returns
     -------
     reduced_data : numpy array 1d or 2d
         Matrix containing the reduced data at each block.        
     """
-    if type(data) != np.ndarray:
-        raise ValueError("data must be numpy arrays")
-    if data.ndim != 1:
-        raise ValueError("data must have ndim = 1")
-    if type(blocks_indices) != list:
-        raise ValueError("blocks_indices must be a list")
-    if type(function) != str:
-        raise ValueError("function must be string")
-    if function not in ["mean", "median"]:
-        raise ValueError("invalid function {}".format(function))
-    if remove_nan not in [True, False]:
-        raise ValueError("{} does not have a valid format".format(remove_nan))
+    if check_input is True:
+        check.is_array(x=data, ndim=1)
+        if type(blocks_indices) != list:
+            raise ValueError("blocks_indices must be a list")
+        if type(function) != str:
+            raise ValueError("function must be string")
+        if function not in ["mean", "median"]:
+            raise ValueError("invalid function {}".format(function))
+        if remove_nan not in [True, False]:
+            raise ValueError("{} does not have a valid format".format(remove_nan))
 
     if function == "mean":
         func = np.mean
@@ -440,114 +427,3 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
         reduced_data = np.delete(reduced_data, nan_elements)
 
     return reduced_data
-
-
-def grid_spacing(area, shape, check_input=True):
-    """
-    Compute the grid spacing along the x and y directions.
-
-    parameters
-    ----------
-    area : list
-        List of min x, max x, min y and max y.
-    shape : tuple
-        Tuple defining the total number of points along x and y directions, respectively.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    spacing : tuple
-        Tuple containing the grid spacing along the x and y directions, respectively.
-    """
-    if check_input == True:
-        check.is_area(area=area)
-        check.is_shape(shape=shape)
-
-    spacing = (
-        (area[1] - area[0]) / (shape[0] - 1),
-        (area[3] - area[2]) / (shape[1] - 1),
-    )
-
-    return spacing
-
-
-def data_reshape(data, ordering, shape, check_input=True):
-    """
-    Let a 'data' vector be computed at a grid of points with a given 'ordering' and 'shape'.
-    The present function reshape the 'data' into a matrix having the given 'shape', according to the 
-    'ordering' of its corresponding grid of points.
-
-    parameters
-    ----------
-    data : numpy array 1d
-        Data vector.
-    ordering : string
-        Defines how the points are ordered after the first point (min x, min y) in the 
-        corresponding grid of points.
-        If 'xy', the points vary first along x and then along y.
-        If 'yx', the points vary first along y and then along x.
-    shape : tuple
-        Tuple defining the total number of points along x and y directions, respectively.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    data_matrix : numpy array 2d
-        Data vector rearranged into a matrix according to the 'ordering' of its 
-        corresponding grid of points.
-    """
-    if check_input == True:
-        check.is_array(x=data, ndim=1)
-        check.is_ordering(ordering)
-        check.is_shape(shape)
-        if shape[0]*shape[1] != data.size:
-            raise Valuerror("shape mismatch data")
-
-    if ordering == 'xy':
-        return np.reshape(data, shape[::-1])
-    else: # ordering == 'yx'
-        return np.reshape(data, shape)
-
-
-def grid_xy_reshape(grid, ordering, check_input=True):
-    """
-    Broadcast the coordinates 'x' and 'y' of 'grid' to matrices according to 
-    its 'ordering'.
-
-    parameters
-    ----------
-    grid : dictionary containing the following keys
-        'x' : numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
-        'y' : numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
-        'z' : scalar (float or int) defining the constant vertical coordinate of the grid.
-        'area' : list 
-            List of min x, max x, min y and max y (the same as input)
-        'shape' : tuple 
-            Tuple defining the total number of points along x and y directions, 
-            respectively (the same as input).
-    ordering : string
-        Defines how the points are ordered after the first point (min x, min y) in the 
-        corresponding grid of points.
-        If 'xy', the points vary first along x and then along y.
-        If 'yx', the points vary first along y and then along x.
-    check_input : boolean
-        If True, verify if the input is valid. Default is True.
-
-    returns
-    -------
-    X, Y : numpy arrays 2d
-        Views of the grid coordinates.
-    """
-    if check_input == True:
-        check.is_regular_grid_xy(grid)
-        check.is_ordering(ordering)
-
-    if ordering == 'xy':
-        X = np.broadcast_to(grid['x'], grid['shape'][::-1])
-        Y = np.broadcast_to(grid['y'], grid['shape']).T
-    else: # ordering == 'yx'
-        X = np.broadcast_to(grid['x'], grid['shape'][::-1]).T
-        Y = np.broadcast_to(grid['y'], grid['shape'])
-    return X, Y

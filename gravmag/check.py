@@ -438,6 +438,10 @@ def BTTB_metadata(BTTB):
     parameters
     ----------
     BTTB : dictionary containing the following keys:
+        ordering : string
+            Defines how the points are ordered after the first point (min x, min y).
+            If 'xy', the points vary first along x and then along y.
+            If 'yx', the points vary first along y and then along x.
         symmetry_structure : string
             Defines the type of symmetry between all blocks above and below the main block diagonal.
             It can be 'gene', 'symm' or 'skew' (see the explanation above).
@@ -458,6 +462,7 @@ def BTTB_metadata(BTTB):
     if type(BTTB) != dict:
         raise ValueError("'BTTB' must be a dictionary")
     if list(BTTB.keys()) != [
+        "ordering",
         "symmetry_structure",
         "symmetry_blocks",
         "nblocks",
@@ -465,16 +470,18 @@ def BTTB_metadata(BTTB):
         "rows",
     ]:
         raise ValueError(
-            "'Toeplitz' must have the following keys: 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
+            "'Toeplitz' must have the following keys: 'ordering', 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
         )
 
     # get the parameters defining the BTTB matrix
+    ordering = BTTB["ordering"]
     symmetry_structure = BTTB["symmetry_structure"]
     symmetry_blocks = BTTB["symmetry_blocks"]
     nblocks = BTTB["nblocks"]
     columns = BTTB["columns"]
     rows = BTTB["rows"]
 
+    is_ordering(ordering=ordering)
     if symmetry_structure not in ["symm", "skew", "gene"]:
         raise ValueError("invalid {} symmetry".format(symmetry_structure))
     if symmetry_blocks not in ["symm", "skew", "gene"]:

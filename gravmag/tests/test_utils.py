@@ -6,61 +6,24 @@ from numba import njit
 from .. import utils
 
 
-def test_unit_vector_magnitude():
-    "check if the unit vector has magnitude 1"
-    I = [10, -30, 0, 90, -90, 180, 45, 73, -3]
-    D = [-28, 47, 5, 18, 0, 90, -90, 7, 89]
-    for inc, dec in zip(I, D):
-        u = utils.unit_vector(inc, dec)
-        aae(np.sum(u * u), 1, decimal=15)
+# safe_atan2
 
-
-def test_unit_vector_known_values():
-    "compare computed unit vector with reference values"
-    I = [0, 0, 90, -90, 0]
-    D = [0, 90, 0, 0, 45]
-    reference_outputs = [
-        np.array([1, 0, 0]),
-        np.array([0, 1, 0]),
-        np.array([0, 0, 1]),
-        np.array([0, 0, -1]),
-        np.array([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]),
-    ]
-    for inc, dec, ref in zip(I, D, reference_outputs):
-        u = utils.unit_vector(inc, dec)
-        aae(u, ref, decimal=15)
-
-
-def test_direction_known_values():
-    "compare computed direction with reference values"
-    reference_I = [0, 0, 90, -90, 0]
-    reference_D = [0, 90, 0, 0, 45]
-    reference_inputs = [
-        np.array([1, 0, 0]),
-        np.array([0, 1, 0]),
-        np.array([0, 0, 1]),
-        np.array([0, 0, -1]),
-        np.array([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]),
-    ]
-    for ref_inc, ref_dec, ref_input in zip(
-        reference_I, reference_D, reference_inputs
-    ):
-        intens, inc, dec = utils.direction(ref_input)
-        aae(intens, 1, decimal=15)
-        aae(inc, ref_inc, decimal=15)
-        aae(dec, ref_dec, decimal=15)
-
-
-def test_rotation_matrix_orthonormal():
-    "check if the rotation matrix is orthonormal"
-    I = [10, -30, 0, 90, -90, 180, 45, 73, -3]
-    D = [-28, 47, 5, 18, 0, 90, -90, 7, 89]
-    dI = [1, 18, 24, 13, 0, 40, 5, -3, -3]
-    dD = [8, 7, -51, 108, 19.4, 0, 6, -7, 389]
-    for inc, dec, dinc, ddec in zip(I, D, dI, dD):
-        R = utils.rotation_matrix(inc, dec, dinc, ddec)
-        aae(np.dot(R.T, R), np.identity(3), decimal=15)
-        aae(np.dot(R, R.T), np.identity(3), decimal=15)
+def test_safe_atan2_compare_functions():
+    "verify consistency between all safe_atan2 functions"
+    y = np.array([
+        [  0.,  30.], 
+        [-45.,  60.], 
+        [-90., 180.]])
+    x = np.array([
+        [ 10., 12.], 
+        [-73.,  3.], 
+        [ 18.,  0.]])
+    result_numba = utils.safe_atan2(y=y, x=x)
+    result_numpy = utils.safe_atan2_np(y=y, x=x)
+    aae(result_numba, result_numpy, decimal=15)
+    for yi, xi, result_i in zip(y.ravel(), x.ravel(), result_numpy.ravel()):
+        result_numba_entrywise = utils.safe_atan2_entrywise(y=yi, x=xi)
+        aae(result_numba_entrywise, result_i, decimal=15)
 
 
 def test_safe_atan2_entrywise():
@@ -104,6 +67,22 @@ def test_safe_atan2():
     aae(utils.safe_atan2(y, x), reference, decimal=15)
 
 
+# safe_log
+
+def test_safe_log_compare_functions():
+    "verify consistency between all safe_log functions"
+    x = np.array([
+        [0., 12.], 
+        [-3., 7.3], 
+        [1018., -1018.]])
+    result_numba = utils.safe_log(x=x)
+    result_numpy = utils.safe_log_np(x=x)
+    aae(result_numba, result_numpy, decimal=15)
+    for xi, result_i in zip(x.ravel(), result_numpy.ravel()):
+        result_numba_entrywise = utils.safe_log_entrywise(x=xi)
+        aae(result_numba_entrywise, result_i, decimal=15)
+
+
 def test_safe_log_entrywise():
     "Test the safe_log function"
     # Check if safe_log function satisfies safe_log(0) == 0
@@ -129,6 +108,8 @@ def test_safe_log():
     aae(utils.safe_log(x), np.log(x), decimal=15)
 
 
+# magnetization_components
+
 def test_magnetization_components():
     "Compare reference values with those obtained from magnetization_components"
     magnetization = np.array([[1.0, -30, 45], [10.0, 60, -30]])
@@ -143,10 +124,128 @@ def test_magnetization_components():
     aae(mz, mz_ref, decimal=13)
 
 
-def test_grid_spacing():
-    "compare result with reference values obtained for specific input"
-    area = [0, 10, 5.5, 7.5]
-    shape = (5, 3)
-    reference = (2.5, 1.)
-    computed = utils.grid_spacing(area=area, shape=shape)
+# unit_vector
+
+
+def test_unit_vector_magnitude():
+    "check if the unit vector has magnitude 1"
+    I = [10, -30, 0, 90, -90, 180, 45, 73, -3]
+    D = [-28, 47, 5, 18, 0, 90, -90, 7, 89]
+    for inc, dec in zip(I, D):
+        u = utils.unit_vector(inc, dec)
+        aae(np.sum(u * u), 1, decimal=15)
+
+
+def test_unit_vector_known_values():
+    "compare computed unit vector with reference values"
+    I = [0, 0, 90, -90, 0]
+    D = [0, 90, 0, 0, 45]
+    reference_outputs = [
+        np.array([1, 0, 0]),
+        np.array([0, 1, 0]),
+        np.array([0, 0, 1]),
+        np.array([0, 0, -1]),
+        np.array([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]),
+    ]
+    for inc, dec, ref in zip(I, D, reference_outputs):
+        u = utils.unit_vector(inc, dec)
+        aae(u, ref, decimal=15)
+
+
+# direction
+
+
+def test_direction_known_values():
+    "compare computed direction with reference values"
+    reference_I = [0, 0, 90, -90, 0]
+    reference_D = [0, 90, 0, 0, 45]
+    reference_inputs = [
+        np.array([1, 0, 0]),
+        np.array([0, 1, 0]),
+        np.array([0, 0, 1]),
+        np.array([0, 0, -1]),
+        np.array([np.sqrt(2) / 2, np.sqrt(2) / 2, 0]),
+    ]
+    for ref_inc, ref_dec, ref_input in zip(
+        reference_I, reference_D, reference_inputs
+    ):
+        intens, inc, dec = utils.direction(ref_input)
+        aae(intens, 1, decimal=15)
+        aae(inc, ref_inc, decimal=15)
+        aae(dec, ref_dec, decimal=15)
+
+
+# rotation_matrix
+
+
+def test_rotation_matrix_orthonormal():
+    "check if the rotation matrix is orthonormal"
+    I = [10, -30, 0, 90, -90, 180, 45, 73, -3]
+    D = [-28, 47, 5, 18, 0, 90, -90, 7, 89]
+    dI = [1, 18, 24, 13, 0, 40, 5, -3, -3]
+    dD = [8, 7, -51, 108, 19.4, 0, 6, -7, 389]
+    for inc, dec, dinc, ddec in zip(I, D, dI, dD):
+        R = utils.rotation_matrix(inc, dec, dinc, ddec)
+        aae(np.dot(R.T, R), np.identity(3), decimal=15)
+        aae(np.dot(R, R.T), np.identity(3), decimal=15)
+
+
+# coordinate_transform
+
+
+# prisms_volume
+
+def test_prisms_volume_compare_known_values():
+    "verify if computed volumes are equal to reference values"
+    model = {
+        'x1' : np.array([-100, 2000, -34]),
+        'x2' : np.array([ 100, 2500,  66]),
+        'y1' : np.array([ 230, -1400, 350.]),
+        'y2' : np.array([ 430, 0, 700.]),
+        'z1' : np.array([10, -100, 0]),
+        'z2' : np.array([90, 600.5, 348.])
+    }
+    reference = np.array([200*200*80, 500*1400*700.5, 100*350*348])
+    computed = utils.prisms_volume(prisms=model)
+    aae(computed, reference, decimal=15)
+
+
+# block_data
+
+def test_block_data():
+    "compare computed blocks with reference values"
+    x = np.array(
+        [310., 290., 403., 500., -107.5,  18.9, 200., -12.3, -99.7, 598., -100.,   0.5, 150., 110., 290., -275.3, 590.]
+        )
+    y = np.array(
+        [134., 201., 370., 260.,  199.3, 101.1, 340., 207.0, 318.1, 150.,  130., 300.1, 150., 170., 240.,  310.8, 311.]
+        )
+    reference = [
+        [[4, 10], [7], [8, 15]], 
+        [[5, 12, 13], [1, 14], [6, 11]], 
+        [[0, 9], [3], [2, 16]]
+        ]
+    computed = utils.block_data(
+        x=x, y=y, area=[-300., 600., 100., 400.], shape=(3,3)
+        )
     ae(computed, reference)
+
+# reduce_data
+
+def test_reduce_data():
+    "compare computed blocks with reference values"
+    x = np.array(
+        [310., 290., 403., 500., -107.5,  18.9, 200., -12.3, -99.7, 598., -100.,   0.5, 150., 110., 290., -275.3, 590.]
+        )
+    y = np.array(
+        [134., 201., 370., 260.,  199.3, 101.1, 340., 207.0, 318.1, 150.,  130., 300.1, 150., 170., 240.,  310.8, 311.]
+        )
+    data = np.arange(17)*10 + 10.
+    blocks = utils.block_data(
+        x=x, y=y, area=[-300., 600., 100., 400.], shape=(3,3)
+        )
+    reference = np.array([[(50+110)/2, (60+130+140)/3, (10+100)/2], [80, (20+150)/2, 40], [(90+160)/2, (70+120)/2, (30+170)/2]]).T
+    computed = utils.reduce_data(
+        data=data, blocks_indices=blocks, function="mean", remove_nan=False
+        )
+    aae(computed, reference, decimal=15)
