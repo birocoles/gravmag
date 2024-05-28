@@ -28,7 +28,7 @@ def direction(wavenumbers, inc, dec, check_input=True):
     """
 
     if check_input is True:
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=inc, positive=False)
         check.is_scalar(x=dec, positive=False)
 
@@ -66,7 +66,7 @@ def rtp(wavenumbers, inc0, dec0, inc, dec, check_input=True):
     """
 
     if check_input is True:
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=inc0, positive=False)
         check.is_scalar(x=dec0, positive=False)
         check.is_scalar(x=inc, positive=False)
@@ -109,7 +109,7 @@ def derivative(wavenumbers, axes, check_input=True):
         Derivative filter evaluated at the wavenumbers kx, ky and kz.
     """
     if check_input is True:
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
         if len(axes) <= 0:
             raise ValueError("axes must have at least one element")
         for axis in axes:
@@ -138,7 +138,7 @@ def continuation(wavenumbers, dz, check_input=True):
     ----------
     wavenumbers: dictionary
         Dictionary containing the metadata of the wavenumber grid 
-        (See description at function 'data_structures.regular_grid_wavenumbers').
+        (See description at function 'data_structures.grid_wavenumbers').
     dz : int or float
         Scalar defining the difference between the constant vertical coordinate
         of the continuation plane and the constant vertical coordinate of the
@@ -154,7 +154,7 @@ def continuation(wavenumbers, dz, check_input=True):
     """
 
     if check_input is True:
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=dz, positive=False)
 
     cont_filter = np.exp(dz * wavenumbers['z'])
@@ -183,7 +183,7 @@ def cuttof_frequency(wavenumbers, max_freq, check_input=True):
     """
 
     if check_input is True:
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=max_freq, positive=True)
 
     dead_zone = (wavenumbers['z'] >= max_freq)

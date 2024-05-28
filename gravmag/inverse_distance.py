@@ -90,7 +90,7 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
 
     if check_input is True:
         # check shape and ndim of points
-        check.is_regular_grid_xy(grid=data_grid)
+        check.is_grid_xy(grid=data_grid)
         check.is_scalar(x=delta_z, positive=True)
         check.is_ordering(ordering)
 
@@ -243,7 +243,7 @@ def grad_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_regular_grid_xy(data_grid)
+        D = check.is_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
@@ -413,7 +413,7 @@ def grad_tensor_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_regular_grid_xy(data_grid)
+        D = check.is_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
@@ -592,7 +592,7 @@ def directional_1st_order_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_regular_grid_xy(data_grid)
+        D = check.is_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check the SEDM
         check.BTTB_metadata(SEDM)

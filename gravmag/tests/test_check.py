@@ -174,10 +174,10 @@ def test_invalid_coordinates():
         check.are_coordinates(coordinates)
 
 
-##### regular_grid_xy
+##### grid_xy
 
 
-def test_is_regular_grid_xy_n_points():
+def test_is_grid_xy_n_points():
     "Check if return the correct number of points"
     grid = {
         "x": np.arange(4),
@@ -186,35 +186,35 @@ def test_is_regular_grid_xy_n_points():
         "area": [0, 1, 2, 3],
         "shape": (4, 3)
     }
-    D = check.is_regular_grid_xy(grid)
+    D = check.is_grid_xy(grid)
     assert D == 12
 
 
-def test_is_regular_grid_xy_non_dict_input():
+def test_is_grid_xy_non_dict_input():
     "Check if passing a non-dictionary grid raises an error"
     # array
     grid = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # array
     grid = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # tuple
     grid = (1, 5)
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # list
     grid = [1, 2, 3.0]
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # float
     grid = 10.2
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
 
 
-def test_is_regular_grid_xy_invalid_keys():
+def test_is_grid_xy_invalid_keys():
     "Check if passing a dictionary with invalid keys raises an error"
     # correct keys
     x = np.arange(4)
@@ -232,7 +232,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "k": np.array([-100, 100, -100, 100, 100, 200]),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with one wrong key (y in uppercase)
     grid = {
         "x": x,
@@ -242,7 +242,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with 'z' key not float or int
     grid = {
         "x": x,
@@ -252,7 +252,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     grid = {
         "x": x,
         "y": y,
@@ -261,7 +261,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with 'area' key not list
     grid = {
         "x": x,
@@ -271,7 +271,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     grid = {
         "x": x,
         "y": y,
@@ -280,7 +280,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with inconsistent 'area' key
     grid = {
         "x": x,
@@ -290,7 +290,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     grid = {
         "x": x,
         "y": y,
@@ -299,7 +299,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": shape,
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with 'shape' key not tuple
     grid = {
         "x": x,
@@ -309,7 +309,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": [x.size, y.size],
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     grid = {
         "x": x,
         "y": y,
@@ -318,7 +318,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": np.array(shape),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # dictionary with inconsistent 'shape' key
     grid = {
         "x": x,
@@ -328,7 +328,7 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": (-1, 4),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     grid = {
         "x": x,
         "y": y,
@@ -337,10 +337,10 @@ def test_is_regular_grid_xy_invalid_keys():
         "shape": (3, 3),
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)    
+        check.is_grid_xy(grid)    
 
 
-def test_is_regular_grid_xy_invalid_x_key():
+def test_is_grid_xy_invalid_x_key():
     "Check if passing an invalid x key raises an error"
     # correct keys
     y = np.ones(3)
@@ -356,7 +356,7 @@ def test_is_regular_grid_xy_invalid_x_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # list
     grid = {
         "x": [0, 1, 2, 3, 4],
@@ -366,7 +366,7 @@ def test_is_regular_grid_xy_invalid_x_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # tuple
     grid = {
         "x": (0, 1, 2, 3, 4),
@@ -376,10 +376,10 @@ def test_is_regular_grid_xy_invalid_x_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
 
 
-def test_is_regular_grid_xy_invalid_y_key():
+def test_is_grid_xy_invalid_y_key():
     "Check if passing an invalid y key raises an error"
     # correct keys
     x = np.arange(4)
@@ -395,7 +395,7 @@ def test_is_regular_grid_xy_invalid_y_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # list
     grid = {
         "x": x,
@@ -405,7 +405,7 @@ def test_is_regular_grid_xy_invalid_y_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # tuple
     grid = {
         "x": x,
@@ -415,10 +415,10 @@ def test_is_regular_grid_xy_invalid_y_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
 
 
-def test_is_regular_grid_xy_invalid_z_key():
+def test_is_grid_xy_invalid_z_key():
     "Check if passing an invalid z key raises an error"
     # correct keys
     x = np.arange(4)
@@ -433,7 +433,7 @@ def test_is_regular_grid_xy_invalid_z_key():
         "ordering": "xy",
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(coordinates)
+        check.is_grid_xy(coordinates)
     # list
     grid = {
         "x": x,
@@ -443,7 +443,7 @@ def test_is_regular_grid_xy_invalid_z_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
     # tuple
     grid = {
         "x": x,
@@ -453,43 +453,42 @@ def test_is_regular_grid_xy_invalid_z_key():
         "shape": shape
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_xy(grid)
+        check.is_grid_xy(grid)
 
 
-##### regular_grid_wavenumbers
+##### grid_wavenumbers
 
 
-def test_is_regular_grid_wavenumbers_non_dict_input():
+def test_is_grid_wavenumbers_non_dict_input():
     "Check if passing a non-dictionary grid raises an error"
     # array
     wavenumbers = np.array([0, 0, 0])
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # array
     wavenumbers = np.zeros((4, 3))
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # tuple
     wavenumbers = (1, 5)
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # list
     wavenumbers = [1, 2, 3.0]
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # float
     wavenumbers = 10.2
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
 
 
-def test_is_regular_grid_wavenumbers_invalid_keys():
+def test_is_grid_wavenumbers_invalid_keys():
     "Check if passing a dictionary with invalid keys raises an error"
     # correct keys
     x = np.arange(4)
     y = np.ones(3)
     z = np.zeros((4,3)) + 1.2
-    ordering = 'xy'
     shape = (4, 3)
     spacing = (1.1, 1.3)
     # set dict with invalid x key
@@ -497,34 +496,31 @@ def test_is_regular_grid_wavenumbers_invalid_keys():
         "x": np.arange(4)[:,np.newaxis],
         "y": y,
         "z": z,
-        "ordering": ordering,
         "shape": shape,
         "spacing": spacing
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid y key
     wavenumbers = {
         "x": x,
         "y": [0, 1, 2],
         "z": z,
-        "ordering": ordering,
         "shape": shape,
         "spacing": spacing
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid z key (scalar instead numpy array 2d)
     wavenumbers = {
         "x": x,
         "y": y,
         "z": 3.,
-        "ordering": ordering,
         "shape": shape,
         "spacing": spacing
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid z key with a negative element
     z_with_negative = np.copy(z)
     z_with_negative[1,1] *= -1 
@@ -532,45 +528,31 @@ def test_is_regular_grid_wavenumbers_invalid_keys():
         "x": x,
         "y": y,
         "z": z_with_negative,
-        "ordering": ordering,
         "shape": shape,
         "spacing": spacing
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
-    # set dict with invalid ordering key
-    wavenumbers = {
-        "x": x,
-        "y": y,
-        "z": z,
-        "ordering": "Xy",
-        "shape": shape,
-        "spacing": spacing
-    }
-    with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid shape key
     wavenumbers = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "shape": [4,3],
         "spacing": spacing
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid spacing key
     wavenumbers = {
         "x": x,
         "y": y,
         "z": z,
-        "ordering": ordering,
         "shape": shape,
         "spacing": np.array([1.1, 1.3])
     }
     with pytest.raises(ValueError):
-        check.is_regular_grid_wavenumbers(wavenumbers)
+        check.is_grid_wavenumbers(wavenumbers)
    
 
 

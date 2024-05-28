@@ -87,7 +87,7 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_regular_grid_xy(grid):
+def is_grid_xy(grid):
     """
     Check if coordinates is a dictionary containing the x, y and z
     coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
@@ -133,7 +133,7 @@ def is_regular_grid_xy(grid):
     return D
 
 
-def is_regular_grid_wavenumbers(wavenumbers):
+def is_grid_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary containing the x, y and z
     wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys 
@@ -148,9 +148,9 @@ def is_regular_grid_wavenumbers(wavenumbers):
     """
     if type(wavenumbers) != dict:
         raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != ["x", "y", "z", "ordering", "shape", "spacing"]:
+    if list(wavenumbers.keys()) != ["x", "y", "z", "shape", "spacing"]:
         raise ValueError(
-            "wavenumbers must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'shape', 'spacing'"
+            "wavenumbers must have the following 5 keys: 'x', 'y', 'z', 'shape', 'spacing'"
         )
     for key in ["x", "y", "z"]:
         if type(wavenumbers[key]) != np.ndarray:
@@ -169,7 +169,6 @@ def is_regular_grid_wavenumbers(wavenumbers):
         raise ValueError("'z' key must contain all-positive elements")
     is_shape(wavenumbers['shape'])
     is_spacing(wavenumbers['spacing'])
-    is_ordering(wavenumbers["ordering"])
     if (wavenumbers["x"].size, wavenumbers["y"].size) != wavenumbers["shape"]:
         raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
 
