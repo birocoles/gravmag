@@ -9,3 +9,4 @@ transformations.
 - `closed_form_eqlayer_mag` : closed-form equivalent layer associated with magnetic data.
 - `gravity_disturbance` : gravity disturbance due to prisms on a realistic topography surface.
 - `gravity_tensor` : gravitational tensor components and its invariants due to prisms.
+- `magnetic_field` : magnetic field due to prisms.
