@@ -187,6 +187,7 @@ def test_BTTB_from_metadata_compare_known_values_symm_symm():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -216,6 +217,7 @@ def test_BTTB_from_metadata_compare_known_values_symm_skew():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -246,6 +248,7 @@ def test_BTTB_from_metadata_compare_known_values_symm_gene():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -275,6 +278,7 @@ def test_BTTB_from_metadata_compare_known_values_skew_symm():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -304,6 +308,7 @@ def test_BTTB_from_metadata_compare_known_values_skew_skew():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -334,6 +339,7 @@ def test_BTTB_from_metadata_compare_known_values_skew_gene():
         ]
     )
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -358,6 +364,7 @@ def test_BTTB_from_metadata_compare_known_values_gene_symm():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [60, -70, 80], [10, -40, -30]])
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -382,6 +389,7 @@ def test_BTTB_from_metadata_compare_known_values_gene_skew():
     "verify if the computed BTTB is equal to the reference"
     columns = np.array([[0, -2, 32], [-60, -70, 80], [10, -40, -30]])
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -407,6 +415,7 @@ def test_BTTB_from_metadata_compare_known_values_gene_gene():
     columns = np.array([[0, -2, 7], [60, -90, 100], [10, 40, 50]])
     rows = np.array([[18, 32], [70, -80], [20, 30]])
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -442,6 +451,7 @@ def test_embedding_BCCB_compare_known_values_symm_symm():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -492,6 +502,7 @@ def test_embedding_BCCB_compare_known_values_symm_skew():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -543,6 +554,7 @@ def test_embedding_BCCB_compare_known_values_symm_gene():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -593,6 +605,7 @@ def test_embedding_BCCB_compare_known_values_skew_symm():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -643,6 +656,7 @@ def test_embedding_BCCB_compare_known_values_skew_skew():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -694,6 +708,7 @@ def test_embedding_BCCB_compare_known_values_skew_gene():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -739,6 +754,7 @@ def test_embedding_BCCB_compare_known_values_gene_symm():
     columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -784,6 +800,7 @@ def test_embedding_BCCB_compare_known_values_gene_skew():
     columns = np.array([[0, -2, 7], [10, 40, 50], [28, 12, 3]])
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -830,6 +847,7 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
     rows = np.array([[18, 32], [20, 30], [1, 2]])
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -875,6 +893,7 @@ def test_embedding_BCCB_compare_known_values_gene_gene():
 def test_eigenvalues_BCCB_bad_ordering():
     "must raise ValueError for invalid symmetry"
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -921,6 +940,7 @@ def test_eigenvalues_BCCB_known_values():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "gene",
         "nblocks": 6,
@@ -951,6 +971,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_symm():
     "verify the relationship between the eigenvalues and transposition"
     # define the data structure for the generating BTTB matrix
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -979,6 +1000,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_skew():
     "verify the relationship between eigenvalues and transposition"
     # define the data structure for the generating BTTB matrix
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -1007,6 +1029,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_gene():
     "verify the relationship between eigenvalues and transposition"
     # define the data structure for the generating BTTB matrix
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "symm",
         "symmetry_blocks": "gene",
         "nblocks": 2,
@@ -1040,6 +1063,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_symm():
     "verify the relationship between eigenvalues and transposition"
     # define the data structure for the generating BTTB matrix
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "symm",
         "nblocks": 2,
@@ -1068,6 +1092,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_skew_skew():
     "verify the relationship between eigenvalues and transposition"
     # define the data structure for the generating BTTB matrix
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "skew",
         "symmetry_blocks": "skew",
         "nblocks": 2,
@@ -1210,6 +1235,7 @@ def test_product_BCCB_vector_compare_matrix_vector():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "gene",
         "nblocks": 6,
@@ -1271,6 +1297,7 @@ def test_product_BCCB_vector_compare_transposed():
     )
     # compute the BCCB
     BTTB = {
+        "ordering": "xy",
         "symmetry_structure": "gene",
         "symmetry_blocks": "gene",
         "nblocks": 6,

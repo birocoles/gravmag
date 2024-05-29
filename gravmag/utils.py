@@ -113,7 +113,7 @@ def safe_log_np(x):
     x = np.asarray(x, dtype=float)
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = np.abs(x) >= 1e-10
+    indices_x = (np.abs(x) >= 1e-10)
     result[indices_x] = np.log(x[indices_x])
     return result
 
@@ -318,7 +318,7 @@ def prisms_volume(prisms):
     return volume
 
 
-def block_data(x, y, area, shape):
+def block_data(x, y, area, shape, check_input=True):
     """
     Split a dataset into a grid of Nx X Ny blocks within a predefined area.
     
@@ -331,34 +331,21 @@ def block_data(x, y, area, shape):
         boundaries along the x and y directions, respectively.
     shape : tuple of ints
         Positive integers defining the number of blocks along the x and y directions, respectively.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
     
     returns
     -------
     blocks_indices : list of lists
         Lists containing the indices of the data at each block.
     """
-    if (type(x) != np.ndarray) or (type(y) != np.ndarray):
-        raise ValueError("x and y must be numpy arrays")
-    if (x.ndim != 1) or (y.ndim != 1):
-        raise ValueError("x and y must have ndim = 1")
-    if (x.size != y.size):
-        raise ValueError("x and y must have the same size")
-    if type(area) != list:
-        raise ValueError("area must be a list")
-    if len(area) != 4:
-        raise ValueError("area must have four elements")
-    if area[1] <= area [0]:
-        raise ValueError("area[1] must be greater than area[0]")
-    if area[3] <= area [2]:
-        raise ValueError("area[3] must be greater than area[2]")
-    if (isinstance(shape, tuple) == False):
-        raise ValueError("shape must be a tuple")
-    if len(shape) != 2:
-        raise ValueError("shape must have 2 elements")
-    if (isinstance(shape[0], int) == False) or (shape[0] <= 0):
-        raise ValueError("shape[0] must be a positive integer")
-    if (isinstance(shape[1], int) == False) or (shape[1] <= 0):
-        raise ValueError("shape[1] must be a positive integer")
+    if check_input is True:
+        check.is_array(x=x, ndim=1)
+        check.is_array(x=y, ndim=1)
+        if (x.size != y.size):
+            raise ValueError("x and y must have the same size")
+        check.is_area(area=area)
+        check.is_shape(shape=shape)
     
     # compute spacing along x and y
     dx = (area[1] - area[0]) / shape[0]
@@ -382,7 +369,7 @@ def block_data(x, y, area, shape):
     return blocks_indices
 
 
-def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
+def reduce_data(data, blocks_indices, function="mean", remove_nan=False, check_input=True):
     """
     Apply func to the values at each element in blocks.
     
@@ -399,24 +386,24 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
         If True, keep the elements containing nan values and return a 2d array of reduced data.
         Otherwise, remove elements containing nan values and return an 1d array of reduced data.
         Default is False.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
     
     returns
     -------
     reduced_data : numpy array 1d or 2d
         Matrix containing the reduced data at each block.        
     """
-    if type(data) != np.ndarray:
-        raise ValueError("data must be numpy arrays")
-    if data.ndim != 1:
-        raise ValueError("data must have ndim = 1")
-    if type(blocks_indices) != list:
-        raise ValueError("blocks_indices must be a list")
-    if type(function) != str:
-        raise ValueError("function must be string")
-    if function not in ["mean", "median"]:
-        raise ValueError("invalid function {}".format(function))
-    if remove_nan not in [True, False]:
-        raise ValueError("{} does not have a valid format".format(remove_nan))
+    if check_input is True:
+        check.is_array(x=data, ndim=1)
+        if type(blocks_indices) != list:
+            raise ValueError("blocks_indices must be a list")
+        if type(function) != str:
+            raise ValueError("function must be string")
+        if function not in ["mean", "median"]:
+            raise ValueError("invalid function {}".format(function))
+        if remove_nan not in [True, False]:
+            raise ValueError("{} does not have a valid format".format(remove_nan))
 
     if function == "mean":
         func = np.mean

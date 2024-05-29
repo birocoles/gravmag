@@ -87,7 +87,7 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_regular_grid_xy(grid):
+def is_grid_xy(grid):
     """
     Check if coordinates is a dictionary containing the x, y and z
     coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
@@ -133,7 +133,7 @@ def is_regular_grid_xy(grid):
     return D
 
 
-def is_regular_grid_wavenumbers(wavenumbers):
+def is_grid_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary containing the x, y and z
     wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys 
@@ -148,19 +148,17 @@ def is_regular_grid_wavenumbers(wavenumbers):
     """
     if type(wavenumbers) != dict:
         raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != ["x", "y", "z", "ordering", "shape", "spacing"]:
+    if list(wavenumbers.keys()) != ["x", "y", "z", "shape", "spacing"]:
         raise ValueError(
-            "wavenumbers must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'shape', 'spacing'"
+            "wavenumbers must have the following 5 keys: 'x', 'y', 'z', 'shape', 'spacing'"
         )
     for key in ["x", "y", "z"]:
         if type(wavenumbers[key]) != np.ndarray:
             raise ValueError(
                 "'x', 'y' and 'z' keys of wavenumbers must be numpy arrays"
             )
-    if wavenumbers["x"].ndim != 2:
-        raise ValueError("'x' key must have ndim = 2")
-    if wavenumbers["x"].shape[1] != 1:
-        raise ValueError("'x' key must have shape[1] = 1")
+    if wavenumbers["x"].ndim != 1:
+        raise ValueError("'x' key must have ndim = 1")
     if wavenumbers["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
     if wavenumbers["z"].ndim != 2:
@@ -171,7 +169,6 @@ def is_regular_grid_wavenumbers(wavenumbers):
         raise ValueError("'z' key must contain all-positive elements")
     is_shape(wavenumbers['shape'])
     is_spacing(wavenumbers['spacing'])
-    is_ordering(wavenumbers["ordering"])
     if (wavenumbers["x"].size, wavenumbers["y"].size) != wavenumbers["shape"]:
         raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
 
@@ -440,6 +437,10 @@ def BTTB_metadata(BTTB):
     parameters
     ----------
     BTTB : dictionary containing the following keys:
+        ordering : string
+            Defines how the points are ordered after the first point (min x, min y).
+            If 'xy', the points vary first along x and then along y.
+            If 'yx', the points vary first along y and then along x.
         symmetry_structure : string
             Defines the type of symmetry between all blocks above and below the main block diagonal.
             It can be 'gene', 'symm' or 'skew' (see the explanation above).
@@ -460,6 +461,7 @@ def BTTB_metadata(BTTB):
     if type(BTTB) != dict:
         raise ValueError("'BTTB' must be a dictionary")
     if list(BTTB.keys()) != [
+        "ordering",
         "symmetry_structure",
         "symmetry_blocks",
         "nblocks",
@@ -467,16 +469,18 @@ def BTTB_metadata(BTTB):
         "rows",
     ]:
         raise ValueError(
-            "'Toeplitz' must have the following keys: 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
+            "'Toeplitz' must have the following keys: 'ordering', 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
         )
 
     # get the parameters defining the BTTB matrix
+    ordering = BTTB["ordering"]
     symmetry_structure = BTTB["symmetry_structure"]
     symmetry_blocks = BTTB["symmetry_blocks"]
     nblocks = BTTB["nblocks"]
     columns = BTTB["columns"]
     rows = BTTB["rows"]
 
+    is_ordering(ordering=ordering)
     if symmetry_structure not in ["symm", "skew", "gene"]:
         raise ValueError("invalid {} symmetry".format(symmetry_structure))
     if symmetry_blocks not in ["symm", "skew", "gene"]:

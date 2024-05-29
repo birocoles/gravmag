@@ -607,7 +607,7 @@ def method_iterative_deconvolution_TOB20(
     # compute the matrices of eigenvalues
     eigenvalues = []
     for G in sensitivity_matrices:
-        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB=G, ordering="row"))
+        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB_metadata=G, ordering="row"))
 
     # compute the first delta and initialize the deltas list
     deltas = []

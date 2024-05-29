@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftfreq, fftshift, ifftshift
-from . import utils
+from . import utils, check
 from . import constants as cts
 
 
@@ -26,14 +26,10 @@ def DFT(data, pad_mode=None, check_input=True):
         the shape of FT_data will be greater than that of the input 'data'.
     """
 
-    # convert data to numpy array
-    data = np.asarray(data)
-
     if check_input is True:
-        assert data.ndim == 2, "data must be a matrix"
-        assert isinstance(
-            pad_mode, (type(None), str)
-        ), "pad_mode must be None or a string (see the routine numpy.pad)"
+        check.is_array(x=data, ndim=2)
+        if isinstance(pad_mode, (type(None), str)) is not True:
+            raise ValueError("pad_mode must be None or a string (see the routine numpy.pad)")
 
     if pad_mode is not None:
         # define the padded data
@@ -51,7 +47,7 @@ def DFT(data, pad_mode=None, check_input=True):
     return FT_data
 
 
-def IDFT(FT_data, unpad=False, grid=True, check_input=True):
+def IDFT(FT_data, unpad=False, check_input=True):
     """
     Compute the Inverse Discrete Fourier Transform (IDFT) of a potential-field
     data set arranged as regular grid on a horizontal surface.
@@ -63,27 +59,21 @@ def IDFT(FT_data, unpad=False, grid=True, check_input=True):
         regular grid on a horizontal surface.
     unpad : boolean
         If True, remove the padding applied according to the function 'DFT'.
-    grid : boolean
-        Defines the output shape. If True, the output has the same shape as the
-        input. If False, then the output is a flattened 1D array.
     check_input : boolean
         If True, it verifies if the input is valid. Default is True.
 
     returns
     -------
     IFT_data : numpy array 2D
-        Matrix containing the regular grid of potential-field data obtained
-        from IDFT.
+        Matrix containing the regular grid of potential-field data obtained from IDFT.
     """
 
-    # convert data to numpy array
-    FT_data = np.asarray(FT_data)
-
     if check_input is True:
-        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
-        assert FT_data.ndim == 2, "FT_data must be a matrix"
-        assert isinstance(unpad, bool), "unpad must be True or False"
-        assert isinstance(grid, bool), "grid must be True or False"
+        check.is_array(x=FT_data, ndim=2)
+        if np.iscomplexobj(FT_data) is not True:
+            raise ValueError("FT_data must be a complex array")
+        if isinstance(unpad, bool) is not True:
+            raise ValueError("unpad must be True or False")
 
     # compute the 2D IDFT of FT_data using the Fast Fourier
     # Transform algorithm implemented at scipy.fft.ifft2
@@ -91,9 +81,6 @@ def IDFT(FT_data, unpad=False, grid=True, check_input=True):
 
     if unpad is True:
         IFT_data = _unpad(IFT_data)
-
-    if grid is False:
-        IFT_data = IFT_data.ravel()
 
     return IFT_data
 
@@ -133,9 +120,11 @@ def spectra(
     FT_data = np.asarray(FT_data)
 
     if check_input is True:
-        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
-        assert FT_data.ndim == 2, "FT_data must be a matrix"
-        assert isinstance(shift, bool), "shift must be True or False"
+        check.is_array(x=FT_data, ndim=2)
+        if np.iscomplexobj(FT_data) is not True:
+            raise ValueError("FT_data must be a complex array")
+        if isinstance(shift, bool) is not True:
+            raise ValueError("shift must be True or False")
         # check number of elements in types
         if len(types) > 3:
             raise ValueError("types must have at most 3 elements")
