@@ -1,3 +1,5 @@
+# The values below can be found at Blakely (1996, sections 3.1 and 4.1).
+
 #: The gravitational constant in m^3 kg^{-1} s^{-1}
 GRAVITATIONAL_CONST = 0.00000000006673
 

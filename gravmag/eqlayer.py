@@ -471,6 +471,8 @@ def method_iterative_SOB17(
     """
     Solves the unconstrained problem to estimate the physical-property
     distribution on the equivalent layer via iterative method.
+    The method is a modified version, presented by Oliveira Jr et al. (2023), 
+    of the original method proposed by Siqueira et al. (2017).
 
     parameters
     ----------
@@ -540,6 +542,7 @@ def method_iterative_deconvolution_TOB20(
     Solves the unconstrained overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via convolutional equivalent-layer method
     proposed by Takahashi et al. (2020, 2022).
+    The implementation follows that shonw by Oliveira Jr. et al (2023).
 
     parameters
     ----------
@@ -673,7 +676,7 @@ def method_direct_deconvolution(
     """
     Solves the overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via direct deconvolution with Wiener
-    filter.
+    filter. This method was proposed by Oliveira Jr. et al (2023).
 
     parameters
     ----------

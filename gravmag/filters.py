@@ -7,7 +7,7 @@ from . import check
 def direction(wavenumbers, inc, dec, check_input=True):
     """
     Compute the 2D directional derivative filter associated with the real
-    unit vector u.
+    unit vector u (Gunn, 1975; Blakely, 1996, p. 278).
 
     parameters
     ----------
@@ -43,7 +43,7 @@ def direction(wavenumbers, inc, dec, check_input=True):
 
 def rtp(wavenumbers, inc0, dec0, inc, dec, check_input=True):
     """
-    Compute the reduction to the pole filter.
+    Compute the reduction to the pole filter (Gunn, 1975; Blakely, 1996, p. 330-331).
 
     parameters
     ----------
@@ -90,7 +90,7 @@ def rtp(wavenumbers, inc0, dec0, inc, dec, check_input=True):
 
 def derivative(wavenumbers, axes, check_input=True):
     """
-    Compute the derivative filter.
+    Compute the derivative filter (Gunn, 1975; Blakely, 1996, p. 323-324).
 
     parameters
     ----------
@@ -132,7 +132,8 @@ def derivative(wavenumbers, axes, check_input=True):
 
 def continuation(wavenumbers, dz, check_input=True):
     """
-    Compute the level-to-level upward/downward continuation filter.
+    Compute the level-to-level upward/downward continuation filter
+    (Gunn, 1975; Blakely, 1996, p. 317).
 
     parameters
     ----------
