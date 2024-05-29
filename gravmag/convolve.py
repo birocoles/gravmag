@@ -11,7 +11,8 @@ from . import check, data_structures
 def compute(FT_data, filters, check_input=True):
     """
     Compute the convolution in Fourier domain as the Hadamard (or element-wise)
-    product of the Fourier-Transformed data and a sequence of filters.
+    product (Horn and Johnson, 1991, p. 298) of the Fourier-Transformed data 
+    and a sequence of filters.
 
     parameters
     ----------
@@ -58,7 +59,8 @@ def compute(FT_data, filters, check_input=True):
 
 def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
     """
-    Generate the Circulant matrix C which embbeds a Toeplitz matrix T.
+    Generate the Circulant matrix C which embbeds a Toeplitz matrix T
+    (Chan and Jin, 2007, p. 1, 11, 12).
 
     The Toeplitz matrix T has P x P elements. The embedding circulant matrix C has 2P x 2P elements.
 
@@ -155,8 +157,8 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
 
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate the full BTTB matrix T from the dictionary containing its metadata
-    (For details, see the function 'check.BTTB_metadata').
+    Generate the full BTTB matrix T (Chan and Jin, 2007, p. 67) 
+    from the dictionary containing its metadata (For details, see the function 'check.BTTB_metadata').
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
 
@@ -400,7 +402,8 @@ def BTTB_from_metadata(BTTB_metadata, check_input=True):
 def embedding_BCCB(BTTB_metadata, full=False, check_input=True):
     """
     Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)
-    matrix that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB).
+    matrix (Davis, 1979, p. 184) that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB)
+    matrix (Chan and Jin, 2007, p. 67, 76; Takahashi et al., 2020, 2022).
 
     See details in the function 'data_structures.BTTB_metadata'.
 
@@ -505,7 +508,7 @@ def eigenvalues_BCCB(BTTB_metadata, ordering="row", check_input=True):
     """
     Compute the eigenvalues of a Block Circulant formed by Circulant Blocks (BCCB) matrix C
     that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB) matrix. The eigenvalues
-    are rearranged along the rows or columns of a matrix L.
+    are rearranged along the rows or columns of a matrix L (Takahashi et al., 2020, 2022).
 
     parameters
     ----------
@@ -561,7 +564,8 @@ def eigenvalues_BCCB(BTTB_metadata, ordering="row", check_input=True):
 
 def product_BCCB_vector(eigenvalues, ordering, v, check_input=True):
     """
-    Compute the product of a BCCB matrix and a vector v by using the eigenvalues of the BCCB.
+    Compute the product of a BCCB matrix and a vector v by using the eigenvalues of the BCCB
+    (Takahashi et al., 2020, 2022).
 
     parameters
     ----------

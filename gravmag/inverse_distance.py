@@ -12,7 +12,7 @@ from . import convolve as cv
 def sedm(data_points, source_points, check_input=True):
     """
     Compute the full Squared Euclidean Distance Matrix (SEDM) between the data points
-    and the source points.
+    and the source points (Dokmanic et. al, 2015).
 
     parameters
     ----------
@@ -63,7 +63,8 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
     """
     Compute the first column of the Squared Euclidean Distance Matrix (SEDM) between
     a horizontal regular grid of Nx x Ny data points and a grid of source points having the
-    same shape, but dislocated by a constant and positive vertical distance.
+    same shape, but dislocated by a constant and positive vertical distance (Dokmanic et. al, 2015).
+    This function optimizes `sedm` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
@@ -211,6 +212,7 @@ def grad_BTTB(
     function between a horizontal regular grid of Nx x Ny data points and a
     grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
+    This function optimizes `grad` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
@@ -379,6 +381,7 @@ def grad_tensor_BTTB(
     function between a horizontal regular grid of Nx x Ny data points and a
     grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
+    This function optimizes `grad_tensor` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
@@ -556,6 +559,7 @@ def directional_1st_order_BTTB(
     grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
     The direcional derivative is computed along a direction defined by a given inclination and declination. 
+    This function optimizes `directional_1st_order` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
