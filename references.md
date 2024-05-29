@@ -7,6 +7,7 @@ package.
 * LaFehr, T. R. “The Estimation of the Total Amount of Anomalous Mass by Gauss’s Theorem.” Journal of Geophysical Research 70, no. 8 (1965): 1911–19. https://doi.org/10.1029/JZ070i008p01911.
 * Gunn, P. J. “LINEAR TRANSFORMATIONS OF GRAVITY AND MAGNETIC FIELDS.” Geophysical Prospecting 23, no. 2 (1975): 300–312. https://doi.org/10.1111/j.1365-2478.1975.tb01530.x.
 * Davis, Philip J. Circulant Matrices. Pure and Applied Mathematics. New York: Wiley, 1979.
+* Pedersen, L. B., and T. M. Rasmussen. “The Gradient Tensor of Potential Field Anomalies: Some Implications on Data Collection and Data Processing of Maps.” GEOPHYSICS 55, no. 12 (December 1990): 1558–66. https://doi.org/10.1190/1.1442807.
 * Horn, Roger A., and Charles R. Johnson. Topics in Matrix Analysis. Cambridge; New York: Cambridge University Press, 1991.
 * Cordell, Lindrith. “A Scattered Equivalent-Source Method for Interpolation and Gridding of Potential-Field Data in Three Dimensions.” GEOPHYSICS 57, no. 4 (1992): 629–36. https://doi.org/10.1190/1.1443275.
 * Blakely, Richard J. Potential Theory in Gravity and Magnetic Applications. Cambridge University Press, 1996.
