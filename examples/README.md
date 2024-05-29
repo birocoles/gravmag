@@ -10,3 +10,4 @@ transformations.
 - `gravity_disturbance` : gravity disturbance due to prisms on a realistic topography surface.
 - `gravity_tensor` : gravitational tensor components and its invariants due to prisms.
 - `magnetic_field` : magnetic field due to prisms.
+- `derivatives_Fourier` : potential-field spatial derivatives via Fourier transform.

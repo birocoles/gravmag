@@ -1,7 +1,6 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftfreq, fftshift
-from . import utils
-from . import check
+from . import utils, check, data_structures
 
 
 def direction(wavenumbers, inc, dec, check_input=True):
@@ -116,13 +115,20 @@ def derivative(wavenumbers, axes, check_input=True):
             if axis not in ["x", "y", "z"]:
                 raise ValueError("invalid axis {}".format(axis))
 
+    # matrix "views' of the original wavenumbers
+    KX, KY = data_structures.grid_xy_to_full_matrices_view(
+        x = wavenumbers['x'],
+        y = wavenumbers['y'],
+        shape = wavenumbers['shape']
+    )
+
     # define only the derivatives along the axes contained in 'axes'
     exponents = [axes.count("x"), axes.count("y"), axes.count("z")]
     deriv_filter = []
     if exponents[0] > 0:
-        deriv_filter.append((1j * wavenumbers['x'][:,np.newaxis]) ** exponents[0])
+        deriv_filter.append((1j * KX) ** exponents[0])
     if exponents[1] > 0:
-        deriv_filter.append((1j * wavenumbers['y']) ** exponents[1])
+        deriv_filter.append((1j * KY) ** exponents[1])
     if exponents[2] > 0:
         deriv_filter.append(wavenumbers['z'] ** exponents[2])
     deriv_filter = np.prod(deriv_filter, axis=0)
