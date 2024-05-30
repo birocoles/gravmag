@@ -536,7 +536,7 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
+    eigenvalues_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -546,9 +546,10 @@ def method_iterative_deconvolution_TOB20(
 
     parameters
     ----------
-    sensitivity_matrices: list of dictionaries
-        List of dictionaries defining the kernel of the equivalent layer integral. Here, it is considered that
-        the kernels are BTTB matrices.
+    eigenvalues_matrices: list of numpy arrays 2d
+        List of matrices containing the eigenvalues of the embedding BCCB matrices associated 
+        with the corresponding BTTB sensitivity matrices for each data set. The eigenvalues_matrices 
+        are outputs of the routine 'convolve.eigenvalues_BCCB'.
     data_vectors : list of numpy arrays 1d
         List of potential-field data.
     epsilon : float
@@ -569,48 +570,60 @@ def method_iterative_deconvolution_TOB20(
     """
 
     if check_input == True:
-        if type(sensitivity_matrices) != list:
-            raise ValueError("sensitivity_matrices must be a list")
-        for G in sensitivity_matrices:
-            check.BTTB_metadata(BTTB=G)
+        if type(eigenvalues_matrices) != list:
+            raise ValueError("eigenvalues_matrices must be a list")
+        for L in eigenvalues_matrices:
+            check.is_array(x=L, ndim=2)
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
-        if len(sensitivity_matrices) != len(data_vectors):
+        for data in data_vectors:
+            check.is_array(x=data, ndim=1)
+        if len(eigenvalues_matrices) != len(data_vectors):
             raise ValueError(
-                "sensitivity_matrices and data_vectors must have the same number of elements"
+                "eigenvalues_matrices and data_vectors must have the same number of elements"
             )
-        # check if the sensitivity_matrices and data_vectors are formed by consistent
-        # BTTB matrices and numpy arrays
-        for G, data in zip(sensitivity_matrices, data_vectors):
-            check.BTTB_metadata(BTTB=G)
-            check.is_array(
-                x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
-            )
-        nparams = sensitivity_matrices[0]["columns"].shape[1] * sensitivity_matrices[0]["nblocks"]
-        for G in sensitivity_matrices[1:]:
-            if G["columns"].shape[1] * G["nblocks"] != nparams:
-                raise ValueError("All sensitivity matrices must have the same number of columns")
+        # We consider that all data sets are defined on the same observation points
+        # Hence, all of them have the same size
+        npoints = data_vectors[0].size
+        # We also consider that the observation points are defined on a planar grid
+        # Hence, all eigenvalues matrices must have the same shape
+        shape = eigenvalues_matrices[0].shape
+        # check the consistency of eigenvalues_matrices
+        for L in eigenvalues_matrices:
+            if L.size != 4 * npoints:
+                raise ValueError(
+                    "All 'L' matrices must have a size equal to 4 times the number of observation points"
+                    )
+            if L.shape != shape:
+                raise ValueError("All matrices 'L' must have the same shape")
+        # check the consistency of data sets
+        for data in data_vectors:
+            if data.size != npoints:
+                raise ValueError(
+                    "'data' size ({}) must be equal to the number of observation points ({})".format(
+                        data.size, npoints
+                    )
+                )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
         check.is_integer(x=ITMAX, positive=True)
         # check if p0 is a consistent array
         if p0 is not None:
-            check.is_array(x=p0, ndim=1, shape=(nparams,))
+            check.is_array(x=p0, ndim=1, shape=(npoints,))
 
-    # get number of data for each dataset and initialize residuals list
+    # We consider that all data sets are defined on the same observation points
+    # Hence, all of them have the same size
+    npoints = data_vectors[0].size
+    # number of data sets
     ndatasets = len(data_vectors)
-    ndata_per_dataset = []
+    # total number of data
+    ndata = npoints * ndatasets
+
+    # initialize residuals list
     residuals = []
     for data in data_vectors:
-        ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
-    ndata = np.sum(ndata_per_dataset)
-
-    # compute the matrices of eigenvalues
-    eigenvalues = []
-    for G in sensitivity_matrices:
-        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB_metadata=G, ordering="row"))
 
     # compute the first delta and initialize the deltas list
     deltas = []
@@ -624,11 +637,11 @@ def method_iterative_deconvolution_TOB20(
     if p0 is not None:
         parameters = p0.copy()
     else: # p0 is None
-        parameters = np.zeros(nparams, dtype=float)
+        parameters = np.zeros(npoints, dtype=float)
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for L, res in zip(eigenvalues, residuals):
+    for L, res in zip(eigenvalues_matrices, residuals):
         vartheta[:] += convolve.product_BCCB_vector(
             eigenvalues=np.conj(L), ordering="row", v=res
         )
@@ -644,7 +657,7 @@ def method_iterative_deconvolution_TOB20(
     while (delta > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
-        for L, nu in zip(eigenvalues, nus):
+        for L, nu in zip(eigenvalues_matrices, nus):
             nu[:] = convolve.product_BCCB_vector(
                 eigenvalues=L, ordering="row", v=eta
             )
@@ -658,7 +671,7 @@ def method_iterative_deconvolution_TOB20(
         delta = np.sqrt(delta) / ndata
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
-        for L, res in zip(eigenvalues, residuals):
+        for L, res in zip(eigenvalues_matrices, residuals):
             vartheta[:] += convolve.product_BCCB_vector(
                 eigenvalues=np.conj(L), ordering="row", v=res
             )

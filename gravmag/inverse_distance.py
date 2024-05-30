@@ -5,7 +5,7 @@ between a set of data points and a set of source points.
 
 import numpy as np
 from scipy.spatial import distance
-from . import check
+from . import check, utils
 from . import convolve as cv
 
 
@@ -177,10 +177,7 @@ def grad(
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 2:
-            raise ValueError("SEDM must be have ndim = 2")
+        check.is_array(x = SEDM, ndim = 2)
         if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
@@ -331,10 +328,7 @@ def grad_tensor(
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 2:
-            raise ValueError("SEDM must be have ndim = 2")
+        check.is_array(x = SEDM, ndim = 2)
         if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
@@ -509,10 +503,7 @@ def directional_1st_order(
         D = check.are_coordinates(data_points)
         P = check.are_coordinates(source_points)
         # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 2:
-            raise ValueError("SEDM must be have ndim = 2")
+        check.is_array(x = SEDM, ndim = 2)
         if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
@@ -630,6 +621,210 @@ def directional_1st_order_BTTB(
     Kt["declination"] = dec
 
     return Kt
+
+
+def directional_2nd_order(
+    data_points,
+    source_points,
+    SEDM,
+    inc0,
+    dec0,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of second order of the inverse distance
+    function between the data points and the source points. The direcional derivative 
+    is computed along a directions defined by the given inclination/declinations pairs 
+    (inc0, dec0) and (inc, dec). 
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    SEDM: numpy array 2d
+        Squared Euclidean Distance Matrix (SEDM) between the N data
+        points and the M sources computed according to function 'sedm'.
+    inc0, dec0, inc, dec : ints or floats
+        Scalars defining the constant inclinations and declinations of the
+        directions along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Ktu: Dictionary
+        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-order directional derivative 
+        along a constant directions with predefined inclinations and declinations.
+        The xx, xy, xz, yy and yz components are stored at the keys 'xx', 'xy', 'xz', 'yy' and 'yz', respectively. 
+        Inclinations and declinations values at keys 'inclination', 'declination0', 'inclination' and 'declination'.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        P = check.are_coordinates(source_points)
+        # check if SEDM match data_points and source_points
+        check.is_array(x = SEDM, ndim = 2)
+        if SEDM.shape != (D, P):
+            raise ValueError(
+                "SEDM does not match data_points and source_points"
+            )
+        check.is_scalar(x=inc0, positive=False)
+        check.is_scalar(x=dec0, positive=False)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the tensor components along x, y and z directions
+    Tensor = grad_tensor(
+        data_points=data_points, 
+        source_points=source_points, 
+        SEDM=SEDM, 
+        components=["xx", "xy", "xz", "yy", "yz"], 
+        check_input=False
+    )
+    
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute unit vector with direction defined by 'inc0' and 'dec0'
+    u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
+
+    # compute the directional factors
+    axx = t[0] * u[0] - t[2] * u[2]
+    axy = t[0] * u[1] + t[1] * u[0]
+    axz = t[0] * u[2] + t[2] * u[0]
+    ayy = t[1] * u[1] - t[2] * u[2]
+    ayz = t[1] * u[2] + t[2] * u[1]
+
+    # compute the directional derivative of 1st order
+    Ktu = dict()
+    Ktu["header"] = "2nd-order directional derivative of the inverse distance function computed at scattered points"
+    Ktu["xx"] = axx * Tensor['xx']
+    Ktu["xy"] = axy * Tensor['xy']
+    Ktu["xz"] = axz * Tensor['xz']
+    Ktu["yy"] = ayy * Tensor['yy']
+    Ktu["yz"] = ayz * Tensor['yz']
+    Ktu["inclination0"] = inc0
+    Ktu["declination0"] = dec0
+    Ktu["inclination"] = inc
+    Ktu["declination"] = dec
+
+    return Ktu
+
+
+def directional_2nd_order_BTTB(
+    data_grid,
+    delta_z,
+    SEDM,
+    ordering,
+    inc0,
+    dec0,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of second order of the inverse distance
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
+    and positive vertical distance.
+    The direcional derivative is computed along a directions defined by the given 
+    inclination/declinations pairs (inc0, dec0) and (inc, dec).  
+    This function optimizes `directional_2nd_order` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    SEDM: dictionary
+        Dictionary containing the metadata associated with the full matrix 
+        (output of function 'inverse_distance.sedm_BTTB').
+    ordering : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    inc0, dec0, inc, dec : ints or floats
+        Scalars defining the constant inclinations and declinations of the
+        directions along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Ktu: Dictionary
+        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-orfer directional derivative 
+        along the constant directions with predefined inclinations and declinations.
+        The xx, xy, xz, yy and yz components are stored at the keys 'xx', 'xy', 'xz', 'yy' and 'yz', respectively, 
+        in the form of BTTB matrices (see input of function 'check.BTTB_metadata').
+        Inclination and declination values at keys 'inclination0', 'declination0', 'inclination' and 'declination'.
+        .
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.is_grid_xy(data_grid)
+        check.is_scalar(x=delta_z, positive=True)
+        # check the SEDM
+        check.BTTB_metadata(SEDM)
+        check.is_ordering(ordering)
+        check.is_scalar(x=inc0, positive=False)
+        check.is_scalar(x=dec0, positive=False)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the gradient components along x, y and z directions
+    Tensor = grad_tensor_BTTB(
+        data_grid=data_grid,
+        delta_z=delta_z,
+        SEDM=SEDM,
+        ordering=ordering, 
+        components=["xx", "xy", "xz", "yy", "yz"], 
+        check_input=False
+    )
+    
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute unit vector with direction defined by 'inc0' and 'dec0'
+    u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
+
+    # compute the directional factors
+    axx = t[0] * u[0] - t[2] * u[2]
+    axy = t[0] * u[1] + t[1] * u[0]
+    axz = t[0] * u[2] + t[2] * u[0]
+    ayy = t[1] * u[1] - t[2] * u[2]
+    ayz = t[1] * u[2] + t[2] * u[1]
+
+    # compute the gradient components defined in components
+    Ktu = dict()
+    Ktu["header"] = "2nd-order partial derivative(s) of the inverse distance function computed at gridded points"
+    Ktu["xx"] = Tensor['xx'].copy()
+    Ktu["xy"] = Tensor['xy'].copy()
+    Ktu["xz"] = Tensor['xz'].copy()
+    Ktu["yy"] = Tensor['yy'].copy()
+    Ktu["yz"] = Tensor['yz'].copy()
+    Ktu["xx"]["columns"] *= axx
+    Ktu["xy"]["columns"] *= axy
+    Ktu["xz"]["columns"] *= axz
+    Ktu["yy"]["columns"] *= ayy
+    Ktu["yz"]["columns"] *= ayz
+    Ktu["inclination0"] = inc0
+    Ktu["declination0"] = dec0
+    Ktu["inclination"] = inc
+    Ktu["declination"] = dec
+
+    return Ktu
 
 
 def _delta_x(data_grid, delta_z, ordering):

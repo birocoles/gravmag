@@ -11,3 +11,4 @@ transformations.
 - `gravity_tensor` : gravitational tensor components and its invariants due to prisms.
 - `magnetic_field` : magnetic field due to prisms.
 - `derivatives_Fourier` : potential-field spatial derivatives via Fourier transform.
+- `reduction_to_the_pole` : reduction-to-the-pole via Fourier transform and equivalent layer.

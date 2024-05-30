@@ -900,6 +900,11 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
     aae(GRAD["zz"], conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["zz"]), decimal=12)
     
 
+#### directional_1st_order
+
+
+
+
 ##### _delta_x
 
 def test__delta_x_known_points():
