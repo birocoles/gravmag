@@ -184,7 +184,7 @@ def test_is_grid_xy_n_points():
         "y": np.ones(3),
         "z": 18.2,
         "area": [0, 1, 2, 3],
-        "shape": (4, 3)
+        "shape": (4, 3),
     }
     D = check.is_grid_xy(grid)
     assert D == 12
@@ -337,7 +337,7 @@ def test_is_grid_xy_invalid_keys():
         "shape": (3, 3),
     }
     with pytest.raises(ValueError):
-        check.is_grid_xy(grid)    
+        check.is_grid_xy(grid)
 
 
 def test_is_grid_xy_invalid_x_key():
@@ -353,28 +353,16 @@ def test_is_grid_xy_invalid_x_key():
         "y": y,
         "z": z,
         "area": area,
-        "shape": shape
+        "shape": shape,
     }
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
     # list
-    grid = {
-        "x": [0, 1, 2, 3, 4],
-        "y": y,
-        "z": z,
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": [0, 1, 2, 3, 4], "y": y, "z": z, "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
     # tuple
-    grid = {
-        "x": (0, 1, 2, 3, 4),
-        "y": y,
-        "z": z,
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": (0, 1, 2, 3, 4), "y": y, "z": z, "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
 
@@ -392,28 +380,16 @@ def test_is_grid_xy_invalid_y_key():
         "y": np.ones(3)[np.newaxis, :],
         "z": z,
         "area": area,
-        "shape": shape
+        "shape": shape,
     }
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
     # list
-    grid = {
-        "x": x,
-        "y": [0, 1, 2, 3, 4],
-        "z": z,
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": x, "y": [0, 1, 2, 3, 4], "z": z, "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
     # tuple
-    grid = {
-        "x": x,
-        "y": (0, 1, 2, 3),
-        "z": z,
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": x, "y": (0, 1, 2, 3), "z": z, "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
 
@@ -435,23 +411,11 @@ def test_is_grid_xy_invalid_z_key():
     with pytest.raises(ValueError):
         check.is_grid_xy(coordinates)
     # list
-    grid = {
-        "x": x,
-        "y": y,
-        "z": [18.2],
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": x, "y": y, "z": [18.2], "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
     # tuple
-    grid = {
-        "x": x,
-        "y": y,
-        "z": (18.2,),
-        "area": area,
-        "shape": shape
-    }
+    grid = {"x": x, "y": y, "z": (18.2,), "area": area, "shape": shape}
     with pytest.raises(ValueError):
         check.is_grid_xy(grid)
 
@@ -488,16 +452,16 @@ def test_is_grid_wavenumbers_invalid_keys():
     # correct keys
     x = np.arange(4)
     y = np.ones(3)
-    z = np.zeros((4,3)) + 1.2
+    z = np.zeros((4, 3)) + 1.2
     shape = (4, 3)
     spacing = (1.1, 1.3)
     # set dict with invalid x key
     wavenumbers = {
-        "x": np.arange(4)[:,np.newaxis],
+        "x": np.arange(4)[:, np.newaxis],
         "y": y,
         "z": z,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
@@ -507,40 +471,28 @@ def test_is_grid_wavenumbers_invalid_keys():
         "y": [0, 1, 2],
         "z": z,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid z key (scalar instead numpy array 2d)
-    wavenumbers = {
-        "x": x,
-        "y": y,
-        "z": 3.,
-        "shape": shape,
-        "spacing": spacing
-    }
+    wavenumbers = {"x": x, "y": y, "z": 3.0, "shape": shape, "spacing": spacing}
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid z key with a negative element
     z_with_negative = np.copy(z)
-    z_with_negative[1,1] *= -1 
+    z_with_negative[1, 1] *= -1
     wavenumbers = {
         "x": x,
         "y": y,
         "z": z_with_negative,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid shape key
-    wavenumbers = {
-        "x": x,
-        "y": y,
-        "z": z,
-        "shape": [4,3],
-        "spacing": spacing
-    }
+    wavenumbers = {"x": x, "y": y, "z": z, "shape": [4, 3], "spacing": spacing}
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
     # set dict with invalid spacing key
@@ -549,11 +501,10 @@ def test_is_grid_wavenumbers_invalid_keys():
         "y": y,
         "z": z,
         "shape": shape,
-        "spacing": np.array([1.1, 1.3])
+        "spacing": np.array([1.1, 1.3]),
     }
     with pytest.raises(ValueError):
         check.is_grid_wavenumbers(wavenumbers)
-   
 
 
 ##### is_scalar
@@ -667,10 +618,11 @@ def test_array_wrong_ndim_shape():
 
 ##### is_area
 
+
 def test_area_not_list():
     "Check if passing a non-list raises an error"
     # scalar
-    area = 0.
+    area = 0.0
     with pytest.raises(ValueError):
         check.is_area(area=area)
     # tuple
@@ -702,7 +654,7 @@ def test_area_inconsistent_elements():
     with pytest.raises(ValueError):
         check.is_area(area=area)
     # first element equal to second
-    area = [0, 0., 3, 4]
+    area = [0, 0.0, 3, 4]
     with pytest.raises(ValueError):
         check.is_area(area=area)
     # third element greater than fouth
@@ -717,10 +669,11 @@ def test_area_inconsistent_elements():
 
 ##### is_shape
 
+
 def test_shape_not_tuple():
     "Check if passing a non-tuple raises an error"
     # scalar
-    shape = 0.
+    shape = 0.0
     with pytest.raises(ValueError):
         check.is_shape(shape=shape)
     # list
@@ -736,7 +689,7 @@ def test_shape_not_tuple():
 def test_shape_not_2_elements():
     "Check if passing list with number of elements different from 4"
     # 1 element
-    shape = (0)
+    shape = 0
     with pytest.raises(ValueError):
         check.is_shape(shape=shape)
     # 5 elements
@@ -775,10 +728,11 @@ def test_shape_inconsistent_elements():
 
 ##### is_spacing
 
+
 def test_spacing_not_tuple():
     "Check if passing a non-tuple raises an error"
     # scalar
-    spacing = 0.
+    spacing = 0.0
     with pytest.raises(ValueError):
         check.is_spacing(spacing=spacing)
     # list
@@ -794,7 +748,7 @@ def test_spacing_not_tuple():
 def test_spacing_not_2_elements():
     "Check if passing list with number of elements different from 4"
     # 1 element
-    spacing = (0)
+    spacing = 0
     with pytest.raises(ValueError):
         check.is_spacing(spacing=spacing)
     # 5 elements
@@ -814,7 +768,7 @@ def test_spacing_inconsistent_elements():
     with pytest.raises(ValueError):
         check.is_spacing(spacing=spacing)
     # first element zero
-    spacing = (0, 5.)
+    spacing = (0, 5.0)
     with pytest.raises(ValueError):
         check.is_spacing(spacing=spacing)
     # second element zero

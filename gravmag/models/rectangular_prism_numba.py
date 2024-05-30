@@ -6,7 +6,6 @@ Nagy et al (2000, 2002). This prototype makes use of the modified arctangent and
 functions proposed by Fukushima (2020) for dealing with singularities at some computation points.
 """
 
-
 import numpy as np
 from numba import njit
 from .. import check

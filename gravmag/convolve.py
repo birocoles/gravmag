@@ -11,7 +11,7 @@ from . import check, data_structures
 def compute(FT_data, filters, check_input=True):
     """
     Compute the convolution in Fourier domain as the Hadamard (or element-wise)
-    product (Horn and Johnson, 1991, p. 298) of the Fourier-Transformed data 
+    product (Horn and Johnson, 1991, p. 298) of the Fourier-Transformed data
     and a sequence of filters.
 
     parameters
@@ -157,7 +157,7 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
 
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate the full BTTB matrix T (Chan and Jin, 2007, p. 67) 
+    Generate the full BTTB matrix T (Chan and Jin, 2007, p. 67)
     from the dictionary containing its metadata (For details, see the function 'check.BTTB_metadata').
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
@@ -396,7 +396,6 @@ def BTTB_from_metadata(BTTB_metadata, check_input=True):
     T = np.hstack(np.hstack(concatenated_blocks[indices]))
 
     return T
-
 
 
 def embedding_BCCB(BTTB_metadata, full=False, check_input=True):

@@ -267,7 +267,12 @@ def cosine_matrix(
 
 
 def method_CGLS(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
+    sensitivity_matrices,
+    data_vectors,
+    epsilon,
+    ITMAX=50,
+    p0=None,
+    check_input=True,
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -313,7 +318,9 @@ def method_CGLS(
         nparams = sensitivity_matrices[0].shape[1]
         for G in sensitivity_matrices[1:]:
             if G.shape[1] != nparams:
-                raise ValueError("All sensitivity matrices must have the same number of columns")
+                raise ValueError(
+                    "All sensitivity matrices must have the same number of columns"
+                )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -343,7 +350,7 @@ def method_CGLS(
     # initialize the parameter vector
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = np.zeros(nparams, dtype=float)
 
     # initialize auxiliary variables
@@ -471,7 +478,7 @@ def method_iterative_SOB17(
     """
     Solves the unconstrained problem to estimate the physical-property
     distribution on the equivalent layer via iterative method.
-    The method is a modified version, presented by Oliveira Jr et al. (2023), 
+    The method is a modified version, presented by Oliveira Jr et al. (2023),
     of the original method proposed by Siqueira et al. (2017).
 
     parameters
@@ -514,7 +521,7 @@ def method_iterative_SOB17(
     scale = (data_aux @ data) / (data_aux @ data_aux)
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = data * scale
     residuals = data - sensitivity_matrix @ parameters
     delta_list = []
@@ -536,7 +543,12 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    eigenvalues_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
+    eigenvalues_matrices,
+    data_vectors,
+    epsilon,
+    ITMAX=50,
+    p0=None,
+    check_input=True,
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -547,8 +559,8 @@ def method_iterative_deconvolution_TOB20(
     parameters
     ----------
     eigenvalues_matrices: list of numpy arrays 2d
-        List of matrices containing the eigenvalues of the embedding BCCB matrices associated 
-        with the corresponding BTTB sensitivity matrices for each data set. The eigenvalues_matrices 
+        List of matrices containing the eigenvalues of the embedding BCCB matrices associated
+        with the corresponding BTTB sensitivity matrices for each data set. The eigenvalues_matrices
         are outputs of the routine 'convolve.eigenvalues_BCCB'.
     data_vectors : list of numpy arrays 1d
         List of potential-field data.
@@ -593,7 +605,7 @@ def method_iterative_deconvolution_TOB20(
             if L.size != 4 * npoints:
                 raise ValueError(
                     "All 'L' matrices must have a size equal to 4 times the number of observation points"
-                    )
+                )
             if L.shape != shape:
                 raise ValueError("All matrices 'L' must have the same shape")
         # check the consistency of data sets
@@ -636,7 +648,7 @@ def method_iterative_deconvolution_TOB20(
     # initialize the parameter vector
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = np.zeros(npoints, dtype=float)
 
     # initialize auxiliary variables
