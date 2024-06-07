@@ -8,16 +8,11 @@ from .. import utils
 
 # safe_atan2
 
+
 def test_safe_atan2_compare_functions():
     "verify consistency between all safe_atan2 functions"
-    y = np.array([
-        [  0.,  30.], 
-        [-45.,  60.], 
-        [-90., 180.]])
-    x = np.array([
-        [ 10., 12.], 
-        [-73.,  3.], 
-        [ 18.,  0.]])
+    y = np.array([[0.0, 30.0], [-45.0, 60.0], [-90.0, 180.0]])
+    x = np.array([[10.0, 12.0], [-73.0, 3.0], [18.0, 0.0]])
     result_numba = utils.safe_atan2(y=y, x=x)
     result_numpy = utils.safe_atan2_np(y=y, x=x)
     aae(result_numba, result_numpy, decimal=15)
@@ -69,12 +64,10 @@ def test_safe_atan2():
 
 # safe_log
 
+
 def test_safe_log_compare_functions():
     "verify consistency between all safe_log functions"
-    x = np.array([
-        [0., 12.], 
-        [-3., 7.3], 
-        [1018., -1018.]])
+    x = np.array([[0.0, 12.0], [-3.0, 7.3], [1018.0, -1018.0]])
     result_numba = utils.safe_log(x=x)
     result_numpy = utils.safe_log_np(x=x)
     aae(result_numba, result_numpy, decimal=15)
@@ -109,6 +102,7 @@ def test_safe_log():
 
 
 # magnetization_components
+
 
 def test_magnetization_components():
     "Compare reference values with those obtained from magnetization_components"
@@ -195,57 +189,139 @@ def test_rotation_matrix_orthonormal():
 
 # prisms_volume
 
+
 def test_prisms_volume_compare_known_values():
     "verify if computed volumes are equal to reference values"
     model = {
-        'x1' : np.array([-100, 2000, -34]),
-        'x2' : np.array([ 100, 2500,  66]),
-        'y1' : np.array([ 230, -1400, 350.]),
-        'y2' : np.array([ 430, 0, 700.]),
-        'z1' : np.array([10, -100, 0]),
-        'z2' : np.array([90, 600.5, 348.])
+        "x1": np.array([-100, 2000, -34]),
+        "x2": np.array([100, 2500, 66]),
+        "y1": np.array([230, -1400, 350.0]),
+        "y2": np.array([430, 0, 700.0]),
+        "z1": np.array([10, -100, 0]),
+        "z2": np.array([90, 600.5, 348.0]),
     }
-    reference = np.array([200*200*80, 500*1400*700.5, 100*350*348])
+    reference = np.array([200 * 200 * 80, 500 * 1400 * 700.5, 100 * 350 * 348])
     computed = utils.prisms_volume(prisms=model)
     aae(computed, reference, decimal=15)
 
 
 # block_data
 
+
 def test_block_data():
     "compare computed blocks with reference values"
     x = np.array(
-        [310., 290., 403., 500., -107.5,  18.9, 200., -12.3, -99.7, 598., -100.,   0.5, 150., 110., 290., -275.3, 590.]
-        )
-    y = np.array(
-        [134., 201., 370., 260.,  199.3, 101.1, 340., 207.0, 318.1, 150.,  130., 300.1, 150., 170., 240.,  310.8, 311.]
-        )
-    reference = [
-        [[4, 10], [7], [8, 15]], 
-        [[5, 12, 13], [1, 14], [6, 11]], 
-        [[0, 9], [3], [2, 16]]
+        [
+            310.0,
+            290.0,
+            403.0,
+            500.0,
+            -107.5,
+            18.9,
+            200.0,
+            -12.3,
+            -99.7,
+            598.0,
+            -100.0,
+            0.5,
+            150.0,
+            110.0,
+            290.0,
+            -275.3,
+            590.0,
         ]
+    )
+    y = np.array(
+        [
+            134.0,
+            201.0,
+            370.0,
+            260.0,
+            199.3,
+            101.1,
+            340.0,
+            207.0,
+            318.1,
+            150.0,
+            130.0,
+            300.1,
+            150.0,
+            170.0,
+            240.0,
+            310.8,
+            311.0,
+        ]
+    )
+    reference = [
+        [[4, 10], [7], [8, 15]],
+        [[5, 12, 13], [1, 14], [6, 11]],
+        [[0, 9], [3], [2, 16]],
+    ]
     computed = utils.block_data(
-        x=x, y=y, area=[-300., 600., 100., 400.], shape=(3,3)
-        )
+        x=x, y=y, area=[-300.0, 600.0, 100.0, 400.0], shape=(3, 3)
+    )
     ae(computed, reference)
 
+
 # reduce_data
+
 
 def test_reduce_data():
     "compare computed blocks with reference values"
     x = np.array(
-        [310., 290., 403., 500., -107.5,  18.9, 200., -12.3, -99.7, 598., -100.,   0.5, 150., 110., 290., -275.3, 590.]
-        )
+        [
+            310.0,
+            290.0,
+            403.0,
+            500.0,
+            -107.5,
+            18.9,
+            200.0,
+            -12.3,
+            -99.7,
+            598.0,
+            -100.0,
+            0.5,
+            150.0,
+            110.0,
+            290.0,
+            -275.3,
+            590.0,
+        ]
+    )
     y = np.array(
-        [134., 201., 370., 260.,  199.3, 101.1, 340., 207.0, 318.1, 150.,  130., 300.1, 150., 170., 240.,  310.8, 311.]
-        )
-    data = np.arange(17)*10 + 10.
+        [
+            134.0,
+            201.0,
+            370.0,
+            260.0,
+            199.3,
+            101.1,
+            340.0,
+            207.0,
+            318.1,
+            150.0,
+            130.0,
+            300.1,
+            150.0,
+            170.0,
+            240.0,
+            310.8,
+            311.0,
+        ]
+    )
+    data = np.arange(17) * 10 + 10.0
     blocks = utils.block_data(
-        x=x, y=y, area=[-300., 600., 100., 400.], shape=(3,3)
-        )
-    reference = np.array([[(50+110)/2, (60+130+140)/3, (10+100)/2], [80, (20+150)/2, 40], [(90+160)/2, (70+120)/2, (30+170)/2]]).T
+        x=x, y=y, area=[-300.0, 600.0, 100.0, 400.0], shape=(3, 3)
+    )
+    reference = np.array(
+        [
+            [(50 + 110) / 2, (60 + 130 + 140) / 3, (10 + 100) / 2],
+            [80, (20 + 150) / 2, 40],
+            [(90 + 160) / 2, (70 + 120) / 2, (30 + 170) / 2],
+        ]
+    ).T
     computed = utils.reduce_data(
         data=data, blocks_indices=blocks, function="mean", remove_nan=False
-        )
+    )
     aae(computed, reference, decimal=15)

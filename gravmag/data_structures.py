@@ -24,10 +24,10 @@ def grid_xy(area, shape, z0, check_input=True):
         'x' : numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
         'y' : numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
         'z' : scalar (float or int) defining the constant vertical coordinate of the grid.
-        'area' : list 
+        'area' : list
             List of min x, max x, min y and max y (the same as input)
-        'shape' : tuple 
-            Tuple defining the total number of points along x and y directions, 
+        'shape' : tuple
+            Tuple defining the total number of points along x and y directions,
             respectively (the same as input).
     """
     if check_input == True:
@@ -36,11 +36,11 @@ def grid_xy(area, shape, z0, check_input=True):
         check.is_scalar(x=z0, positive=False)
 
     grid = {
-        'x' : np.linspace(area[0], area[1], shape[0]),
-        'y' : np.linspace(area[2], area[3], shape[1]),
-        'z' : z0,
-        'area' : area,
-        'shape' : shape
+        "x": np.linspace(area[0], area[1], shape[0]),
+        "y": np.linspace(area[2], area[3], shape[1]),
+        "z": z0,
+        "area": area,
+        "shape": shape,
     }
 
     return grid
@@ -67,23 +67,23 @@ def grid_xy_to_full_flatten(grid, ordering, check_input=True):
     returns
     -------
     full_grid : dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z', respectively. 
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z', respectively.
         All keys are numpy arrays 1d having the same number of elements.
     """
     if check_input == True:
         check.is_grid_xy(grid)
         check.is_ordering(ordering)
 
-    if ordering == 'xy':
-        x, y = np.meshgrid(grid['x'], grid['y'], indexing='xy')
-    else: # ordering == 'yx'
-        x, y = np.meshgrid(grid['x'], grid['y'], indexing='ij')
+    if ordering == "xy":
+        x, y = np.meshgrid(grid["x"], grid["y"], indexing="xy")
+    else:  # ordering == 'yx'
+        x, y = np.meshgrid(grid["x"], grid["y"], indexing="ij")
 
-    N = grid['shape'][0] * grid['shape'][1]
+    N = grid["shape"][0] * grid["shape"][1]
     full_grid = {
-        'x' : np.ravel(x),
-        'y' : np.ravel(y),
-        'z' : np.zeros(N, dtype=float) + grid['z']
+        "x": np.ravel(x),
+        "y": np.ravel(y),
+        "z": np.zeros(N, dtype=float) + grid["z"],
     }
 
     return full_grid
@@ -92,7 +92,7 @@ def grid_xy_to_full_flatten(grid, ordering, check_input=True):
 def grid_xy_full_flatten_to_matrix(data, ordering, shape, check_input=True):
     """
     Let a 'data' vector be computed at a grid of points with a given 'ordering' and 'shape'.
-    The present function reshape the 'data' into a matrix having the given 'shape', according to the 
+    The present function reshape the 'data' into a matrix having the given 'shape', according to the
     'ordering' of its corresponding grid of points.
 
     parameters
@@ -100,7 +100,7 @@ def grid_xy_full_flatten_to_matrix(data, ordering, shape, check_input=True):
     data : numpy array 1d
         Data vector.
     ordering : string
-        Defines how the points are ordered after the first point (min x, min y) in the 
+        Defines how the points are ordered after the first point (min x, min y) in the
         corresponding grid of points.
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -112,19 +112,19 @@ def grid_xy_full_flatten_to_matrix(data, ordering, shape, check_input=True):
     returns
     -------
     data_matrix : numpy array 2d
-        Data vector rearranged into a matrix according to the 'ordering' of its 
+        Data vector rearranged into a matrix according to the 'ordering' of its
         corresponding grid of points.
     """
     if check_input == True:
         check.is_array(x=data, ndim=1)
         check.is_ordering(ordering)
         check.is_shape(shape)
-        if shape[0]*shape[1] != data.size:
+        if shape[0] * shape[1] != data.size:
             raise Valuerror("shape mismatch data")
 
-    if ordering == 'xy':
+    if ordering == "xy":
         return np.reshape(data, shape[::-1]).T
-    else: # ordering == 'yx'
+    else:  # ordering == 'yx'
         return np.reshape(data, shape)
 
 
@@ -137,7 +137,7 @@ def grid_xy_full_matrix_to_flatten(grid, ordering, check_input=True):
     grid : numpy array 2d
         Full grid of points.
     ordering : string
-        Defines how the points are ordered after the first point (min x, min y) in the 
+        Defines how the points are ordered after the first point (min x, min y) in the
         corresponding grid of points.
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -153,27 +153,27 @@ def grid_xy_full_matrix_to_flatten(grid, ordering, check_input=True):
         check.is_array(x=grid, ndim=2)
         check.is_ordering(ordering)
 
-    if ordering == 'xy':
+    if ordering == "xy":
         return grid.T.ravel()
-    else: # ordering == 'yx'
+    else:  # ordering == 'yx'
         return grid.ravel()
 
 
 def grid_xy_to_full_matrices_view(x, y, shape, check_input=True):
     """
-    Broadcast to matrices the coordinates 'x' and 'y' of a 'grid' with given 'shape', 
+    Broadcast to matrices the coordinates 'x' and 'y' of a 'grid' with given 'shape',
     according to the given 'ordering'.
 
     parameters
     ----------
-    'x' : numpy array 1d 
+    'x' : numpy array 1d
         Array with shape = (Nx, ), where Nx is the number of data along x-axis.
-    'y' : numpy array 1d 
+    'y' : numpy array 1d
         Array with shape = (Ny, ), where Ny is the number of data along y-axis.
     shape : tuple
         Tuple defining the total number of points along x and y directions, respectively.
     ordering : string
-        Defines how the points are ordered after the first point (min x, min y) in the 
+        Defines how the points are ordered after the first point (min x, min y) in the
         corresponding grid of points.
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -245,19 +245,19 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
     returns
     -------
     wavenumbers: dictionary containing the following keys
-        'x' : numpy array 1d 
+        'x' : numpy array 1d
             Vector with shape = (Nx, ), where Nx is the number of
-            data long x-axis, if 'pad' is False, or the number of padded data, if 'pad' is True. 
+            data long x-axis, if 'pad' is False, or the number of padded data, if 'pad' is True.
             This numpy array contains the discrete wavenumbers along the x-axis.
-        'y' : numpy array 1d 
+        'y' : numpy array 1d
             Vector with shape = (Ny, ), where Ny is the number of
-            data long y-axis, if 'pad' is False, or the number of padded data, if 'pad' is True. 
+            data long y-axis, if 'pad' is False, or the number of padded data, if 'pad' is True.
             This numpy array contains the discrete wavenumbers along the y-axis.
-        'z' : numpy array 2d 
+        'z' : numpy array 2d
             Matrix with shape (kx.size, ky.size) containing the wavenumbers along
             the z-axis by considering that the generating data grid in space domain
             contains potential-field data on a horizontal plane.
-        'shape' : tuple 
+        'shape' : tuple
             If 'pad' is False, it returns the parameter 'shape' of the given 'grid'.
             Otherwise, it returns the 'shape' of the padded 'grid'.
         'spacing' : tuple
@@ -270,13 +270,13 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
             raise Valuerror("'pad' must be boolean")
 
     # get the original shape and area
-    shape = grid['shape']
-    area = grid['area']
+    shape = grid["shape"]
+    area = grid["area"]
     # compute the grid spacing
     spacing = grid_xy_spacing(area=area, shape=shape, check_input=False)
     # redefine 'shape' according to 'pad'
     if pad is True:
-        shape = (3*shape[0], 3*shape[1])
+        shape = (3 * shape[0], 3 * shape[1])
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
     kx = 2 * np.pi * fftfreq(n=shape[0], d=spacing[0])
@@ -284,7 +284,9 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
 
     # this is valid for potential fields on a plane
     # the line below generates a numpy array 2d with shape (kx.size, ky.size)
-    KX, KY = grid_xy_to_full_matrices_view(x=kx, y=ky, shape=shape, check_input=False)
+    KX, KY = grid_xy_to_full_matrices_view(
+        x=kx, y=ky, shape=shape, check_input=False
+    )
     kz = np.sqrt(KX**2 + KY**2)
 
     # shift the wavenumbers so that their values goes from negative to positive values
@@ -293,11 +295,11 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
     # kz = fftshift(kz)
 
     wavenumbers = {
-        'x': kx,
-        'y': ky,
-        'z': kz,
-        'shape': shape,
-        'spacing': spacing
+        "x": kx,
+        "y": ky,
+        "z": kz,
+        "shape": shape,
+        "spacing": spacing,
     }
 
     return wavenumbers
@@ -325,10 +327,10 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
     # the transposed of a BTTB inherits the symmetry structure between blocks,
     # within blocks, number of blocks and also order of blocks.
     BTTB_T_metadata = {
-        "ordering" : BTTB_metadata["ordering"],
-        "symmetry_structure" : BTTB_metadata["symmetry_structure"],
-        "symmetry_blocks" : BTTB_metadata["symmetry_blocks"],
-        "nblocks": BTTB_metadata["nblocks"]
+        "ordering": BTTB_metadata["ordering"],
+        "symmetry_structure": BTTB_metadata["symmetry_structure"],
+        "symmetry_blocks": BTTB_metadata["symmetry_blocks"],
+        "nblocks": BTTB_metadata["nblocks"],
     }
 
     # get data and perform the required changes
@@ -338,39 +340,42 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             BTTB_T_metadata["rows"] = None
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][:,1:] *= -1
+            BTTB_T_metadata["columns"][:, 1:] *= -1
             BTTB_T_metadata["rows"] = None
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
-            BTTB_T_metadata["columns"] = np.hstack([
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
+            BTTB_T_metadata["columns"] = np.hstack(
+                [
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
 
     elif BTTB_metadata["symmetry_structure"] == "skew":
         if BTTB_metadata["symmetry_blocks"] == "symm":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][1:,:] *= -1
+            BTTB_T_metadata["columns"][1:, :] *= -1
             BTTB_T_metadata["rows"] = None
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][:,1:] *= -1
-            BTTB_T_metadata["columns"][1:,:] *= -1
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+            BTTB_T_metadata["columns"][1:, :] *= -1
             BTTB_T_metadata["rows"] = None
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.hstack(
                 [
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
             # change signal
             BTTB_T_metadata["columns"][1:] *= -1
             BTTB_T_metadata["rows"][1:] *= -1
-    else: # BTTB_metadata["symmetry_structure"] == "gene"
+    else:  # BTTB_metadata["symmetry_structure"] == "gene"
         if BTTB_metadata["symmetry_blocks"] == "symm":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
@@ -378,15 +383,14 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             # get the columns
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
@@ -394,37 +398,38 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute the elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
             # change signal
-            BTTB_T_metadata["columns"][:,1:] *= -1
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.hstack(
                 [
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute the elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
-            BTTB_T_metadata["rows"] = BTTB_T_metadata["rows"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
+            BTTB_T_metadata["rows"] = BTTB_T_metadata["rows"][
+                permutation_indices
+            ]
 
     return BTTB_T_metadata

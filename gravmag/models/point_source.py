@@ -3,7 +3,6 @@ This code presents a general approach for implementing the gravitational
 magnetic induction fields produced by point sources.
 """
 
-
 import numpy as np
 from .. import check
 from .. import utils

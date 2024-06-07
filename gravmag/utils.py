@@ -113,7 +113,7 @@ def safe_log_np(x):
     x = np.asarray(x, dtype=float)
     result = np.zeros_like(x)
     # abs(x) >= 1e-10
-    indices_x = (np.abs(x) >= 1e-10)
+    indices_x = np.abs(x) >= 1e-10
     result[indices_x] = np.log(x[indices_x])
     return result
 
@@ -313,7 +313,11 @@ def prisms_volume(prisms):
     # Verify the input parameters
     check.are_rectangular_prisms(prisms)
 
-    volume = (prisms['x2'] - prisms['x1'])*(prisms['y2'] - prisms['y1'])*(prisms['z2'] - prisms['z1'])
+    volume = (
+        (prisms["x2"] - prisms["x1"])
+        * (prisms["y2"] - prisms["y1"])
+        * (prisms["z2"] - prisms["z1"])
+    )
 
     return volume
 
@@ -321,7 +325,7 @@ def prisms_volume(prisms):
 def block_data(x, y, area, shape, check_input=True):
     """
     Split a dataset into a grid of Nx X Ny blocks within a predefined area.
-    
+
     parameters
     ----------
     x, y : numpy arrays 1d
@@ -333,7 +337,7 @@ def block_data(x, y, area, shape, check_input=True):
         Positive integers defining the number of blocks along the x and y directions, respectively.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
-    
+
     returns
     -------
     blocks_indices : list of lists
@@ -342,20 +346,20 @@ def block_data(x, y, area, shape, check_input=True):
     if check_input is True:
         check.is_array(x=x, ndim=1)
         check.is_array(x=y, ndim=1)
-        if (x.size != y.size):
+        if x.size != y.size:
             raise ValueError("x and y must have the same size")
         check.is_area(area=area)
         check.is_shape(shape=shape)
-    
+
     # compute spacing along x and y
     dx = (area[1] - area[0]) / shape[0]
     dy = (area[3] - area[2]) / shape[1]
 
     # reduced_data = np.empty(shape=(Nx,Ny), dtype=float)
-    x_indices = np.array((x - area[0]) / dx, dtype = int)
-    y_indices = np.array((y - area[2]) / dy, dtype = int)
+    x_indices = np.array((x - area[0]) / dx, dtype=int)
+    y_indices = np.array((y - area[2]) / dy, dtype=int)
 
-    #blocks = shape[0]*[shape[1]*[[]]]
+    # blocks = shape[0]*[shape[1]*[[]]]
     blocks_indices = []
     for i in range(shape[0]):
         blocks_indices.append([])
@@ -369,10 +373,12 @@ def block_data(x, y, area, shape, check_input=True):
     return blocks_indices
 
 
-def reduce_data(data, blocks_indices, function="mean", remove_nan=False, check_input=True):
+def reduce_data(
+    data, blocks_indices, function="mean", remove_nan=False, check_input=True
+):
     """
     Apply func to the values at each element in blocks.
-    
+
     parameters
     ----------
     data : numpy array 1d
@@ -388,11 +394,11 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False, check_i
         Default is False.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
-    
+
     returns
     -------
     reduced_data : numpy array 1d or 2d
-        Matrix containing the reduced data at each block.        
+        Matrix containing the reduced data at each block.
     """
     if check_input is True:
         check.is_array(x=data, ndim=1)
@@ -403,17 +409,19 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False, check_i
         if function not in ["mean", "median"]:
             raise ValueError("invalid function {}".format(function))
         if remove_nan not in [True, False]:
-            raise ValueError("{} does not have a valid format".format(remove_nan))
+            raise ValueError(
+                "{} does not have a valid format".format(remove_nan)
+            )
 
     if function == "mean":
         func = np.mean
-    else: # function == "median"
+    else:  # function == "median"
         func = np.median
 
     Nx = len(blocks_indices)
     Ny = len(blocks_indices[0])
- 
-    reduced_data = np.empty(shape = (Nx, Ny), dtype = float)
+
+    reduced_data = np.empty(shape=(Nx, Ny), dtype=float)
     for i in range(Nx):
         for j in range(Ny):
             if len(blocks_indices[i][j]) == 0:

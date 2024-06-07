@@ -29,7 +29,9 @@ def DFT(data, pad_mode=None, check_input=True):
     if check_input is True:
         check.is_array(x=data, ndim=2)
         if isinstance(pad_mode, (type(None), str)) is not True:
-            raise ValueError("pad_mode must be None or a string (see the routine numpy.pad)")
+            raise ValueError(
+                "pad_mode must be None or a string (see the routine numpy.pad)"
+            )
 
     if pad_mode is not None:
         # define the padded data
