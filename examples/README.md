@@ -12,3 +12,4 @@ transformations.
 - `magnetic_field` : magnetic field due to prisms.
 - `derivatives_Fourier` : potential-field spatial derivatives via Fourier transform.
 - `reduction_to_the_pole` : reduction-to-the-pole via Fourier transform and equivalent layer.
+- `complex_model_1` : shows a possible workflow to create a complex model and save it at folde `models/complex_model_1`.
