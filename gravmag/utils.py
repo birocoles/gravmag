@@ -205,6 +205,46 @@ def direction(vector, check_input=True):
     return intensity, inclination, declination
 
 
+def directional_factors(t, u, check_input=True):
+    """
+    Given two 3x1 unit vectors t and u, compute factors:
+    axx = tx * ux - tz * uz
+    axy = tx * uy + ty * ux
+    axz = tx * uz + tz * ux
+    ayy = ty * uy - tz * uz
+    ayz = ty * uz + tz * uy
+
+    parameters
+    ----------
+    t, u : numpy arrays 1d
+        Unit 3x1 vectors.
+
+    returns
+    -------
+    a : dictionary
+        Dictionary containing the factors.
+    """
+    if check_input is True:
+        check.is_array(x=t, ndim=1, shape=(3,))
+        check.is_array(x=u, ndim=1, shape=(3,))
+        if np.sum(t*t) != 1:
+            raise ValueError("t must be a unit vector")
+        if np.sum(u*u) != 1:
+            raise ValueError("u must be a unit vector")
+
+    if np.sum(t*t) != 1:
+            raise ValueError("t must be a unit vector")
+
+    a = dict()
+    a['xx'] = t[0] * u[0] - t[2] * u[2]
+    a['xy'] = t[0] * u[1] + t[1] * u[0]
+    a['xz'] = t[0] * u[2] + t[2] * u[0]
+    a['yy'] = t[1] * u[1] - t[2] * u[2]
+    a['yz'] = t[1] * u[2] + t[2] * u[1]
+
+    return a
+
+
 def rotation_matrix(I, D, dI, dD):
     """
     Compute the rotation matrix transforming the unit vector
