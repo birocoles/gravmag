@@ -227,13 +227,10 @@ def directional_factors(t, u, check_input=True):
     if check_input is True:
         check.is_array(x=t, ndim=1, shape=(3,))
         check.is_array(x=u, ndim=1, shape=(3,))
-        if np.sum(t*t) != 1:
+        if np.abs(np.sum(t*t) - 1) > 1e-10:
             raise ValueError("t must be a unit vector")
-        if np.sum(u*u) != 1:
+        if np.abs(np.sum(u*u) - 1) > 1e-10:
             raise ValueError("u must be a unit vector")
-
-    if np.sum(t*t) != 1:
-            raise ValueError("t must be a unit vector")
 
     a = dict()
     a['xx'] = t[0] * u[0] - t[2] * u[2]
