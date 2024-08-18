@@ -74,7 +74,7 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
         points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
-        source grids of points.
+        the top of the prisms.
     ordering : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
@@ -708,22 +708,18 @@ def directional_2nd_order(
     u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
 
     # compute the directional factors
-    axx = t[0] * u[0] - t[2] * u[2]
-    axy = t[0] * u[1] + t[1] * u[0]
-    axz = t[0] * u[2] + t[2] * u[0]
-    ayy = t[1] * u[1] - t[2] * u[2]
-    ayz = t[1] * u[2] + t[2] * u[1]
+    a = utils.directional_factors(t, u, check_input=False)
 
     # compute the directional derivative of 1st order
     Ktu = dict()
     Ktu["header"] = (
         "2nd-order directional derivative of the inverse distance function computed at scattered points"
     )
-    Ktu["xx"] = axx * Tensor["xx"]
-    Ktu["xy"] = axy * Tensor["xy"]
-    Ktu["xz"] = axz * Tensor["xz"]
-    Ktu["yy"] = ayy * Tensor["yy"]
-    Ktu["yz"] = ayz * Tensor["yz"]
+    Ktu["xx"] = a['xx'] * Tensor["xx"]
+    Ktu["xy"] = a['xy'] * Tensor["xy"]
+    Ktu["xz"] = a['xz'] * Tensor["xz"]
+    Ktu["yy"] = a['yy'] * Tensor["yy"]
+    Ktu["yz"] = a['yz'] * Tensor["yz"]
     Ktu["inclination0"] = inc0
     Ktu["declination0"] = dec0
     Ktu["inclination"] = inc
@@ -814,11 +810,7 @@ def directional_2nd_order_BTTB(
     u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
 
     # compute the directional factors
-    axx = t[0] * u[0] - t[2] * u[2]
-    axy = t[0] * u[1] + t[1] * u[0]
-    axz = t[0] * u[2] + t[2] * u[0]
-    ayy = t[1] * u[1] - t[2] * u[2]
-    ayz = t[1] * u[2] + t[2] * u[1]
+    a = utils.directional_factors(t, u, check_input=False)
 
     # compute the gradient components defined in components
     Ktu = dict()
@@ -830,11 +822,11 @@ def directional_2nd_order_BTTB(
     Ktu["xz"] = Tensor["xz"].copy()
     Ktu["yy"] = Tensor["yy"].copy()
     Ktu["yz"] = Tensor["yz"].copy()
-    Ktu["xx"]["columns"] *= axx
-    Ktu["xy"]["columns"] *= axy
-    Ktu["xz"]["columns"] *= axz
-    Ktu["yy"]["columns"] *= ayy
-    Ktu["yz"]["columns"] *= ayz
+    Ktu["xx"]["columns"] *= a['xx']
+    Ktu["xy"]["columns"] *= a['xy']
+    Ktu["xz"]["columns"] *= a['xz']
+    Ktu["yy"]["columns"] *= a['yy']
+    Ktu["yz"]["columns"] *= a['yz']
     Ktu["inclination0"] = inc0
     Ktu["declination0"] = dec0
     Ktu["inclination"] = inc

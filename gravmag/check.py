@@ -177,7 +177,7 @@ def is_grid_wavenumbers(wavenumbers):
         )
 
 
-def is_scalar(x, positive=True):
+def is_scalar(x, positive=False):
     """
     Check if x is a float or int.
 
@@ -186,7 +186,7 @@ def is_scalar(x, positive=True):
     x : generic object
         Python object to be verified.
     positive : boolean
-        If True, impose that x must be positive.
+        If True, impose that x must be positive. Default is False.
     """
     if isinstance(x, (float, int)) is False:
         raise ValueError("x must be in float or int")
@@ -209,7 +209,7 @@ def is_integer(x, positive=True):
     if isinstance(x, int) is False:
         raise ValueError("x must be an int")
     if positive == True:
-        if x <= 0:
+        if x < 1:
             raise ValueError("x must be positive")
 
 
@@ -290,7 +290,7 @@ def is_shape(shape):
 
 def is_spacing(spacing):
     """
-    Check is spacing is a tuple containing two positive scalar.
+    Check is spacing is a tuple containing two positive scalars.
 
     parameters
     ----------
