@@ -138,10 +138,11 @@ def derivative(wavenumbers, axes, check_input=True):
     return deriv_filter
 
 
-def continuation(wavenumbers, dz, check_input=True):
+def continuation(wavenumbers, dz, regularization=0., check_input=True):
     """
     Compute the level-to-level upward/downward continuation filter
-    (Gunn, 1975; Blakely, 1996, p. 317).
+    (Gunn, 1975; Blakely, 1996, p. 317) with regularization defined
+    by Pašteka et al. (2012).
 
     parameters
     ----------
@@ -153,22 +154,35 @@ def continuation(wavenumbers, dz, check_input=True):
         of the continuation plane and the constant vertical coordinate of the
         original data. Negative and positive values define upward and downward
         continuations, respectively.
+    regularization : int or float
+        Positive scalar defining the regularization parameter for continuation
+        operator (Pašteka et al, 2012).
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
     returns
     -------
-    filter : numpy array 2D
-        Continuation filter evaluated at the wavenumber kz.
+    result : numpy array 2D
+        Resultant filter evaluated at the wavenumber kz.
     """
 
     if check_input is True:
         check.is_grid_wavenumbers(wavenumbers)
-        check.is_scalar(x=dz, positive=False)
+        check.is_scalar(x=dz, positive=True)
+        check.is_scalar(x=regularization, positive=True)
+        if regularization < 0.:
+            raise ValueError('regularization must be zero or positive')
 
+    # compute the continuation filter
     cont_filter = np.exp(dz * wavenumbers["z"])
 
-    return cont_filter
+    if regularization == 0:
+        result = cont_filter
+    else:
+        aux = regularization * (wavenumbers["z"]**2) * cont_filter
+        result = cont_filter / (1 + aux)
+
+    return result
 
 
 def cuttof_frequency(wavenumbers, max_freq, check_input=True):

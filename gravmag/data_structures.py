@@ -199,6 +199,9 @@ def grid_xy_to_full_matrices_view(x, y, shape, check_input=True):
 def grid_xy_spacing(area, shape, check_input=True):
     """
     Compute the grid spacing along the x and y directions.
+    The grid spacing between N data points is defined by the ratio of 
+    'total extension' and 'N - 1', where 'N - 1' is the number of 
+    intervals between the N data points.
 
     parameters
     ----------

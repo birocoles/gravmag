@@ -532,11 +532,11 @@ def test_invalid_scalar():
 
 def test_scalar_non_positive():
     "Check if passing a non-positive raises an error"
-    # zero
-    y = 0.0
+    # 1
+    y = -1e-10
     with pytest.raises(ValueError):
         check.is_scalar(x=y, positive=True)
-    # negative
+    # 2
     y = -5.7
     with pytest.raises(ValueError):
         check.is_scalar(x=y, positive=True)
@@ -571,11 +571,11 @@ def test_invalid_integer():
 
 def test_integer_non_positive():
     "Check if passing a non-integer raises an error"
-    # zero
-    y = 0
+    # 1
+    y = -1
     with pytest.raises(ValueError):
         check.is_integer(x=y, positive=True)
-    # negative
+    # 2
     y = -5
     with pytest.raises(ValueError):
         check.is_integer(x=y, positive=True)

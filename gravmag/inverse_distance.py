@@ -74,7 +74,7 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
         points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
-        source grids of points.
+        the top of the prisms.
     ordering : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
