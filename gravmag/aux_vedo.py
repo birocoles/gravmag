@@ -7,7 +7,10 @@ import numpy as np
 import vedo
 from . import check
 
-def custom_axes(area):
+def custom_axes(
+    area, 
+    grids=(False, False, True, True, True, False)
+    ):
     '''
     Function form creating the axes in Vedo.
     '''
@@ -43,7 +46,7 @@ def custom_axes(area):
         ztitle_position=0.95,
         xtitle_offset=0.025,
         ytitle_offset=-0.0875,
-        ztitle_offset=-0.025,
+        ztitle_offset=0.025,
         xtitle_justify=None,
         ytitle_justify=None,
         ztitle_justify=None,
@@ -65,18 +68,18 @@ def custom_axes(area):
         ytitle_italic=0,
         ztitle_italic=0,
         grid_linewidth=1,
-        xygrid=False,
-        yzgrid=False,
-        zxgrid=True,
-        xygrid2=True,
-        yzgrid2=True,
-        zxgrid2=False,
+        xygrid=grids[0],
+        yzgrid=grids[1],
+        zxgrid=grids[2],
+        xygrid2=grids[3],
+        yzgrid2=grids[4],
+        zxgrid2=grids[5],
         xygrid_transparent=True,
-        yzgrid_transparent=False,
-        zxgrid_transparent=True,
+        yzgrid_transparent=True,
+        zxgrid_transparent=False,
         xygrid2_transparent=False,
-        yzgrid2_transparent=True,
-        zxgrid2_transparent=False,
+        yzgrid2_transparent=False,
+        zxgrid2_transparent=True,
         xyplane_color=None,
         yzplane_color=None,
         zxplane_color=None,
