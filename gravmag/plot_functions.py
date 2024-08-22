@@ -6,7 +6,6 @@ using Matplotlib and PyVista.
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 import numpy as np
-import pyvista as pv
 from . import check
 
 
@@ -177,101 +176,3 @@ def fields_list(computed, true, diffs):
         fields.append(t)
         fields.append(d)
     return fields
-
-
-def prisms_to_pyvista(prisms, prop):
-    """
-    This function creates a pyvista.UnstructuredGrid of
-    rectangular prisms from a Numpy array acoording to:
-
-    https://docs.pyvista.org/examples/00-load/create-unstructured-surface.html
-
-    parameters
-    ----------
-    prisms : dictionary
-        Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
-        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
-        prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
-        Each key is a numpy array 1d having the same number of elements.
-    prop : 1d-array
-        1d-array containing the scalar physical property of each prism.
-
-    returns
-    -------
-    model_mesh: pyvista.UnstructuredGrid
-    """
-
-    # Verify the input parameters
-    nprisms = check.are_rectangular_prisms(prisms=prisms)
-    check.is_array(x=prop, ndim=1, shape=(nprisms,))
-
-    # define indices of the cells composing the pyvista.UnstructuredGrid
-    cells = np.empty((nprisms, 9), dtype=int)
-    cells[:, 0] = 8
-    cells[:, 1:] = np.reshape(np.arange(8 * nprisms), (nprisms, 8))
-    cells = cells.ravel()
-
-    # define cell types of the pyvista.UnstructuredGrid
-    cell_type = np.tile(np.array([pv.CellType.HEXAHEDRON]), nprisms)
-
-    # define the cells forming the pyvista.UnstructuredGrid
-    points = []
-    for i in range(nprisms):
-        points.append(
-            np.array(
-                [
-                    [prisms["x1"][i], prisms["y1"][i], prisms["z1"][i]],
-                    [prisms["x2"][i], prisms["y1"][i], prisms["z1"][i]],
-                    [prisms["x2"][i], prisms["y2"][i], prisms["z1"][i]],
-                    [prisms["x1"][i], prisms["y2"][i], prisms["z1"][i]],
-                    [prisms["x1"][i], prisms["y1"][i], prisms["z2"][i]],
-                    [prisms["x2"][i], prisms["y1"][i], prisms["z2"][i]],
-                    [prisms["x2"][i], prisms["y2"][i], prisms["z2"][i]],
-                    [prisms["x1"][i], prisms["y2"][i], prisms["z2"][i]],
-                ],
-                dtype=float,
-            )
-        )
-    points = np.vstack(points)
-
-    # create the model mesh (pyvista.UnstructuredGrid)
-    model_mesh = pv.UnstructuredGrid(cells, cell_type, points)
-
-    # add physical property
-    model_mesh.cell_data["prop"] = prop.flatten(order="F")
-
-    return model_mesh
-
-
-def data_to_surface_pyvista(coordinates, data):
-    """
-    This function creates a connected surface from a PyVista point cloud.
-    The surface is created by using delaunay_2d triangulation.
-
-    parameters
-    ----------
-    coordinates : 2d-array
-        2d-array containing x (first line), y (second line), and z (third line) of
-        the computation points. All coordinates should be in meters.
-    data : numpy array 1D
-        Vector containing the potential-field data.
-
-    returns
-    -------
-    data_mesh: pyvista.PolyData
-    """
-    D = check.are_coordinates(coordinates)
-    assert data.size == D, "data size and coordinates must match"
-
-    # create a PyVista point cloud
-    data_mesh = pv.PolyData(
-        np.vstack([coordinates["x"], coordinates["y"], coordinates["z"]]).T
-    )
-
-    # add point data to the point cloud
-    data_mesh.point_data["data"] = data
-
-    # transform the point cloud in a connected surface
-    _ = data_mesh.delaunay_2d(inplace=True)
-
-    return data_mesh
