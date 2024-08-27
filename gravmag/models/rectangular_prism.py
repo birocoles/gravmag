@@ -73,7 +73,7 @@ def grav(coordinates, prisms, density, field, scale=True):
         result *= cts.GRAVITATIONAL_CONST
         # Convert from m/s^2 to mGal
         if field in ["x", "y", "z"]:
-            result *= cts.SI2MGAL
+            result *= cts.SI2miliGAL
         # Convert from 1/s^2 to Eötvös
         if field in ["xx", "xy", "xz", "yy", "yz", "zz"]:
             result *= cts.SI2EOTVOS
@@ -166,7 +166,7 @@ def grav(coordinates, prisms, density, field, scale=True):
 #         result *= cts.GRAVITATIONAL_CONST
 #         # Convert from m/s^2 to mGal
 #         if field in ["x", "y", "z"]:
-#             result *= cts.SI2MGAL
+#             result *= cts.SI2miliGAL
 #         # Convert from 1/s^2 to Eötvös
 #         if field in ["xx", "xy", "xz", "yy", "yz", "zz"]:
 #             result *= cts.SI2EOTVOS
@@ -250,10 +250,10 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
         result *= cts.CM
         # Convert from T to nT
         if field in ["x", "y", "z"]:
-            result *= cts.T2NT
+            result *= cts.T2nanoT
         # Convert from T to uT and change sign
         if field == "potential":
-            result *= -cts.T2MT
+            result *= -cts.T2microT
 
     return result
 

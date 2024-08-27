@@ -169,7 +169,7 @@ def continuation(wavenumbers, dz, regularization=0., check_input=True):
     if check_input is True:
         check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=dz, positive=True)
-        check.is_scalar(x=regularization, positive=True)
+        check.is_scalar(x=regularization)
         if regularization < 0.:
             raise ValueError('regularization must be zero or positive')
 
