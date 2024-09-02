@@ -7,7 +7,10 @@ import numpy as np
 import vedo
 from . import check
 
-def custom_axes(area):
+def custom_axes(
+    area, 
+    grids=(False, False, True, True, True, False)
+    ):
     '''
     Function form creating the axes in Vedo.
     '''
@@ -43,7 +46,7 @@ def custom_axes(area):
         ztitle_position=0.95,
         xtitle_offset=0.025,
         ytitle_offset=-0.0875,
-        ztitle_offset=-0.025,
+        ztitle_offset=0.025,
         xtitle_justify=None,
         ytitle_justify=None,
         ztitle_justify=None,
@@ -65,18 +68,18 @@ def custom_axes(area):
         ytitle_italic=0,
         ztitle_italic=0,
         grid_linewidth=1,
-        xygrid=False,
-        yzgrid=False,
-        zxgrid=True,
-        xygrid2=True,
-        yzgrid2=True,
-        zxgrid2=False,
+        xygrid=grids[0],
+        yzgrid=grids[1],
+        zxgrid=grids[2],
+        xygrid2=grids[3],
+        yzgrid2=grids[4],
+        zxgrid2=grids[5],
         xygrid_transparent=True,
-        yzgrid_transparent=False,
-        zxgrid_transparent=True,
+        yzgrid_transparent=True,
+        zxgrid_transparent=False,
         xygrid2_transparent=False,
-        yzgrid2_transparent=True,
-        zxgrid2_transparent=False,
+        yzgrid2_transparent=False,
+        zxgrid2_transparent=True,
         xyplane_color=None,
         yzplane_color=None,
         zxplane_color=None,
@@ -384,4 +387,57 @@ def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
             )
             print("A colorized Vedo surface were created")
             return vedo_surface
-            
+
+
+def quad_mesh2prisms(quad_meshes, dy):
+    '''
+    Receive a list of vedo.mesh.Mesh objects defining quad meshses and 
+    return a model of prisms for gravmag.
+
+    parameters
+    ----------
+    quad_meshes : list of vedo.mesh.Mesh
+        List of vedo quad meshses.
+    dy : float or int
+        Positive scalar defining the side lenght of prisms along the y-axis.
+
+    returns
+    -------
+    model : prisms
+        Dictionary containing the x, y and z coordinates of the corners of each prism in prisms.
+        The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
+        prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
+        All keys must be numpy arrays 1d having the same number of elements.
+    '''
+
+    check.is_scalar(x=dy, positive=True)
+
+    # create empty lists to store the coordinates of the vertices
+    x1 = []
+    x2 = []
+    y1 = []
+    y2 = []
+    z1 = []
+    z2 = []
+    
+    # iterate over the quad meshes to take the coordinates and create prisms
+    dy_half = 0.5*dy
+    for quad_mesh in quad_meshes:
+        for quad in quad_mesh.vertices[quad_mesh.cells]:
+            x1.append(quad[0,0])
+            x2.append(quad[1,0])
+            y1.append(quad[0,1]-dy_half)
+            y2.append(quad[0,1]+dy_half)
+            z1.append(quad[0,2])
+            z2.append(quad[3,2])
+
+    # create a model for gravmag
+    model = {
+        'x1' : np.array(x1),
+        'x2' : np.array(x2),
+        'y1' : np.array(y1),
+        'y2' : np.array(y2),
+        'z1' : np.array(z1),
+        'z2' : np.array(z2)
+    }
+    return model
