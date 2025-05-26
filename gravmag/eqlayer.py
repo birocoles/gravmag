@@ -333,9 +333,11 @@ def method_CGLS(
     ndatasets = len(data_vectors)
     ndata_per_dataset = []
     residuals = []
+    nus = []
     for data in data_vectors:
         ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
+        nus.append(np.zeros_like(data))
     ndata = np.sum(ndata_per_dataset)
     nparams = sensitivity_matrices[0].shape[1]
 
@@ -360,9 +362,6 @@ def method_CGLS(
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
     eta = np.zeros_like(parameters)
-    nus = []
-    for i in range(ndatasets):
-        nus.append(np.zeros_like(parameters))
     m = 1
 
     # updates
@@ -527,14 +526,12 @@ def method_iterative_SOB17(
     delta_list = []
     delta = np.sqrt(np.sum(residuals * residuals)) / D
     delta_list.append(delta)
-    nu = np.zeros_like(parameters)
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
         dp = scale * residuals
         parameters[:] += dp
-        nu[:] = sensitivity_matrix @ dp
-        residuals[:] -= nu
+        residuals[:] -= sensitivity_matrix @ dp
         delta = np.sqrt(np.sum(residuals * residuals)) / D
         delta_list.append(delta)
         m += 1

@@ -2,6 +2,7 @@ import numpy as np
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from pytest import raises
+from scipy.linalg import dft
 from .. import inverse_distance as idist
 from .. import convolve as conv
 
@@ -73,16 +74,38 @@ def test_sedm_symmetric_points():
     aae(SEDM_up, SEDM_down, decimal=12)
 
 
+def test_sedm_compared_constant_and_variable_sources_z():
+    "verify is both results are the same"
+
+    # data points
+    P = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([0, 0, -10, 0, 0, 0]),
+    }
+
+    # source points
+    S = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([10, 10, 10, 10, 10, 10]),
+    }
+
+    SEDM_1 = idist.sedm(P, S)
+    SEDM_2 = idist.sedm(P, 10.)
+
+    aae(SEDM_1, SEDM_2, decimal=12)
+
 ##### SEDM BTTB
 
 
-def test_sedm_BTTB_compare_sedm_xy():
+def test_sedm_BTTB_grid_orientation_xy_compare_sedm():
     "verify if sedm_BTTB produces the same result as sedm for a xy grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5)
     y = np.linspace(100.0, 104.3, 4)
     Dz = 15.0
-    # define points with 'ordering'='xy'
+    # define points with 'grid_orientation'='xy'
     xp, yp = np.meshgrid(x, y, indexing="xy")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -96,18 +119,18 @@ def test_sedm_BTTB_compare_sedm_xy():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
     SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
-def test_sedm_BTTB_compare_sedm_yx():
+def test_sedm_BTTB_grid_orientation_yx_compare_sedm():
     "verify if sedm_BTTB produces the same result as sedm for a yx grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5)
     y = np.linspace(100.0, 104.3, 4)
     Dz = 15.0
-    # define points with 'ordering'='yx'
+    # define points with 'grid_orientation'='yx'
     xp, yp = np.meshgrid(x, y, indexing="ij")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -121,12 +144,39 @@ def test_sedm_BTTB_compare_sedm_yx():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
     SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
 #### grad
+
+def test_grad_constant_versus_dictionary_sources():
+    "verify is both results are the same"
+
+    # data points
+    P = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([1, 5, -10, -3, 0, 0]),
+    }
+
+    # source points
+    S_1 = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([10, 10, 10, 10, 10, 10]),
+    }
+    S_2 = 10
+
+    R2_1 = idist.sedm(P, S_1)
+    GRAD_1 = idist.grad(P, S_1, R2_1, ["x", "y", "z"])
+    R2_2 = idist.sedm(P, S_2)
+    GRAD_2 = idist.grad(P, S_2, R2_2, ["x", "y", "z"])
+
+    ae(GRAD_1["x"], GRAD_2["x"])
+    ae(GRAD_1["y"], GRAD_2["y"])
+    ae(GRAD_1["z"], GRAD_2["z"])
 
 
 def test_grad_single_versus_joint_computation():
@@ -257,8 +307,7 @@ def test_grad_known_points():
 
 ##### grad BTTB
 
-
-def test_grad_BTTB_known_points_x_oriented():
+def test_grad_BTTB_known_points_grid_orientation_xy():
     "verify results obtained for specific points"
 
     # full grid of computation points
@@ -302,12 +351,12 @@ def test_grad_BTTB_known_points_x_oriented():
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="xy")
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, grid_orientation="xy")
     G = idist.grad_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
-        ordering="xy",
+        grid_orientation="xy",
         components=["x", "y", "z"],
     )
 
@@ -316,7 +365,7 @@ def test_grad_BTTB_known_points_x_oriented():
     aae(conv.BTTB_from_metadata(BTTB_metadata=G["z"])[:, 0], GZ, decimal=10)
 
 
-def test_grad_BTTB_known_points_y_oriented():
+def test_grad_BTTB_known_points_grid_orientation_yx():
     "verify results obtained for specific points"
 
     # full grid of computation points
@@ -360,12 +409,12 @@ def test_grad_BTTB_known_points_y_oriented():
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="yx")
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, grid_orientation="yx")
     G = idist.grad_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
-        ordering="yx",
+        grid_orientation="yx",
         components=["x", "y", "z"],
     )
 
@@ -374,13 +423,13 @@ def test_grad_BTTB_known_points_y_oriented():
     aae(conv.BTTB_from_metadata(BTTB_metadata=G["z"])[:, 0], GZ, decimal=12)
 
 
-def test_grad_BTTB_compare_grad_xy():
+def test_grad_BTTB_compare_grad_grid_orientation_xy():
     "verify if grad_BTTB produces the same result as grad for a xy grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5) * 1e3
     y = np.linspace(100.0, 104.3, 4) * 1e3
     Dz = 15.8 * 1e3
-    # define points with 'ordering'='xy'
+    # define points with 'grid_orientation'='xy'
     xp, yp = np.meshgrid(x, y, indexing="xy")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -394,7 +443,7 @@ def test_grad_BTTB_compare_grad_xy():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -406,7 +455,7 @@ def test_grad_BTTB_compare_grad_xy():
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
-        ordering="xy",
+        grid_orientation="xy",
         components=["x", "y", "z"],
     )
     aae(
@@ -426,13 +475,13 @@ def test_grad_BTTB_compare_grad_xy():
     )
 
 
-def test_grad_BTTB_compare_grad_yx():
-    "verify if grad_BTTB produces the same result as grad for a xy grid"
+def test_grad_BTTB_compare_grad_grid_orientation_yx():
+    "verify if grad_BTTB produces the same result as grad for a yx grid"
     # cordinates of the grid
     x = np.linspace(1.3, 5.7, 5) * 1e3
     y = np.linspace(100.0, 104.3, 4) * 1e3
     Dz = 15.8 * 1e3
-    # define points with 'ordering'='yx'
+    # define points with 'grid_orientation'='yx'
     xp, yp = np.meshgrid(x, y, indexing="ij")
     zp = np.zeros_like(xp) + 30.0
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -446,7 +495,7 @@ def test_grad_BTTB_compare_grad_yx():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -458,7 +507,7 @@ def test_grad_BTTB_compare_grad_yx():
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
-        ordering="yx",
+        grid_orientation="yx",
         components=["x", "y", "z"],
     )
     aae(
@@ -478,7 +527,89 @@ def test_grad_BTTB_compare_grad_yx():
     )
 
 
+def test_grad_x_BTTB_eigenvalues_orientation_xy():
+    "verify if grad_BTTB eigenvalues retrieves the result obtained from grad for a xy grid"
+    # cordinates of the grid
+    x = np.linspace(1.3, 5.7, 5) * 1e3
+    y = np.linspace(100.0, 104.3, 4) * 1e3
+    Dz = 15.8 * 1e3
+    # define points with 'grid_orientation'='xy'
+    xp, yp = np.meshgrid(x, y, indexing="xy")
+    zp = np.zeros_like(xp) + 30.0
+    data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
+    source_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel() + Dz}
+    grid = {
+        "x": x,
+        "y": y,
+        "z": 30.0,
+        "area": [1300, 5700, 100000, 104300],
+        "shape": (5, 4),
+    }
+    # compute the SEDM's
+    SEDM = idist.sedm(data_points=data_points, source_points=source_points)
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
+    # compute grad's
+    GRAD = idist.grad(
+        data_points=data_points,
+        source_points=source_points,
+        SEDM=SEDM,
+        components=["x"],
+    )["x"]
+    GRAD_BTTB = idist.grad_BTTB(
+        data_grid=grid,
+        delta_z=Dz,
+        SEDM=SEDM_BTTB,
+        grid_orientation="xy",
+        components=["x"],
+    )["x"]
+    # compute eigenvalues with ordering='row'
+    L_row = conv.eigenvalues_BCCB(BTTB_metadata=GRAD_BTTB, ordering="row")
+    # compute the GRAD from eigenvalues
+    Q = GRAD_BTTB["nblocks"]  # number of blocks along rows/columns of BTTB matrix
+    P = 3  # number of rows/columns in each block of BTTB matrix
+    # define unitaty DFT matrices
+    F2Q = dft(n=2 * Q, scale="sqrtn")
+    F2P = dft(n=2 * P, scale="sqrtn")
+
+    aae(
+        GRAD, 
+        conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB),
+        decimal=8,
+    )
+
+
 #### grad tensor
+
+
+def test_grad_tensor_constant_versus_dictionary_sources():
+    "verify is both results are the same"
+
+    # data points
+    P = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([1, 5, -10, -3, 0, 0]),
+    }
+
+    # source points
+    S_1 = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([10, 10, 10, 10, 10, 10]),
+    }
+    S_2 = 10
+
+    R2_1 = idist.sedm(P, S_1)
+    TENSOR_1 = idist.grad_tensor(P, S_1, R2_1, ["xx", "xy", "xz", "yy", "yz", "zz"])
+    R2_2 = idist.sedm(P, S_2)
+    TENSOR_2 = idist.grad_tensor(P, S_2, R2_2, ["xx", "xy", "xz", "yy", "yz", "zz"])
+
+    ae(TENSOR_1["xx"], TENSOR_2["xx"])
+    ae(TENSOR_1["xy"], TENSOR_2["xy"])
+    ae(TENSOR_1["xz"], TENSOR_2["xz"])
+    ae(TENSOR_1["yy"], TENSOR_2["yy"])
+    ae(TENSOR_1["yz"], TENSOR_2["yz"])
+    ae(TENSOR_1["zz"], TENSOR_2["zz"])
 
 
 def test_grad_tensor_single_versus_joint_computation():
@@ -695,7 +826,7 @@ def test_grad_tensor_known_points():
 ##### grad tensor BTTB
 
 
-def test_grad_tensor_BTTB_known_points_x_oriented():
+def test_grad_tensor_BTTB_known_points_grid_orientation_xy():
     "verify results obtained for specific points"
 
     # full grid of computation points
@@ -743,12 +874,12 @@ def test_grad_tensor_BTTB_known_points_x_oriented():
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="xy")
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, grid_orientation="xy")
     G = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
-        ordering="xy",
+        grid_orientation="xy",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
@@ -760,7 +891,7 @@ def test_grad_tensor_BTTB_known_points_x_oriented():
     aae(conv.BTTB_from_metadata(BTTB_metadata=G["zz"])[:, 0], GZZ, decimal=12)
 
 
-def test_grad_tensor_BTTB_known_points_y_oriented():
+def test_grad_tensor_BTTB_known_points_grid_orientation_yx():
     "verify results obtained for specific points"
 
     # full grid of computation points
@@ -808,12 +939,12 @@ def test_grad_tensor_BTTB_known_points_y_oriented():
     }
 
     # computed components
-    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, ordering="yx")
+    SEDM = idist.sedm_BTTB(data_grid=grid, delta_z=DZ, grid_orientation="yx")
     G = idist.grad_tensor_BTTB(
         data_grid=grid,
         delta_z=DZ,
         SEDM=SEDM,
-        ordering="yx",
+        grid_orientation="yx",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
 
@@ -825,13 +956,13 @@ def test_grad_tensor_BTTB_known_points_y_oriented():
     aae(conv.BTTB_from_metadata(BTTB_metadata=G["zz"])[:, 0], GZZ, decimal=12)
 
 
-def test_grad_tensor_BTTB_compare_grad_x_oriented():
-    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a yx grid"
+def test_grad_tensor_BTTB_compare_grad_grid_orientation_xy():
+    "verify if grad_tensor_BTTB produces the same result as grad_tensor for a xy grid"
     # cordinates of the grid
     x = np.linspace(100.3, 105.7, 5)
     y = np.linspace(100.0, 104.3, 4)
     Dz = 10.0
-    # define points with 'ordering'='xy'
+    # define points with 'grid_orientation'='xy'
     xp, yp = np.meshgrid(x, y, indexing="xy")
     zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -845,7 +976,7 @@ def test_grad_tensor_BTTB_compare_grad_x_oriented():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="xy")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
     # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
@@ -857,7 +988,7 @@ def test_grad_tensor_BTTB_compare_grad_x_oriented():
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
-        ordering="xy",
+        grid_orientation="xy",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
     # component xx
@@ -898,13 +1029,13 @@ def test_grad_tensor_BTTB_compare_grad_x_oriented():
     )
 
 
-def test_grad_tensor_BTTB_compare_grad_y_oriented():
+def test_grad_tensor_BTTB_compare_grad_grid_orientation_yx():
     "verify if grad_tensor_BTTB produces the same result as grad_tensor for a yx grid"
     # cordinates of the grid
     x = np.linspace(100.3, 105.7, 5)
     y = np.linspace(100.0, 104.3, 4)
     Dz = 10.0
-    # define points with 'ordering'='yx'
+    # define points with 'grid_orientation'='yx'
     xp, yp = np.meshgrid(x, y, indexing="ij")
     zp = np.zeros_like(xp)
     data_points = {"x": xp.ravel(), "y": yp.ravel(), "z": zp.ravel()}
@@ -918,7 +1049,7 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, ordering="yx")
+    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
     # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
@@ -930,7 +1061,7 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
         data_grid=grid,
         delta_z=Dz,
         SEDM=SEDM_BTTB,
-        ordering="yx",
+        grid_orientation="yx",
         components=["xx", "xy", "xz", "yy", "yz", "zz"],
     )
     # component xx
@@ -974,11 +1105,12 @@ def test_grad_tensor_BTTB_compare_grad_y_oriented():
 #### directional_1st_order
 
 
+
 ##### _delta_x
 
 
 def test__delta_x_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -990,7 +1122,7 @@ def test__delta_x_known_points():
     reference = -np.array([[0, 10, 20], [0, 10, 20]])
     symmetries, shape, delta = idist._delta_x(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1008,7 +1140,7 @@ def test__delta_x_known_points():
 
 
 def test__delta_y_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1020,7 +1152,7 @@ def test__delta_y_known_points():
     reference = -np.array([[0, 0, 0], [15, 15, 15]])
     symmetries, shape, delta = idist._delta_y(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1038,7 +1170,7 @@ def test__delta_y_known_points():
 
 
 def test__delta_z_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1050,7 +1182,7 @@ def test__delta_z_known_points():
     reference = 10
     symmetries, shape, delta = idist._delta_z(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1068,7 +1200,7 @@ def test__delta_z_known_points():
 
 
 def test__delta_xx_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1080,7 +1212,7 @@ def test__delta_xx_known_points():
     reference = 3 * np.array([[0, 100, 400], [0, 100, 400]])
     symmetries, shape, delta = idist._delta_xx(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1098,7 +1230,7 @@ def test__delta_xx_known_points():
 
 
 def test__delta_xy_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1110,7 +1242,7 @@ def test__delta_xy_known_points():
     reference = 3 * np.array([[0, 0, 0], [0, 150, 300]])
     symmetries, shape, delta = idist._delta_xy(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1128,7 +1260,7 @@ def test__delta_xy_known_points():
 
 
 def test__delta_xz_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1140,7 +1272,7 @@ def test__delta_xz_known_points():
     reference = -3 * np.array([[0, 100, 200], [0, 100, 200]])
     symmetries, shape, delta = idist._delta_xz(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1158,7 +1290,7 @@ def test__delta_xz_known_points():
 
 
 def test__delta_yy_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1170,7 +1302,7 @@ def test__delta_yy_known_points():
     reference = 3 * np.array([[0, 0, 0], [225, 225, 225]])
     symmetries, shape, delta = idist._delta_yy(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1188,7 +1320,7 @@ def test__delta_yy_known_points():
 
 
 def test__delta_yz_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1200,7 +1332,7 @@ def test__delta_yz_known_points():
     reference = -3 * np.array([[0, 0, 0], [150, 150, 150]])
     symmetries, shape, delta = idist._delta_yz(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1218,7 +1350,7 @@ def test__delta_yz_known_points():
 
 
 def test__delta_zz_known_points():
-    # ordering xy
+    # grid_orientation xy
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),
@@ -1230,7 +1362,7 @@ def test__delta_zz_known_points():
     reference = 3 * 100
     symmetries, shape, delta = idist._delta_zz(grid, Dz, "xy")
     aae(reference, delta)
-    # ordering yx
+    # grid_orientation yx
     grid = {
         "x": np.array([10, 20, 30]),
         "y": np.array([15, 30]),

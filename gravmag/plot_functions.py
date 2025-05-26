@@ -100,7 +100,7 @@ def define_mask(total, shape, clip):
     return mask, masked_shape
 
 
-def model_boundaries(model, color="k", style="--", width="2", m2km=True):
+def model_boundaries(ax, model, color="k", style="--", width="2", m2km=True):
     """
     Plot the projection of the model boundaries on plane xy.
     """
@@ -113,7 +113,7 @@ def model_boundaries(model, color="k", style="--", width="2", m2km=True):
         x = np.array([x1, x2, x2, x1, x1])
         y = np.array([y1, y1, y2, y2, y1])
         if m2km is True:
-            plt.plot(
+            ax.plot(
                 0.001 * y,
                 0.001 * x,
                 color=color,
@@ -121,7 +121,7 @@ def model_boundaries(model, color="k", style="--", width="2", m2km=True):
                 linewidth=width,
             )
         else:
-            plt.plot(y, x, color=color, linestyle=style, linewidth=width)
+            ax.plot(y, x, color=color, linestyle=style, linewidth=width)
 
 
 def draw_region(

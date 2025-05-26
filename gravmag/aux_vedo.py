@@ -266,6 +266,7 @@ def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
         if data.vertices.shape[1] != 3:
             raise ValueError("data must have three columns")
         N = data.vertices.shape[0]
+        vedo_pointcloud = data
     else:
         raise ValueError(
             "data must be a numpy array or vedo.pointcloud.Points"
@@ -278,36 +279,28 @@ def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
         if vmin >= vmax:
             raise ValueError("vmin must be smaller than vmax")
 
+    # generate a Vedo pointcloud if data is a numpy array 2d
+    if isinstance(data, np.ndarray):
+        vedo_pointcloud = vedo.Points(
+            inputobj=data, 
+            r=4, 
+            c='blue4', 
+            alpha=1
+            )
+    if isinstance(data, vedo.pointcloud.Points):
+        vedo_pointcloud = data
+
     # colorize the poincloud
     if scalar_props is not None:
-        # colorize the original data
-        try:
-            data.cmap(
+        vedo_pointcloud.cmap(
                 input_cmap=cmap, 
                 input_array=scalar_props,
                 vmin=vmin, 
                 vmax=vmax,
                 alpha=1
             )
-            print("The original data were colorized")
-            return data
-        except:
-            # generate a Vedo pointcloud if data is a numpy array 2d
-            vedo_pointcloud = vedo.Points(
-                inputobj=data, 
-                r=4, 
-                c='blue4', 
-                alpha=1
-                )
-            vedo_pointcloud.cmap(
-                input_cmap=cmap, 
-                input_array=scalar_props,
-                vmin=vmin, 
-                vmax=vmax,
-                alpha=1
-            )
-            print("A colorized Vedo pointcloud were created")
-            return vedo_pointcloud
+    
+    return vedo_pointcloud
 
 
 def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
@@ -385,7 +378,7 @@ def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
                 vmax=vmax,
                 alpha=1
             )
-            print("A colorized Vedo surface were created")
+            print("A colorized Vedo surface was created")
             return vedo_surface
 
 
