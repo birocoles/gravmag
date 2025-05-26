@@ -406,7 +406,7 @@ def test_is_grid_xy_invalid_z_key():
         "x": np.arange(4),
         "y": np.ones(3),
         "z": np.array(18.2),
-        "ordering": "xy",
+        "grid_orientation": "xy",
     }
     with pytest.raises(ValueError):
         check.is_grid_xy(coordinates)
@@ -777,24 +777,24 @@ def test_spacing_inconsistent_elements():
         check.is_spacing(spacing=spacing)
 
 
-###### is ordering
-def test_ordering_inconsistent_elements():
-    "Check if passing an inconsistent ordering raises an error"
-    ordering = "Xy"
+###### is grid_orientation
+def test_grid_orientation_inconsistent_elements():
+    "Check if passing an inconsistent grid_orientation raises an error"
+    grid_orientation = "Xy"
     with pytest.raises(ValueError):
-        check.is_ordering(ordering=ordering)
-    ordering = "xY"
+        check.is_grid_orientation(grid_orientation=grid_orientation)
+    grid_orientation = "xY"
     with pytest.raises(ValueError):
-        check.is_ordering(ordering=ordering)
-    ordering = "x"
+        check.is_grid_orientation(grid_orientation=grid_orientation)
+    grid_orientation = "x"
     with pytest.raises(ValueError):
-        check.is_ordering(ordering=ordering)
-    ordering = "y"
+        check.is_grid_orientation(grid_orientation=grid_orientation)
+    grid_orientation = "y"
     with pytest.raises(ValueError):
-        check.is_ordering(ordering=ordering)
-    ordering = "xyz"
+        check.is_grid_orientation(grid_orientation=grid_orientation)
+    grid_orientation = "xyz"
     with pytest.raises(ValueError):
-        check.is_ordering(ordering=ordering)
+        check.is_grid_orientation(grid_orientation=grid_orientation)
 
 
 ##### sensitivity matrix and data vector

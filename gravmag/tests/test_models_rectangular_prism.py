@@ -26,8 +26,29 @@ def test_rectangular_prism_invalid_grav_field():
     with pytest.raises(ValueError):
         rp.grav(coords, model, rho, field="invalid field")
 
+def test_rectangular_prism_invalid_mag_field():
+    "Check if passing an invalid field raises an error"
+    model = {
+        "x1": np.array([-130]),
+        "x2": np.array([100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([213]),
+    }
+    coords = {
+        "x": np.array([0, 30, -62.1]),
+        "y": np.array([0, -10, 80]),
+        "z": np.array([-1, 0, -2]),
+    }
+    mx = np.array([1.])
+    my = np.array([1.])
+    mz = np.array([1.])
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="invalid field")
 
-def test_rectangular_prism_invalid_prism_boundaries():
+
+def test_rectangular_prism_grav_invalid_prism_boundaries():
     "Check if passing an invalid prism boundaries raises an error"
     coords = {
         "x": np.array([0, 30, -62.1]),
@@ -69,8 +90,52 @@ def test_rectangular_prism_invalid_prism_boundaries():
     with pytest.raises(ValueError):
         rp.grav(coords, model, rho, field="potential")
 
+def test_rectangular_prism_mag_invalid_prism_boundaries():
+    "Check if passing an invalid prism boundaries raises an error"
+    coords = {
+        "x": np.array([0, 30, -62.1]),
+        "y": np.array([0, -10, 80]),
+        "z": np.array([-1, 0, -2]),
+    }
+    mx = np.array([1.])
+    my = np.array([1.])
+    mz = np.array([1.])
+    # wrong x boundaries
+    model = {
+        "x1": np.array([130]),
+        "x2": np.array([-100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([213]),
+    }
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="x")
+    # wrong y boundaries
+    model = {
+        "x1": np.array([-130]),
+        "x2": np.array([100]),
+        "y1": np.array([100]),
+        "y2": np.array([-100]),
+        "z1": np.array([100]),
+        "z2": np.array([213]),
+    }
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="z")
+    # wrong z boundaries
+    model = {
+        "x1": np.array([-130]),
+        "x2": np.array([100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([-213]),
+    }
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="potential")
 
-def test_rectangular_prism_invalid_prism():
+
+def test_rectangular_prism_grav_invalid_prism():
     "Check if passing a non-dictionaty prism raises an error"
     coords = {
         "x": np.array([0, 30, -62.1]),
@@ -93,6 +158,31 @@ def test_rectangular_prism_invalid_prism():
         rp.grav(coords, model, rho, field="z")
 
 
+def test_rectangular_prism_mag_invalid_prism():
+    "Check if passing a non-dictionaty prism raises an error"
+    coords = {
+        "x": np.array([0, 30, -62.1]),
+        "y": np.array([0, -10, 80]),
+        "z": np.array([-1, 0, -2]),
+    }
+    mx = np.array([1.])
+    my = np.array([1.])
+    mz = np.array([1.])
+    field = "potential"
+    # array
+    model = np.array([100, -100, -100, 100, 100, 200])
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="potential")
+    # list
+    model = [2, 4]
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="x")
+    # array shape (1,4)
+    model = (1, 5)
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="z")
+
+
 def test_rectangular_prism_invalid_coordinates():
     "Check if passing an invalid coordinates raises an error"
     model = {
@@ -104,17 +194,24 @@ def test_rectangular_prism_invalid_coordinates():
         "z2": np.array([213]),
     }
     rho = np.array([1300])
+    mx = np.array([1.])
+    my = np.array([1.])
+    mz = np.array([1.])
     # array
     coords = np.array([0, 0, 0])
     with pytest.raises(ValueError):
         rp.grav(coords, model, rho, field="z")
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="z")
     # tuple
     coords = (4, 3)
     with pytest.raises(ValueError):
         rp.grav(coords, model, rho, field="z")
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="z")
 
 
-def test_rectangular_prism_incompatible_density_prisms():
+def test_rectangular_prism_grav_incompatible_density_prisms():
     "Check if passing incompatible density and prisms raises an error"
     model = {
         "x1": np.array([-130]),
@@ -134,8 +231,30 @@ def test_rectangular_prism_incompatible_density_prisms():
         rp.grav(coords, model, density, field="z")
 
 
-def test_field_decreases_with_distance():
-    "Check if field decreases with distance"
+def test_rectangular_prism_mag_incompatible_magnetization_prisms():
+    "Check if passing incompatible magnetization and prisms raises an error"
+    model = {
+        "x1": np.array([-130]),
+        "x2": np.array([100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([213]),
+    }
+    coords = {
+        "x": np.array([0, 30, -62.1]),
+        "y": np.array([0, -10, 80]),
+        "z": np.array([-1, 0, -2]),
+    }
+    mx = np.ones(2)
+    my = np.array([1.])
+    mz = np.array([1.])
+    with pytest.raises(ValueError):
+        rp.mag(coords, model, mx, my, mz, field="potential")
+
+
+def test_grav_field_decreases_with_distance():
+    "Check if grav field decreases with distance"
     model = {
         "x1": np.array([-100]),
         "x2": np.array([100]),
@@ -172,6 +291,46 @@ def test_field_decreases_with_distance():
     ae(diffs, [True, True, True])
 
 
+def test_mag_field_decreases_with_distance():
+    "Check if mag field decreases with distance"
+    model = {
+        "x1": np.array([-100]),
+        "x2": np.array([100]),
+        "y1": np.array([-100]),
+        "y2": np.array([100]),
+        "z1": np.array([100]),
+        "z2": np.array([200]),
+    }
+    mx = np.array([8.])
+    my = np.array([8.])
+    mz = np.array([8.])
+    close = {
+        "x": np.array([20]),
+        "y": np.array([0]),
+        "z": np.array([0]),
+    }
+    far = {
+        "x": np.array([20]),
+        "y": np.array([0]),
+        "z": np.array([-100]),
+    }
+    # potential
+    potential_close = rp.mag(close, model, mx, my, mz, field="potential")
+    potential_far = rp.mag(far, model, mx, my, mz, field="potential")
+    # bz
+    bz_close = rp.mag(close, model, mx, my, mz, field="z")
+    bz_far = rp.mag(far, model, mx, my, mz, field="z")
+    # bx
+    bx_close = rp.mag(close, model, mx, my, mz, field="x")
+    bx_far = rp.mag(far, model, mx, my, mz, field="x")
+    diffs = [
+        np.abs(potential_far) < np.abs(potential_close),
+        np.abs(bz_far) < np.abs(bz_close),
+        np.abs(bx_far) < np.abs(bx_close),
+    ]
+    ae(diffs, [True, True, True])
+
+
 def test_Laplace_equation():
     "Sum of derivatives xx, yy and zz must be zero outside the prism"
     model = {
@@ -195,7 +354,7 @@ def test_Laplace_equation():
 
 
 def test_Poisson_equation():
-    "Sum of derivatives xx, yy and zz must -4*pi*rho*G inside the prism"
+    "Sum of derivatives xx, yy and zz must be equal to -4*pi*rho*G inside the prism"
     model = {
         "x1": np.array([-130]),
         "x2": np.array([100]),
@@ -244,7 +403,7 @@ def test_rectangular_prism_symmetric_points():
 
 
 def test_rectangular_prism_compare_reference_values():
-    "Check if computed values are consisten with literature"
+    "Check if computed values are consistent with literature"
     model = {
         "x1": np.array([-10.0]),
         "x2": np.array([10.0]),
@@ -264,10 +423,10 @@ def test_rectangular_prism_compare_reference_values():
         [-0.346426, 0.346426, 0.0, -0.129316, -0.005335, -0.000053, -0.000518]
     )
     computed = rp.grav(coordinates=coords, prisms=model, density=rho, field="z")
-    aae(reference, computed, decimal=3)  #
+    aae(reference, computed, decimal=3)
 
 
-##### kernels
+##### kernels: comparison Numba x Numpy
 
 
 def test_kernel_potential_numbaXnumpy():

@@ -90,10 +90,10 @@ def are_coordinates(coordinates):
 def is_grid_xy(grid):
     """
     Check if coordinates is a dictionary containing the x, y and z
-    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
+    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'grid_orientation'
     defining how the points are ordered after the first point (min x, min y).
-    If 'ordering' = 'xy', the points vary first along x and then along y.
-    If 'ordering' = 'yx', the points vary first along y and then along x.
+    If 'grid_orientation' = 'xy', the points vary first along x and then along y.
+    If 'grid_orientation' = 'yx', the points vary first along y and then along x.
     Key 'x' must be a numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
     Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
     Key 'z' must be a scalar (float or int) defining the constant vertical coordinate of the grid.
@@ -137,7 +137,7 @@ def is_grid_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary containing the x, y and z
     wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys
-    'shape,' 'spacing', 'ordering'. See docstring of function
+    'shape,' 'spacing', 'grid_orientation'. See docstring of function
     'data_structures.regular_grid_wavenumbers'.
 
     parameters
@@ -305,21 +305,21 @@ def is_spacing(spacing):
     is_scalar(x=spacing[1], positive=True)
 
 
-def is_ordering(ordering):
+def is_grid_orientation(grid_orientation):
     """
-    Check if ordering is a string 'xy' or 'yx'.
+    Check if grid_orientation is a string 'xy' or 'yx'.
 
     parameters
     ----------
-    ordering : generic object
+    grid_orientation : generic object
         Python object to be verified.
     """
-    if type(ordering) != str:
-        raise ValueError("ordering must be a string")
-    if len(ordering) != 2:
-        raise ValueError("ordering must have 2 elements")
-    if ordering not in ["xy", "yx"]:
-        raise ValueError("invalid ordering {}".format(ordering))
+    if type(grid_orientation) != str:
+        raise ValueError("grid_orientation must be a string")
+    if len(grid_orientation) != 2:
+        raise ValueError("grid_orientation must have 2 elements")
+    if grid_orientation not in ["xy", "yx"]:
+        raise ValueError("invalid grid_orientation {}".format(grid_orientation))
 
 
 def sensitivity_matrix_and_data(matrix, data):
@@ -443,10 +443,6 @@ def BTTB_metadata(BTTB):
     parameters
     ----------
     BTTB : dictionary containing the following keys:
-        ordering : string
-            Defines how the points are ordered after the first point (min x, min y).
-            If 'xy', the points vary first along x and then along y.
-            If 'yx', the points vary first along y and then along x.
         symmetry_structure : string
             Defines the type of symmetry between all blocks above and below the main block diagonal.
             It can be 'gene', 'symm' or 'skew' (see the explanation above).
@@ -467,7 +463,6 @@ def BTTB_metadata(BTTB):
     if type(BTTB) != dict:
         raise ValueError("'BTTB' must be a dictionary")
     if list(BTTB.keys()) != [
-        "ordering",
         "symmetry_structure",
         "symmetry_blocks",
         "nblocks",
@@ -475,18 +470,16 @@ def BTTB_metadata(BTTB):
         "rows",
     ]:
         raise ValueError(
-            "'Toeplitz' must have the following keys: 'ordering', 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
+            "'Toeplitz' must have the following keys: 'symmetry_structure', 'symmetry_blocks', 'nblocks', 'columns', 'rows'"
         )
 
     # get the parameters defining the BTTB matrix
-    ordering = BTTB["ordering"]
     symmetry_structure = BTTB["symmetry_structure"]
     symmetry_blocks = BTTB["symmetry_blocks"]
     nblocks = BTTB["nblocks"]
     columns = BTTB["columns"]
     rows = BTTB["rows"]
 
-    is_ordering(ordering=ordering)
     if symmetry_structure not in ["symm", "skew", "gene"]:
         raise ValueError("invalid {} symmetry".format(symmetry_structure))
     if symmetry_blocks not in ["symm", "skew", "gene"]:

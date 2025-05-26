@@ -47,7 +47,7 @@ def safe_atan2(y, x):
                     result[i, j] = np.pi / 2
                 elif y[i, j] < 0.0:
                     result[i, j] = -np.pi / 2
-                else:
+                else: # y[i, j] == 0.0
                     result[i, j] = 0.0
     return result
 

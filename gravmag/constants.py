@@ -4,6 +4,7 @@
 GRAVITATIONAL_CONST = 0.00000000006673
 
 #: The magnetic constant in u0/4pi x 10^9
+#: u0/4pi = 10^-7 H/m
 MAGNETIC_CONST = 100  # CM * T2nanoT
 CM = 1e-7
 
