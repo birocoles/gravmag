@@ -470,7 +470,7 @@ def reduce_data(
             else:
                 reduced_data[i, j] = func(data[blocks_indices[i][j]])
 
-    if remove_nan == True:
+    if remove_nan is True:
         reduced_data = reduced_data.ravel()
         nan_elements = np.isnan(reduced_data)
         reduced_data = np.delete(reduced_data, nan_elements)

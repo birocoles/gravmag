@@ -229,7 +229,7 @@ def grid_xy_spacing(area, shape, check_input=True):
     return spacing
 
 
-def grid_wavenumbers(grid, pad=False, check_input=True):
+def grid_wavenumbers(grid, pad_size=None, check_input=True):
     """
     Compute the wavenumbers associated with a regular grid of data.
 
@@ -239,9 +239,11 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
         points at the key 'grid_orientation'. Output of the function 'data_structures.grid_xy'.
-    pad : boolean
-        If True, compute the wavenumbers by considering that the originating grid is padded.
-        Default is False.
+    pad_size : integer or None
+        If not None, it defines the size of padding along axes 
+        0 (rows) and 1 (columns). The shape of the padded data is 
+        (data.shape[0] * (2 * pad_size + 1), data.shape[1] * (2 * pad_size + 1)).
+        Default is 1.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -269,8 +271,8 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
 
     if check_input is True:
         check.is_grid_xy(grid=grid)
-        if isinstance(pad, bool) is not True:
-            raise Valuerror("'pad' must be boolean")
+        if pad_size is not None:
+            check.is_integer(x=pad_size, positive=True)
 
     # get the original shape and area
     shape = grid["shape"]
@@ -278,8 +280,8 @@ def grid_wavenumbers(grid, pad=False, check_input=True):
     # compute the grid spacing
     spacing = grid_xy_spacing(area=area, shape=shape, check_input=False)
     # redefine 'shape' according to 'pad'
-    if pad is True:
-        shape = (3 * shape[0], 3 * shape[1])
+    if pad_size is not None:
+        shape = ((2 * pad_size + 1) * shape[0], (2 * pad_size + 1) * shape[1])
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
     kx = 2 * np.pi * fftfreq(n=shape[0], d=spacing[0])
