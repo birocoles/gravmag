@@ -298,7 +298,7 @@ def method_CGLS(
     returns
     -------
     deltas : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values. The RMSE considers the total number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -346,7 +346,7 @@ def method_CGLS(
     delta = 0.0
     for res in residuals:
         delta += np.sum(res * res)
-    delta = np.sqrt(delta) / ndata
+    delta = np.sqrt(delta / ndata)
     deltas.append(delta)
 
     # initialize the parameter vector
@@ -363,9 +363,11 @@ def method_CGLS(
     tau = 0.0
     eta = np.zeros_like(parameters)
     m = 1
+    delta0 = delta
+    relative_delta_variation = np.inf
 
     # updates
-    while (delta > epsilon) and (m < ITMAX):
+    while (relative_delta_variation > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
         for G, nu in zip(sensitivity_matrices, nus):
@@ -377,7 +379,7 @@ def method_CGLS(
         for res, nu in zip(residuals, nus):
             res[:] -= upsilon * nu
             delta += np.sum(res * res)
-        delta = np.sqrt(delta) / ndata
+        delta = np.sqrt(delta / ndata)
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
         for sensitivity_matrix, res in zip(sensitivity_matrices, residuals):
@@ -386,6 +388,8 @@ def method_CGLS(
         tau = rho / rho0
         rho0 = rho
         m += 1
+        relative_delta_variation = np.abs((delta - delta0) / delta0)
+        delta0 = delta
 
     return deltas, parameters
 
@@ -498,7 +502,7 @@ def method_iterative_SOB17(
     returns
     -------
     delta_list : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -524,7 +528,7 @@ def method_iterative_SOB17(
         parameters = data * scale
     residuals = data - sensitivity_matrix @ parameters
     delta_list = []
-    delta = np.sqrt(np.sum(residuals * residuals)) / D
+    delta = np.sqrt(np.sum(residuals * residuals) / D)
     delta_list.append(delta)
     m = 1
     # updates
@@ -532,7 +536,7 @@ def method_iterative_SOB17(
         dp = scale * residuals
         parameters[:] += dp
         residuals[:] -= sensitivity_matrix @ dp
-        delta = np.sqrt(np.sum(residuals * residuals)) / D
+        delta = np.sqrt(np.sum(residuals * residuals) / D)
         delta_list.append(delta)
         m += 1
 
@@ -573,7 +577,7 @@ def method_iterative_deconvolution_TOB20(
     returns
     -------
     deltas : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values. The RMSE considers the total number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -639,7 +643,7 @@ def method_iterative_deconvolution_TOB20(
     delta = 0.0
     for res in residuals:
         delta += np.sum(res * res)
-    delta = np.sqrt(delta) / ndata
+    delta = np.sqrt(delta / ndata)
     deltas.append(delta)
 
     # initialize the parameter vector
@@ -661,9 +665,11 @@ def method_iterative_deconvolution_TOB20(
     for i in range(ndatasets):
         nus.append(np.zeros_like(parameters))
     m = 1
+    delta0 = delta
+    relative_delta_variation = np.inf
 
     # updates
-    while (delta > epsilon) and (m < ITMAX):
+    while (relative_delta_variation > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
         for L, nu in zip(eigenvalues_matrices, nus):
@@ -677,7 +683,7 @@ def method_iterative_deconvolution_TOB20(
         for res, nu in zip(residuals, nus):
             res[:] -= upsilon * nu
             delta += np.sum(res * res)
-        delta = np.sqrt(delta) / ndata
+        delta = np.sqrt(delta / ndata)
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
         for L, res in zip(eigenvalues_matrices, residuals):
@@ -688,6 +694,8 @@ def method_iterative_deconvolution_TOB20(
         tau = rho / rho0
         rho0 = rho
         m += 1
+        relative_delta_variation = np.abs((delta - delta0) / delta0)
+        delta0 = delta
 
     return deltas, parameters
 

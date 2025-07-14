@@ -167,7 +167,7 @@ def test_grid_wavenumbers_output_without_pad():
         "shape": (5, 4),
         "spacing": (1.3, 1.1),
     }
-    computed = ds.grid_wavenumbers(grid=grid)
+    computed = ds.grid_wavenumbers(grid=grid, pad_size=None)
     aae(reference["x"], computed["x"], decimal=15)
     aae(reference["y"], computed["y"], decimal=15)
     aae(reference["z"], computed["z"], decimal=15)
@@ -203,9 +203,27 @@ def test_grid_wavenumbers_output_with_pad():
         "shape": (15, 12),
         "spacing": (1.3, 1.1),
     }
-    computed = ds.grid_wavenumbers(grid=grid, pad=True)
+    computed = ds.grid_wavenumbers(grid=grid, pad_size=1)
     aae(reference["x"], computed["x"], decimal=15)
     aae(reference["y"], computed["y"], decimal=15)
     aae(reference["z"], computed["z"], decimal=15)
     ae(reference["shape"], computed["shape"])
     aae(reference["spacing"], computed["spacing"], decimal=15)
+
+
+def test_grid_wavenumbers_shape_with_pad():
+    "compare output with reference"
+    grid = {
+        "x": np.arange(5) * 1.3 + 10.0,
+        "y": np.arange(4) * 1.1 - 3.2,
+        "z": 10.0,
+        "area": [10, 10 + 4 * 1.3, -3.2, -3.2 + 3 * 1.1],
+        "shape": (5, 4),
+    }
+    wavenumbers = ds.grid_wavenumbers(grid=grid, pad_size=1)
+    ae((15, 12), wavenumbers["shape"])
+    wavenumbers = ds.grid_wavenumbers(grid=grid, pad_size=2)
+    ae((25, 20), wavenumbers["shape"])
+    wavenumbers = ds.grid_wavenumbers(grid=grid, pad_size=3)
+    ae((35, 28), wavenumbers["shape"])
+    
