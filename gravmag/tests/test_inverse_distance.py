@@ -1101,9 +1101,7 @@ def test_grad_tensor_BTTB_compare_grad_grid_orientation_yx():
         decimal=12,
     )
 
-
 #### directional_1st_order
-
 
 
 ##### _delta_x

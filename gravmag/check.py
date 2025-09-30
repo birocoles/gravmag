@@ -195,7 +195,7 @@ def is_scalar(x, positive=False):
             raise ValueError("x must be positive")
 
 
-def is_integer(x, positive=True):
+def is_integer(x, positive=True, include_zero=False):
     """
     Check if x is an int.
 
@@ -205,6 +205,10 @@ def is_integer(x, positive=True):
         Python object to be verified.
     positive : boolean
         If True, impose that x must be positive.
+        Default is True.
+    include_zero : boolean
+        If True, impose that x must be positive or zero.
+        Default is False.
     """
     if isinstance(x, int) is False:
         raise ValueError("x must be an int")

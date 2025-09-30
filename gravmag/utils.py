@@ -437,6 +437,7 @@ def reduce_data(
     reduced_data : numpy array 1d or 2d
         Matrix containing the reduced data at each block.
     """
+
     if check_input is True:
         check.is_array(x=data, ndim=1)
         if type(blocks_indices) != list:

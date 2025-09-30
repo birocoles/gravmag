@@ -184,7 +184,7 @@ def continuation(wavenumbers, dz, regularization=0., check_input=True):
 
     return result
 
-
+7
 def cuttof_frequency(wavenumbers, max_freq, check_input=True):
     """
     Compute a simple low-pass filter.

@@ -53,7 +53,6 @@ def test_grid_xy_output():
 
 # grid_xy_to_full_flatten
 
-
 def test_grid_xy_to_full_flatten_known_values():
     "compare results with reference values obtained for specific input"
     # reference grid
@@ -226,4 +225,3 @@ def test_grid_wavenumbers_shape_with_pad():
     ae((25, 20), wavenumbers["shape"])
     wavenumbers = ds.grid_wavenumbers(grid=grid, pad_size=3)
     ae((35, 28), wavenumbers["shape"])
-    

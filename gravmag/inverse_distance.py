@@ -1015,6 +1015,7 @@ def _delta_x(data_grid, delta_z, grid_orientation):
 
 
 def _delta_y(data_grid, delta_z, grid_orientation):
+
     """
     Parameters associated with the BTTB defined by field component y.
 
