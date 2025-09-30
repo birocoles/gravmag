@@ -116,9 +116,7 @@ def is_regular_grid_xy(grid):
         )
     for key in ["x", "y"]:
         if type(grid[key]) != np.ndarray:
-            raise ValueError(
-                "'x' and 'y' keys in grid must be numpy arrays"
-            )
+            raise ValueError("'x' and 'y' keys in grid must be numpy arrays")
     if grid["x"].ndim != 1:
         raise ValueError("'x' key must have ndim = 1")
     if grid["y"].ndim != 1:
@@ -127,7 +125,9 @@ def is_regular_grid_xy(grid):
     is_shape(grid["shape"])
     is_area(grid["area"])
     if (grid["x"].size, grid["y"].size) != grid["shape"]:
-        raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
+        raise ValueError(
+            "number of elements in 'x' and 'y' keys must must be consistent with shape key"
+        )
     D = (grid["x"].size) * (grid["y"].size)
 
     return D
@@ -136,8 +136,8 @@ def is_regular_grid_xy(grid):
 def is_regular_grid_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary containing the x, y and z
-    wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys 
-    'shape,' 'spacing', 'ordering'. See docstring of function 
+    wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys
+    'shape,' 'spacing', 'ordering'. See docstring of function
     'data_structures.regular_grid_wavenumbers'.
 
     parameters
@@ -148,7 +148,14 @@ def is_regular_grid_wavenumbers(wavenumbers):
     """
     if type(wavenumbers) != dict:
         raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != ["x", "y", "z", "ordering", "shape", "spacing"]:
+    if list(wavenumbers.keys()) != [
+        "x",
+        "y",
+        "z",
+        "ordering",
+        "shape",
+        "spacing",
+    ]:
         raise ValueError(
             "wavenumbers must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'shape', 'spacing'"
         )
@@ -166,14 +173,18 @@ def is_regular_grid_wavenumbers(wavenumbers):
     if wavenumbers["z"].ndim != 2:
         raise ValueError("'z' key must have ndim = 2")
     if wavenumbers["z"].shape != (wavenumbers["x"].size, wavenumbers["y"].size):
-        raise ValueError("shape of 'z' key must consistent with sizes of keys 'x' and 'y'")
+        raise ValueError(
+            "shape of 'z' key must consistent with sizes of keys 'x' and 'y'"
+        )
     if np.any(wavenumbers["z"] < 0):
         raise ValueError("'z' key must contain all-positive elements")
-    is_shape(wavenumbers['shape'])
-    is_spacing(wavenumbers['spacing'])
+    is_shape(wavenumbers["shape"])
+    is_spacing(wavenumbers["spacing"])
     is_ordering(wavenumbers["ordering"])
     if (wavenumbers["x"].size, wavenumbers["y"].size) != wavenumbers["shape"]:
-        raise ValueError("number of elements in 'x' and 'y' keys must must be consistent with shape key")
+        raise ValueError(
+            "number of elements in 'x' and 'y' keys must must be consistent with shape key"
+        )
 
 
 def is_scalar(x, positive=True):
@@ -194,7 +205,7 @@ def is_scalar(x, positive=True):
             raise ValueError("x must be positive")
 
 
-def is_integer(x, positive=True):
+def is_integer(x, positive=True, include_zero=False):
     """
     Check if x is an int.
 
@@ -204,11 +215,15 @@ def is_integer(x, positive=True):
         Python object to be verified.
     positive : boolean
         If True, impose that x must be positive.
+        Default is True.
+    include_zero : boolean
+        If True, impose that x must be positive or zero.
+        Default is False.
     """
     if isinstance(x, int) is False:
         raise ValueError("x must be an int")
     if positive == True:
-        if x <= 0:
+        if x < 1:
             raise ValueError("x must be positive")
 
 
@@ -252,7 +267,7 @@ def is_array(x, ndim=None, shape=None):
 
 def is_area(area):
     """
-    Check if area is a list containing min x, max x, min y and max y 
+    Check if area is a list containing min x, max x, min y and max y
     coordinates of a given region.
 
     parameters
@@ -265,18 +280,20 @@ def is_area(area):
     if len(area) != 4:
         raise ValueError("'area' must have 4 elements")
     if (area[0] >= area[1]) or (area[2] >= area[3]):
-        raise ValueError("'area[0]' must be smaller than 'area[1]' and 'area[2]' must be smaller than 'area[3]'")
+        raise ValueError(
+            "'area[0]' must be smaller than 'area[1]' and 'area[2]' must be smaller than 'area[3]'"
+        )
 
 
 def is_shape(shape):
-    '''
+    """
     Check is shape is a tuple containing two positive integers.
 
     parameters
     ----------
     shape : generic object
         Python object to be verified.
-    '''
+    """
     if type(shape) != tuple:
         raise ValueError("'shape' must be a tuple")
     if len(shape) != 2:
@@ -286,14 +303,14 @@ def is_shape(shape):
 
 
 def is_spacing(spacing):
-    '''
+    """
     Check is spacing is a tuple containing two positive scalar.
 
     parameters
     ----------
     spacing : generic object
         Python object to be verified.
-    '''
+    """
     if type(spacing) != tuple:
         raise ValueError("spacing must be a tuple")
     if len(spacing) != 2:
@@ -303,14 +320,14 @@ def is_spacing(spacing):
 
 
 def is_ordering(ordering):
-    '''
+    """
     Check if ordering is a string 'xy' or 'yx'.
 
     parameters
     ----------
     ordering : generic object
         Python object to be verified.
-    '''
+    """
     if type(ordering) != str:
         raise ValueError("ordering must be a string")
     if len(ordering) != 2:

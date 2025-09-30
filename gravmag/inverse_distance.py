@@ -84,7 +84,7 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
     returns
     -------
     SEDM: dictionary
-        Returns a dictionary containing the metadata associated with the full matrix 
+        Returns a dictionary containing the metadata associated with the full matrix
         (see input of function 'check.BTTB_metadata').
     """
 
@@ -95,8 +95,8 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
         check.is_ordering(ordering)
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # compute auxiliary variables SEDMx, SEDMy and SEDMz
     SEDMx = (
@@ -220,7 +220,7 @@ def grad_BTTB(
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
     SEDM: dictionary
-        Dictionary containing the metadata associated with the full matrix 
+        Dictionary containing the metadata associated with the full matrix
         (output of function 'inverse_distance.sedm_BTTB').
     ordering : string
         Defines how the points are ordered after the first point (min x, min y).
@@ -235,7 +235,7 @@ def grad_BTTB(
     returns
     -------
     Ka: Dictionary of dictionaries
-        Dictionary of dictionaries containing the metadata associated with the full matrix 
+        Dictionary of dictionaries containing the metadata associated with the full matrix
         (see input of function 'check.BTTB_metadata').
     """
 
@@ -254,17 +254,15 @@ def grad_BTTB(
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM["columns"] * np.sqrt(SEDM["columns"])
 
-    delta_func = {
-        "x" : _delta_x,
-        "y" : _delta_y,
-        "z" : _delta_z
-    }
+    delta_func = {"x": _delta_x, "y": _delta_y, "z": _delta_z}
 
     # compute the gradient components defined in components
     Ka = dict()
     for component in components:
         # get the parameters of the BTTB matrix
-        symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
+        symmetries, shape, delta = delta_func[component](
+            data_grid, delta_z, ordering
+        )
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
             "symmetry_structure": symmetries[0],
@@ -385,7 +383,7 @@ def grad_tensor_BTTB(
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
     SEDM: dictionary
-        Dictionary containing the metadata associated with the full matrix 
+        Dictionary containing the metadata associated with the full matrix
         (output of function 'inverse_distance.sedm_BTTB').
     ordering : string
         Defines how the points are ordered after the first point (min x, min y).
@@ -419,27 +417,29 @@ def grad_tensor_BTTB(
         check.is_ordering(ordering)
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # compute the inverse distance function to the powers 3 and 5
     R3 = SEDM["columns"] * np.sqrt(SEDM["columns"])
     R5 = R3 * SEDM["columns"]
 
     delta_func = {
-        "xx" : _delta_xx,
-        "xy" : _delta_xy,
-        "xz" : _delta_xz,
-        "yy" : _delta_yy,
-        "yz" : _delta_yz,
-        "zz" : _delta_zz
+        "xx": _delta_xx,
+        "xy": _delta_xy,
+        "xz": _delta_xz,
+        "yy": _delta_yy,
+        "yz": _delta_yz,
+        "zz": _delta_zz,
     }
 
     # compute the gradient tensor components defined in components
     Kab = dict()
     for component in components:
         # get the parameters of the BTTB matrix
-        symmetries, shape, delta = delta_func[component](data_grid, delta_z, ordering)
+        symmetries, shape, delta = delta_func[component](
+            data_grid, delta_z, ordering
+        )
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
             "symmetry_structure": symmetries[0],
@@ -456,7 +456,7 @@ def grad_tensor_BTTB(
 
 
 def _delta_x(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component x.
 
     parameters
@@ -481,13 +481,13 @@ def _delta_x(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term -(x_i - x_j) arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
-    # compute the auxiliary variable  
+    # compute the auxiliary variable
     aux = -(data_grid["x"] - data_grid["x"][0])
 
     if ordering == "xy":
@@ -497,7 +497,7 @@ def _delta_x(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term -(x_i - x_j)
         delta = np.reshape(np.tile(aux, Ny), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Nx, Ny)
@@ -509,7 +509,7 @@ def _delta_x(data_grid, delta_z, ordering):
 
 
 def _delta_y(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component y.
 
     parameters
@@ -534,13 +534,13 @@ def _delta_y(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term -(y_i - y_j) arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
-    # compute the auxiliary variable  
+    # compute the auxiliary variable
     aux = -(data_grid["y"] - data_grid["y"][0])
 
     if ordering == "xy":
@@ -550,7 +550,7 @@ def _delta_y(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term -(y_i - y_j)
         delta = np.reshape(np.repeat(aux, Nx), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Nx, Ny)
@@ -562,7 +562,7 @@ def _delta_y(data_grid, delta_z, ordering):
 
 
 def _delta_z(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component z.
 
     parameters
@@ -587,11 +587,11 @@ def _delta_z(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : scalar
         Term -(z_i - z_j).
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
@@ -599,8 +599,8 @@ def _delta_z(data_grid, delta_z, ordering):
     delta = delta_z
     if ordering == "xy":
         # shape (Ny, Nx)
-        shape = data_grid["shape"][::-1]    
-    else: # ordering == "yx"
+        shape = data_grid["shape"][::-1]
+    else:  # ordering == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
 
@@ -608,7 +608,7 @@ def _delta_z(data_grid, delta_z, ordering):
 
 
 def _delta_xx(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component xx.
 
     parameters
@@ -633,14 +633,14 @@ def _delta_xx(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term 3 * (x_i - x_j)**2 arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
-    # compute the auxiliary variable  
-    aux = 3 * (data_grid["x"] - data_grid["x"][0])**2
+    # compute the auxiliary variable
+    aux = 3 * (data_grid["x"] - data_grid["x"][0]) ** 2
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
@@ -649,7 +649,7 @@ def _delta_xx(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term 3 * (x_i - x_j)**2
         delta = np.reshape(np.tile(aux, Ny), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # term 3 * (x_i - x_j)**2
@@ -659,7 +659,7 @@ def _delta_xx(data_grid, delta_z, ordering):
 
 
 def _delta_xy(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component xy.
 
     parameters
@@ -684,11 +684,11 @@ def _delta_xy(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term 3 * (x_i - x_j) * (y_i - y_j) arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # compute the auxiliary variables
     aux_x = -(data_grid["x"] - data_grid["x"][0])
@@ -702,7 +702,7 @@ def _delta_xy(data_grid, delta_z, ordering):
         # terms (x_i - x_j) and (y_i - y_j)
         delta_x = np.reshape(np.tile(aux_x, Ny), shape)
         delta_y = np.reshape(np.repeat(aux_y, Nx), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # terms (x_i - x_j) and (y_i - y_j)
@@ -716,7 +716,7 @@ def _delta_xy(data_grid, delta_z, ordering):
 
 
 def _delta_xz(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component xz.
 
     parameters
@@ -741,11 +741,11 @@ def _delta_xz(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term 3 * (x_i - x_j) * (z_i - z_j) arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # compute the auxiliary variable
     aux_x = -(data_grid["x"] - data_grid["x"][0])
@@ -757,7 +757,7 @@ def _delta_xz(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term (x_i - x_j)
         delta_x = np.reshape(np.tile(aux_x, Ny), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Nx, Ny)
@@ -772,7 +772,7 @@ def _delta_xz(data_grid, delta_z, ordering):
 
 
 def _delta_yy(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component yy.
 
     parameters
@@ -797,14 +797,14 @@ def _delta_yy(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term 3 * (y_i - y_j)**2 arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
-    # compute the auxiliary variable  
-    aux = 3 * (data_grid["y"] - data_grid["y"][0])**2
+    # compute the auxiliary variable
+    aux = 3 * (data_grid["y"] - data_grid["y"][0]) ** 2
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
@@ -813,7 +813,7 @@ def _delta_yy(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term 3* (y_i - y_j)**2
         delta = np.reshape(np.repeat(aux, Nx), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # term 3* (y_i - y_j)**2
@@ -823,7 +823,7 @@ def _delta_yy(data_grid, delta_z, ordering):
 
 
 def _delta_yz(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component yz.
 
     parameters
@@ -848,11 +848,11 @@ def _delta_yz(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : numpy array 2d
         Term 3 * (y_i - y_j) * (z_i - z_j) arranged in a matrix.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # compute the auxiliary variable
     aux_y = -(data_grid["y"] - data_grid["y"][0])
@@ -864,7 +864,7 @@ def _delta_yz(data_grid, delta_z, ordering):
         shape = data_grid["shape"][::-1]
         # term (y_i - y_j)
         delta_y = np.reshape(np.repeat(aux_y, Nx), shape)
-    else: # ordering == "yx"
+    else:  # ordering == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Nx, Ny)
@@ -879,7 +879,7 @@ def _delta_yz(data_grid, delta_z, ordering):
 
 
 def _delta_zz(data_grid, delta_z, ordering):
-    '''
+    """
     Parameters associated with the BTTB defined by field component zz.
 
     parameters
@@ -904,11 +904,11 @@ def _delta_zz(data_grid, delta_z, ordering):
         Tuple defining the number of blocks and number of points per blocks
     delta : scalar
         Term 3 * (z_i - z_j)**2.
-    '''
+    """
 
     # number of points along x and y directions
-    Nx = data_grid['x'].size
-    Ny = data_grid['y'].size
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
@@ -916,8 +916,8 @@ def _delta_zz(data_grid, delta_z, ordering):
     delta = 3 * delta_z**2
     if ordering == "xy":
         # shape (Ny, Nx)
-        shape = data_grid["shape"][::-1]    
-    else: # ordering == "yx"
+        shape = data_grid["shape"][::-1]
+    else:  # ordering == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
 

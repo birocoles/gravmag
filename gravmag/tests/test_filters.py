@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from numpy.testing import assert_raises as ar
 from pytest import raises
-from .. import filters as ft    
+from .. import filters as ft
 
 
 def test_direction_inc_dec_not_scalars():
@@ -11,8 +11,8 @@ def test_direction_inc_dec_not_scalars():
     # correct input
     x = np.arange(4)[:, np.newaxis]
     y = np.ones(3)
-    z = np.zeros((4,3)) + 1.2
-    ordering = 'xy'
+    z = np.zeros((4, 3)) + 1.2
+    ordering = "xy"
     shape = (4, 3)
     spacing = (1.1, 1.3)
     wavenumbers = {
@@ -21,7 +21,7 @@ def test_direction_inc_dec_not_scalars():
         "z": z,
         "ordering": ordering,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     inc = 10.0
     dec = -3.0
@@ -38,8 +38,8 @@ def test_rtp_inc0_dec0_inc_dec_not_scalars():
     # correct input
     x = np.arange(4)[:, np.newaxis]
     y = np.ones(3)
-    z = np.zeros((4,3)) + 1.2
-    ordering = 'xy'
+    z = np.zeros((4, 3)) + 1.2
+    ordering = "xy"
     shape = (4, 3)
     spacing = (1.1, 1.3)
     wavenumbers = {
@@ -48,7 +48,7 @@ def test_rtp_inc0_dec0_inc_dec_not_scalars():
         "z": z,
         "ordering": ordering,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     inc0 = 10
     dec0 = 9
@@ -72,8 +72,8 @@ def test_derivative_invalid_axes():
     "must raise ValueError if axes is empty or has invalid elements"
     x = np.arange(4)[:, np.newaxis]
     y = np.ones(3)
-    z = np.zeros((4,3)) + 1.2
-    ordering = 'xy'
+    z = np.zeros((4, 3)) + 1.2
+    ordering = "xy"
     shape = (4, 3)
     spacing = (1.1, 1.3)
     wavenumbers = {
@@ -82,7 +82,7 @@ def test_derivative_invalid_axes():
         "z": z,
         "ordering": ordering,
         "shape": shape,
-        "spacing": spacing
+        "spacing": spacing,
     }
     # axes without elements
     with raises(ValueError):

@@ -24,10 +24,10 @@ def regular_grid_xy(area, shape, z0, check_input=True):
         'x' : numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
         'y' : numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
         'z' : scalar (float or int) defining the constant vertical coordinate of the grid.
-        'area' : list 
+        'area' : list
             List of min x, max x, min y and max y (the same as input)
-        'shape' : tuple 
-            Tuple defining the total number of points along x and y directions, 
+        'shape' : tuple
+            Tuple defining the total number of points along x and y directions,
             respectively (the same as input).
     """
     if check_input == True:
@@ -36,11 +36,11 @@ def regular_grid_xy(area, shape, z0, check_input=True):
         check.is_scalar(x=z0, positive=False)
 
     grid = {
-        'x' : np.linspace(area[0], area[1], shape[0]),
-        'y' : np.linspace(area[2], area[3], shape[1]),
-        'z' : z0,
-        'area' : area,
-        'shape' : shape
+        "x": np.linspace(area[0], area[1], shape[0]),
+        "y": np.linspace(area[2], area[3], shape[1]),
+        "z": z0,
+        "area": area,
+        "shape": shape,
     }
 
     return grid
@@ -68,21 +68,21 @@ def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
     returns
     -------
     wavenumbers: dictionary containing the following keys
-        'x' : numpy array 2d 
+        'x' : numpy array 2d
             Matrix with a single column, i.e., with shape = (N, 1),
             where Nx is the number of data along x-axis.
             This numpy array contains the discrete wavenumbers along the x-axis.
-        'y' : numpy array 1d 
+        'y' : numpy array 1d
             Vector with shape = (Ny, ), where Ny is the number of
-            data long y-axis. This numpy array contains the discrete wavenumbers along 
+            data long y-axis. This numpy array contains the discrete wavenumbers along
             the y-axis.
-        'z' : numpy array 2d 
+        'z' : numpy array 2d
             Matrix with shape (kx.size, ky.size) containing the wavenumbers along
             the z-axis by considering that the generating data grid in space domain
             contains potential-field data on a horizontal plane.
         'ordering' : string
             The input parameter 'ordering'
-        'shape' : tuple 
+        'shape' : tuple
             The input parameter 'shape'
         'spacing' : tuple
             The input parameter 'spacing'
@@ -94,7 +94,7 @@ def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
         check.is_ordering(ordering=ordering)
 
     # wavenumbers kx = 2pi fx and ky = 2pi fy
-    kx = (2 * np.pi * fftfreq(n=shape[0], d=spacing[0]))[:,np.newaxis]
+    kx = (2 * np.pi * fftfreq(n=shape[0], d=spacing[0]))[:, np.newaxis]
     ky = 2 * np.pi * fftfreq(n=shape[1], d=spacing[1])
 
     # this is valid for potential fields on a plane
@@ -107,12 +107,12 @@ def regular_grid_wavenumbers(shape, spacing, ordering="xy", check_input=True):
     kz = fftshift(kz)
 
     wavenumbers = {
-        'x': kx,
-        'y': ky,
-        'z': kz,
-        'ordering': ordering,
-        'shape': shape,
-        'spacing': spacing
+        "x": kx,
+        "y": ky,
+        "z": kz,
+        "ordering": ordering,
+        "shape": shape,
+        "spacing": spacing,
     }
 
     return wavenumbers
@@ -140,9 +140,9 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
     # the transposed of a BTTB inherits the symmetry structure between blocks,
     # within blocks, number of blocks and also order of blocks.
     BTTB_T_metadata = {
-        "symmetry_structure" : BTTB_metadata["symmetry_structure"],
-        "symmetry_blocks" : BTTB_metadata["symmetry_blocks"],
-        "nblocks": BTTB_metadata["nblocks"]
+        "symmetry_structure": BTTB_metadata["symmetry_structure"],
+        "symmetry_blocks": BTTB_metadata["symmetry_blocks"],
+        "nblocks": BTTB_metadata["nblocks"],
     }
 
     # get data and perform the required changes
@@ -152,39 +152,42 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             BTTB_T_metadata["rows"] = None
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][:,1:] *= -1
+            BTTB_T_metadata["columns"][:, 1:] *= -1
             BTTB_T_metadata["rows"] = None
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
-            BTTB_T_metadata["columns"] = np.hstack([
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
+            BTTB_T_metadata["columns"] = np.hstack(
+                [
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
 
     elif BTTB_metadata["symmetry_structure"] == "skew":
         if BTTB_metadata["symmetry_blocks"] == "symm":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][1:,:] *= -1
+            BTTB_T_metadata["columns"][1:, :] *= -1
             BTTB_T_metadata["rows"] = None
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
-            BTTB_T_metadata["columns"][:,1:] *= -1
-            BTTB_T_metadata["columns"][1:,:] *= -1
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+            BTTB_T_metadata["columns"][1:, :] *= -1
             BTTB_T_metadata["rows"] = None
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.hstack(
                 [
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
             # change signal
             BTTB_T_metadata["columns"][1:] *= -1
             BTTB_T_metadata["rows"][1:] *= -1
-    else: # BTTB_metadata["symmetry_structure"] == "gene"
+    else:  # BTTB_metadata["symmetry_structure"] == "gene"
         if BTTB_metadata["symmetry_blocks"] == "symm":
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
@@ -192,15 +195,14 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
         elif BTTB_metadata["symmetry_blocks"] == "skew":
             # get the columns
             BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
@@ -208,37 +210,38 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute the elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
             # change signal
-            BTTB_T_metadata["columns"][:,1:] *= -1
-        else: # BTTB_metadata["symmetry_blocks"] == "gene"
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
             # get the elements forming the columns and rows
             BTTB_T_metadata["columns"] = np.hstack(
                 [
-                BTTB_metadata["columns"][:,0][:,np.newaxis], 
-                BTTB_metadata["rows"]
-                ])
-            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:,1:]
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
             # get the number of blocks along a column/row
             nblocks = BTTB_T_metadata["nblocks"]
             # permute the elements with respect to the main diagonal
-            permutation_indices = [i for i in range(2*nblocks - 1)]
-            (
-                permutation_indices[1:nblocks], 
-                permutation_indices[nblocks:]
-            ) = (
-                permutation_indices[nblocks:], 
-                permutation_indices[1:nblocks]
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
             )
-            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][permutation_indices]
-            BTTB_T_metadata["rows"] = BTTB_T_metadata["rows"][permutation_indices]
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
+            BTTB_T_metadata["rows"] = BTTB_T_metadata["rows"][
+                permutation_indices
+            ]
 
     return BTTB_T_metadata

@@ -5,7 +5,6 @@ Nagy et al (2000, 2002). This prototype makes use of the modified arctangent and
 functions proposed by Fukushima (2020) for dealing with singularities at some computation points.
 """
 
-
 import numpy as np
 from .. import check
 from .. import utils
@@ -100,7 +99,7 @@ def grav(coordinates, prisms, density, field, scale=True):
 
 def mag(coordinates, prisms, mx, my, mz, field, scale=True):
     """
-    Magnetic scalar potential and magnetic induction field produced by 
+    Magnetic scalar potential and magnetic induction field produced by
     uniformly-magnetized and right-rectangular prisms in Cartesian coordinates.
     All values are referred to a topocentric Cartesian system with axes
     x, y and z pointing to north, east and down, respectively.
@@ -158,9 +157,15 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
         raise ValueError("Magnetic field {} not recognized".format(field))
 
     # compute the contribution of each vertex
-    resultx = iterate_over_vertices(coordinates, prisms, mx, kernels[field]["x"])
-    resulty = iterate_over_vertices(coordinates, prisms, my, kernels[field]["y"])
-    resultz = iterate_over_vertices(coordinates, prisms, mz, kernels[field]["z"])
+    resultx = iterate_over_vertices(
+        coordinates, prisms, mx, kernels[field]["x"]
+    )
+    resulty = iterate_over_vertices(
+        coordinates, prisms, my, kernels[field]["y"]
+    )
+    resultz = iterate_over_vertices(
+        coordinates, prisms, mz, kernels[field]["z"]
+    )
     result = resultx + resulty + resultz
 
     # multiply the computed field by the corresponding scale factors

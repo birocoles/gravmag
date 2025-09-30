@@ -396,7 +396,6 @@ def BTTB_from_metadata(BTTB_metadata, check_input=True):
     return T
 
 
-
 def embedding_BCCB(BTTB_metadata, full=False, check_input=True):
     """
     Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)

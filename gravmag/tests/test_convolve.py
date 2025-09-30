@@ -427,7 +427,6 @@ def test_BTTB_from_metadata_compare_known_values_gene_gene():
     ae(computed, reference)
 
 
-
 # ##### embedding_BCCB
 
 
@@ -1010,18 +1009,8 @@ def test_eigenvalues_BCCB_compare_eigenvalues_symm_gene():
         "symmetry_structure": "symm",
         "symmetry_blocks": "gene",
         "nblocks": 2,
-        "columns": np.array(
-            [
-                [1, 2, 3],
-                [10, 20, 30]
-            ]
-        ),
-        "rows": np.array(
-            [
-                [12, 5],
-                [8, 14.7]
-            ]
-        )
+        "columns": np.array([[1, 2, 3], [10, 20, 30]]),
+        "rows": np.array([[12, 5], [8, 14.7]]),
     }
     BTTB_matrix = cv.BTTB_from_metadata(BTTB_metadata=BTTB)
     # define the data structure for the generating BTTB matrix transposed

@@ -12,7 +12,7 @@ def direction(wavenumbers, inc, dec, check_input=True):
     parameters
     ----------
     wavenumbers: dictionary
-        Dictionary containing the metadata of the wavenumber grid 
+        Dictionary containing the metadata of the wavenumber grid
         (See description at function 'data_structures.regular_grid_wavenumbers').
     inc, dec: scalars
         Inclination and declination of the unit vector (in degrees)
@@ -36,7 +36,9 @@ def direction(wavenumbers, inc, dec, check_input=True):
     u = utils.unit_vector(inc, dec, check_input=False)
 
     # compute the filter
-    theta = (wavenumbers['z'] * u[2]) + 1j * (wavenumbers['x'] * u[0] + wavenumbers['y'] * u[1])
+    theta = (wavenumbers["z"] * u[2]) + 1j * (
+        wavenumbers["x"] * u[0] + wavenumbers["y"] * u[1]
+    )
 
     return theta
 
@@ -48,7 +50,7 @@ def rtp(wavenumbers, inc0, dec0, inc, dec, check_input=True):
     parameters
     ----------
     wavenumbers: dictionary
-        Dictionary containing the metadata of the wavenumber grid 
+        Dictionary containing the metadata of the wavenumber grid
         (See description at function 'data_structures.regular_grid_wavenumbers').
     inc0, dec0: scalars
         Constant inclination and declination (in degrees) of the main
@@ -83,7 +85,9 @@ def rtp(wavenumbers, inc0, dec0, inc, dec, check_input=True):
     # set theta_main_field[0,0] and theta_magnetization[0,0] equal to 1
     theta_main_field[0, 0] = 1.0
     theta_magnetization[0, 0] = 1.0
-    rtp_filter = (wavenumbers['z'] * wavenumbers['z']) / (theta_main_field * theta_magnetization)
+    rtp_filter = (wavenumbers["z"] * wavenumbers["z"]) / (
+        theta_main_field * theta_magnetization
+    )
 
     return rtp_filter
 
@@ -95,7 +99,7 @@ def derivative(wavenumbers, axes, check_input=True):
     parameters
     ----------
     wavenumbers: dictionary
-        Dictionary containing the metadata of the wavenumber grid 
+        Dictionary containing the metadata of the wavenumber grid
         (See description at function 'data_structures.regular_grid_wavenumbers').
     axes : list or tuple of strings
         Sequence of strings defining the axes along which the partial derivative
@@ -120,11 +124,11 @@ def derivative(wavenumbers, axes, check_input=True):
     exponents = [axes.count("x"), axes.count("y"), axes.count("z")]
     deriv_filter = []
     if exponents[0] > 0:
-        deriv_filter.append((1j * wavenumbers['x']) ** exponents[0])
+        deriv_filter.append((1j * wavenumbers["x"]) ** exponents[0])
     if exponents[1] > 0:
-        deriv_filter.append((1j * wavenumbers['y']) ** exponents[1])
+        deriv_filter.append((1j * wavenumbers["y"]) ** exponents[1])
     if exponents[2] > 0:
-        deriv_filter.append(wavenumbers['z'] ** exponents[2])
+        deriv_filter.append(wavenumbers["z"] ** exponents[2])
     deriv_filter = np.prod(deriv_filter, axis=0)
 
     return deriv_filter
@@ -137,7 +141,7 @@ def continuation(wavenumbers, dz, check_input=True):
     parameters
     ----------
     wavenumbers: dictionary
-        Dictionary containing the metadata of the wavenumber grid 
+        Dictionary containing the metadata of the wavenumber grid
         (See description at function 'data_structures.regular_grid_wavenumbers').
     dz : int or float
         Scalar defining the difference between the constant vertical coordinate
@@ -157,7 +161,7 @@ def continuation(wavenumbers, dz, check_input=True):
         check.is_regular_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=dz, positive=False)
 
-    cont_filter = np.exp(dz * wavenumbers['z'])
+    cont_filter = np.exp(dz * wavenumbers["z"])
 
     return cont_filter
 
@@ -169,7 +173,7 @@ def cuttof_frequency(wavenumbers, max_freq, check_input=True):
     parameters
     ----------
     wavenumbers: dictionary
-        Dictionary containing the metadata of the wavenumber grid 
+        Dictionary containing the metadata of the wavenumber grid
         (See description at function 'data_structures.regular_grid_wavenumbers').
     max_freq : int or float
         Scalar defining the maximum frequency of the filtered data..
@@ -186,8 +190,8 @@ def cuttof_frequency(wavenumbers, max_freq, check_input=True):
         check.is_regular_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=max_freq, positive=True)
 
-    dead_zone = (wavenumbers['z'] >= max_freq)
-    cutoff_filter = np.ones_like(wavenumbers['z'])
+    dead_zone = wavenumbers["z"] >= max_freq
+    cutoff_filter = np.ones_like(wavenumbers["z"])
     cutoff_filter[dead_zone] = 0.0
 
     return cutoff_filter

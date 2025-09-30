@@ -267,7 +267,12 @@ def cosine_matrix(
 
 
 def method_CGLS(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
+    sensitivity_matrices,
+    data_vectors,
+    epsilon,
+    ITMAX=50,
+    p0=None,
+    check_input=True,
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -313,7 +318,9 @@ def method_CGLS(
         nparams = sensitivity_matrices[0].shape[1]
         for G in sensitivity_matrices[1:]:
             if G.shape[1] != nparams:
-                raise ValueError("All sensitivity matrices must have the same number of columns")
+                raise ValueError(
+                    "All sensitivity matrices must have the same number of columns"
+                )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -343,7 +350,7 @@ def method_CGLS(
     # initialize the parameter vector
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = np.zeros(nparams, dtype=float)
 
     # initialize auxiliary variables
@@ -512,7 +519,7 @@ def method_iterative_SOB17(
     scale = (data_aux @ data) / (data_aux @ data_aux)
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = data * scale
     residuals = data - sensitivity_matrix @ parameters
     delta_list = []
@@ -534,7 +541,12 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    sensitivity_matrices, data_vectors, epsilon, ITMAX=50, p0=None, check_input=True
+    sensitivity_matrices,
+    data_vectors,
+    epsilon,
+    ITMAX=50,
+    p0=None,
+    check_input=True,
 ):
     """
     Solves the unconstrained overdetermined problem to estimate the physical-property
@@ -583,10 +595,15 @@ def method_iterative_deconvolution_TOB20(
             check.is_array(
                 x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
             )
-        nparams = sensitivity_matrices[0]["columns"].shape[1] * sensitivity_matrices[0]["nblocks"]
+        nparams = (
+            sensitivity_matrices[0]["columns"].shape[1]
+            * sensitivity_matrices[0]["nblocks"]
+        )
         for G in sensitivity_matrices[1:]:
             if G["columns"].shape[1] * G["nblocks"] != nparams:
-                raise ValueError("All sensitivity matrices must have the same number of columns")
+                raise ValueError(
+                    "All sensitivity matrices must have the same number of columns"
+                )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
         # check if ITMAX is a positive integer
@@ -620,7 +637,7 @@ def method_iterative_deconvolution_TOB20(
     # initialize the parameter vector
     if p0 is not None:
         parameters = p0.copy()
-    else: # p0 is None
+    else:  # p0 is None
         parameters = np.zeros(nparams, dtype=float)
 
     # initialize auxiliary variables
