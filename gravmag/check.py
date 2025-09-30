@@ -87,13 +87,13 @@ def are_coordinates(coordinates):
     return D
 
 
-def is_regular_grid_xy(grid):
+def is_grid_xy(grid):
     """
     Check if coordinates is a dictionary containing the x, y and z
-    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'ordering'
+    coordinates at the keys 'x', 'y' and 'z', respectively, and a key 'grid_orientation'
     defining how the points are ordered after the first point (min x, min y).
-    If 'ordering' = 'xy', the points vary first along x and then along y.
-    If 'ordering' = 'yx', the points vary first along y and then along x.
+    If 'grid_orientation' = 'xy', the points vary first along x and then along y.
+    If 'grid_orientation' = 'yx', the points vary first along y and then along x.
     Key 'x' must be a numpy array 1d with shape = (Nx, ), where Nx is the number of data along x-axis.
     Key 'y' must be a numpy array 1d with shape = (Ny, ), where Ny is the number of data along y-axis.
     Key 'z' must be a scalar (float or int) defining the constant vertical coordinate of the grid.
@@ -133,11 +133,11 @@ def is_regular_grid_xy(grid):
     return D
 
 
-def is_regular_grid_wavenumbers(wavenumbers):
+def is_grid_wavenumbers(wavenumbers):
     """
     Check if wavenumbers is a dictionary containing the x, y and z
     wavenumbers at the keys 'x', 'y' and 'z', respectively, and the keys
-    'shape,' 'spacing', 'ordering'. See docstring of function
+    'shape,' 'spacing', 'grid_orientation'. See docstring of function
     'data_structures.regular_grid_wavenumbers'.
 
     parameters
@@ -148,26 +148,17 @@ def is_regular_grid_wavenumbers(wavenumbers):
     """
     if type(wavenumbers) != dict:
         raise ValueError("wavenumbers must be a dictionary")
-    if list(wavenumbers.keys()) != [
-        "x",
-        "y",
-        "z",
-        "ordering",
-        "shape",
-        "spacing",
-    ]:
+    if list(wavenumbers.keys()) != ["x", "y", "z", "shape", "spacing"]:
         raise ValueError(
-            "wavenumbers must have the following 6 keys: 'x', 'y', 'z', 'ordering', 'shape', 'spacing'"
+            "wavenumbers must have the following 5 keys: 'x', 'y', 'z', 'shape', 'spacing'"
         )
     for key in ["x", "y", "z"]:
         if type(wavenumbers[key]) != np.ndarray:
             raise ValueError(
                 "'x', 'y' and 'z' keys of wavenumbers must be numpy arrays"
             )
-    if wavenumbers["x"].ndim != 2:
-        raise ValueError("'x' key must have ndim = 2")
-    if wavenumbers["x"].shape[1] != 1:
-        raise ValueError("'x' key must have shape[1] = 1")
+    if wavenumbers["x"].ndim != 1:
+        raise ValueError("'x' key must have ndim = 1")
     if wavenumbers["y"].ndim != 1:
         raise ValueError("'y' key must have ndim = 1")
     if wavenumbers["z"].ndim != 2:
@@ -180,14 +171,13 @@ def is_regular_grid_wavenumbers(wavenumbers):
         raise ValueError("'z' key must contain all-positive elements")
     is_shape(wavenumbers["shape"])
     is_spacing(wavenumbers["spacing"])
-    is_ordering(wavenumbers["ordering"])
     if (wavenumbers["x"].size, wavenumbers["y"].size) != wavenumbers["shape"]:
         raise ValueError(
             "number of elements in 'x' and 'y' keys must must be consistent with shape key"
         )
 
 
-def is_scalar(x, positive=True):
+def is_scalar(x, positive=False):
     """
     Check if x is a float or int.
 
@@ -196,7 +186,7 @@ def is_scalar(x, positive=True):
     x : generic object
         Python object to be verified.
     positive : boolean
-        If True, impose that x must be positive.
+        If True, impose that x must be positive. Default is False.
     """
     if isinstance(x, (float, int)) is False:
         raise ValueError("x must be in float or int")
@@ -304,7 +294,7 @@ def is_shape(shape):
 
 def is_spacing(spacing):
     """
-    Check is spacing is a tuple containing two positive scalar.
+    Check is spacing is a tuple containing two positive scalars.
 
     parameters
     ----------
@@ -319,21 +309,21 @@ def is_spacing(spacing):
     is_scalar(x=spacing[1], positive=True)
 
 
-def is_ordering(ordering):
+def is_grid_orientation(grid_orientation):
     """
-    Check if ordering is a string 'xy' or 'yx'.
+    Check if grid_orientation is a string 'xy' or 'yx'.
 
     parameters
     ----------
-    ordering : generic object
+    grid_orientation : generic object
         Python object to be verified.
     """
-    if type(ordering) != str:
-        raise ValueError("ordering must be a string")
-    if len(ordering) != 2:
-        raise ValueError("ordering must have 2 elements")
-    if ordering not in ["xy", "yx"]:
-        raise ValueError("invalid ordering {}".format(ordering))
+    if type(grid_orientation) != str:
+        raise ValueError("grid_orientation must be a string")
+    if len(grid_orientation) != 2:
+        raise ValueError("grid_orientation must have 2 elements")
+    if grid_orientation not in ["xy", "yx"]:
+        raise ValueError("invalid grid_orientation {}".format(grid_orientation))
 
 
 def sensitivity_matrix_and_data(matrix, data):

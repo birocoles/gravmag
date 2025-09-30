@@ -298,7 +298,7 @@ def method_CGLS(
     returns
     -------
     deltas : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values. The RMSE considers the total number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -333,9 +333,11 @@ def method_CGLS(
     ndatasets = len(data_vectors)
     ndata_per_dataset = []
     residuals = []
+    nus = []
     for data in data_vectors:
         ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
+        nus.append(np.zeros_like(data))
     ndata = np.sum(ndata_per_dataset)
     nparams = sensitivity_matrices[0].shape[1]
 
@@ -344,7 +346,7 @@ def method_CGLS(
     delta = 0.0
     for res in residuals:
         delta += np.sum(res * res)
-    delta = np.sqrt(delta) / ndata
+    delta = np.sqrt(delta / ndata)
     deltas.append(delta)
 
     # initialize the parameter vector
@@ -360,13 +362,12 @@ def method_CGLS(
     rho0 = np.sum(vartheta * vartheta)
     tau = 0.0
     eta = np.zeros_like(parameters)
-    nus = []
-    for i in range(ndatasets):
-        nus.append(np.zeros_like(parameters))
     m = 1
+    delta0 = delta
+    relative_delta_variation = np.inf
 
     # updates
-    while (delta > epsilon) and (m < ITMAX):
+    while (relative_delta_variation > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
         for G, nu in zip(sensitivity_matrices, nus):
@@ -378,7 +379,7 @@ def method_CGLS(
         for res, nu in zip(residuals, nus):
             res[:] -= upsilon * nu
             delta += np.sum(res * res)
-        delta = np.sqrt(delta) / ndata
+        delta = np.sqrt(delta / ndata)
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
         for sensitivity_matrix, res in zip(sensitivity_matrices, residuals):
@@ -387,6 +388,8 @@ def method_CGLS(
         tau = rho / rho0
         rho0 = rho
         m += 1
+        relative_delta_variation = np.abs((delta - delta0) / delta0)
+        delta0 = delta
 
     return deltas, parameters
 
@@ -478,6 +481,8 @@ def method_iterative_SOB17(
     """
     Solves the unconstrained problem to estimate the physical-property
     distribution on the equivalent layer via iterative method.
+    The method is a modified version, presented by Oliveira Jr et al. (2023),
+    of the original method proposed by Siqueira et al. (2017).
 
     parameters
     ----------
@@ -497,7 +502,7 @@ def method_iterative_SOB17(
     returns
     -------
     delta_list : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
@@ -523,17 +528,15 @@ def method_iterative_SOB17(
         parameters = data * scale
     residuals = data - sensitivity_matrix @ parameters
     delta_list = []
-    delta = np.sqrt(np.sum(residuals * residuals)) / D
+    delta = np.sqrt(np.sum(residuals * residuals) / D)
     delta_list.append(delta)
-    nu = np.zeros_like(parameters)
     m = 1
     # updates
     while (delta > epsilon) and (m < ITMAX):
         dp = scale * residuals
         parameters[:] += dp
-        nu[:] = sensitivity_matrix @ dp
-        residuals[:] -= nu
-        delta = np.sqrt(np.sum(residuals * residuals)) / D
+        residuals[:] -= sensitivity_matrix @ dp
+        delta = np.sqrt(np.sum(residuals * residuals) / D)
         delta_list.append(delta)
         m += 1
 
@@ -541,7 +544,7 @@ def method_iterative_SOB17(
 
 
 def method_iterative_deconvolution_TOB20(
-    sensitivity_matrices,
+    eigenvalues_matrices,
     data_vectors,
     epsilon,
     ITMAX=50,
@@ -552,12 +555,14 @@ def method_iterative_deconvolution_TOB20(
     Solves the unconstrained overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via convolutional equivalent-layer method
     proposed by Takahashi et al. (2020, 2022).
+    The implementation follows that shonw by Oliveira Jr. et al (2023).
 
     parameters
     ----------
-    sensitivity_matrices: list of dictionaries
-        List of dictionaries defining the kernel of the equivalent layer integral. Here, it is considered that
-        the kernels are BTTB matrices.
+    eigenvalues_matrices: list of numpy arrays 2d
+        List of matrices containing the eigenvalues of the embedding BCCB matrices associated
+        with the corresponding BTTB sensitivity matrices for each data set. The eigenvalues_matrices
+        are outputs of the routine 'convolve.eigenvalues_BCCB'.
     data_vectors : list of numpy arrays 1d
         List of potential-field data.
     epsilon : float
@@ -572,37 +577,45 @@ def method_iterative_deconvolution_TOB20(
     returns
     -------
     deltas : list of floats
-        List of ratios of Euclidean norm of the residuals and number of data.
+        List of RMSE values. The RMSE considers the total number of data.
     parameters : numpy array 1d
         Physical property distribution on the equivalent layer.
     """
 
     if check_input == True:
-        if type(sensitivity_matrices) != list:
-            raise ValueError("sensitivity_matrices must be a list")
-        for G in sensitivity_matrices:
-            check.BTTB_metadata(BTTB=G)
+        if type(eigenvalues_matrices) != list:
+            raise ValueError("eigenvalues_matrices must be a list")
+        for L in eigenvalues_matrices:
+            check.is_array(x=L, ndim=2)
         if type(data_vectors) != list:
             raise ValueError("data_vectors must be a list")
-        if len(sensitivity_matrices) != len(data_vectors):
+        for data in data_vectors:
+            check.is_array(x=data, ndim=1)
+        if len(eigenvalues_matrices) != len(data_vectors):
             raise ValueError(
-                "sensitivity_matrices and data_vectors must have the same number of elements"
+                "eigenvalues_matrices and data_vectors must have the same number of elements"
             )
-        # check if the sensitivity_matrices and data_vectors are formed by consistent
-        # BTTB matrices and numpy arrays
-        for G, data in zip(sensitivity_matrices, data_vectors):
-            check.BTTB_metadata(BTTB=G)
-            check.is_array(
-                x=data, ndim=1, shape=(G["columns"].shape[1] * G["nblocks"],)
-            )
-        nparams = (
-            sensitivity_matrices[0]["columns"].shape[1]
-            * sensitivity_matrices[0]["nblocks"]
-        )
-        for G in sensitivity_matrices[1:]:
-            if G["columns"].shape[1] * G["nblocks"] != nparams:
+        # We consider that all data sets are defined on the same observation points
+        # Hence, all of them have the same size
+        npoints = data_vectors[0].size
+        # We also consider that the observation points are defined on a planar grid
+        # Hence, all eigenvalues matrices must have the same shape
+        shape = eigenvalues_matrices[0].shape
+        # check the consistency of eigenvalues_matrices
+        for L in eigenvalues_matrices:
+            if L.size != 4 * npoints:
                 raise ValueError(
-                    "All sensitivity matrices must have the same number of columns"
+                    "All 'L' matrices must have a size equal to 4 times the number of observation points"
+                )
+            if L.shape != shape:
+                raise ValueError("All matrices 'L' must have the same shape")
+        # check the consistency of data sets
+        for data in data_vectors:
+            if data.size != npoints:
+                raise ValueError(
+                    "'data' size ({}) must be equal to the number of observation points ({})".format(
+                        data.size, npoints
+                    )
                 )
         # check if epsilon is a positive scalar
         check.is_scalar(x=epsilon, positive=True)
@@ -610,39 +623,38 @@ def method_iterative_deconvolution_TOB20(
         check.is_integer(x=ITMAX, positive=True)
         # check if p0 is a consistent array
         if p0 is not None:
-            check.is_array(x=p0, ndim=1, shape=(nparams,))
+            check.is_array(x=p0, ndim=1, shape=(npoints,))
 
-    # get number of data for each dataset and initialize residuals list
+    # We consider that all data sets are defined on the same observation points
+    # Hence, all of them have the same size
+    npoints = data_vectors[0].size
+    # number of data sets
     ndatasets = len(data_vectors)
-    ndata_per_dataset = []
+    # total number of data
+    ndata = npoints * ndatasets
+
+    # initialize residuals list
     residuals = []
     for data in data_vectors:
-        ndata_per_dataset.append(data.size)
         residuals.append(np.copy(data))
-    ndata = np.sum(ndata_per_dataset)
-
-    # compute the matrices of eigenvalues
-    eigenvalues = []
-    for G in sensitivity_matrices:
-        eigenvalues.append(convolve.eigenvalues_BCCB(BTTB=G, ordering="row"))
 
     # compute the first delta and initialize the deltas list
     deltas = []
     delta = 0.0
     for res in residuals:
         delta += np.sum(res * res)
-    delta = np.sqrt(delta) / ndata
+    delta = np.sqrt(delta / ndata)
     deltas.append(delta)
 
     # initialize the parameter vector
     if p0 is not None:
         parameters = p0.copy()
     else:  # p0 is None
-        parameters = np.zeros(nparams, dtype=float)
+        parameters = np.zeros(npoints, dtype=float)
 
     # initialize auxiliary variables
     vartheta = np.zeros_like(parameters)
-    for L, res in zip(eigenvalues, residuals):
+    for L, res in zip(eigenvalues_matrices, residuals):
         vartheta[:] += convolve.product_BCCB_vector(
             eigenvalues=np.conj(L), ordering="row", v=res
         )
@@ -653,12 +665,14 @@ def method_iterative_deconvolution_TOB20(
     for i in range(ndatasets):
         nus.append(np.zeros_like(parameters))
     m = 1
+    delta0 = delta
+    relative_delta_variation = np.inf
 
     # updates
-    while (delta > epsilon) and (m < ITMAX):
+    while (relative_delta_variation > epsilon) and (m < ITMAX):
         eta[:] = vartheta + tau * eta
         aux = 0.0
-        for L, nu in zip(eigenvalues, nus):
+        for L, nu in zip(eigenvalues_matrices, nus):
             nu[:] = convolve.product_BCCB_vector(
                 eigenvalues=L, ordering="row", v=eta
             )
@@ -669,10 +683,10 @@ def method_iterative_deconvolution_TOB20(
         for res, nu in zip(residuals, nus):
             res[:] -= upsilon * nu
             delta += np.sum(res * res)
-        delta = np.sqrt(delta) / ndata
+        delta = np.sqrt(delta / ndata)
         deltas.append(delta)
         vartheta[:] = 0.0  # remember that vartheta in an array like parameters
-        for L, res in zip(eigenvalues, residuals):
+        for L, res in zip(eigenvalues_matrices, residuals):
             vartheta[:] += convolve.product_BCCB_vector(
                 eigenvalues=np.conj(L), ordering="row", v=res
             )
@@ -680,6 +694,8 @@ def method_iterative_deconvolution_TOB20(
         tau = rho / rho0
         rho0 = rho
         m += 1
+        relative_delta_variation = np.abs((delta - delta0) / delta0)
+        delta0 = delta
 
     return deltas, parameters
 
@@ -690,7 +706,7 @@ def method_direct_deconvolution(
     """
     Solves the overdetermined problem to estimate the physical-property
     distribution on the equivalent layer via direct deconvolution with Wiener
-    filter.
+    filter. This method was proposed by Oliveira Jr. et al (2023).
 
     parameters
     ----------

@@ -9,7 +9,7 @@ from .. import filters as ft
 def test_direction_inc_dec_not_scalars():
     "must raise ValueError if inc/dec are not scalars"
     # correct input
-    x = np.arange(4)[:, np.newaxis]
+    x = np.arange(4)
     y = np.ones(3)
     z = np.zeros((4, 3)) + 1.2
     ordering = "xy"
@@ -36,7 +36,7 @@ def test_direction_inc_dec_not_scalars():
 def test_rtp_inc0_dec0_inc_dec_not_scalars():
     "must raise ValueError if inc0/dec0/inc/dec are not scalars"
     # correct input
-    x = np.arange(4)[:, np.newaxis]
+    x = np.arange(4)
     y = np.ones(3)
     z = np.zeros((4, 3)) + 1.2
     ordering = "xy"
@@ -70,7 +70,7 @@ def test_rtp_inc0_dec0_inc_dec_not_scalars():
 
 def test_derivative_invalid_axes():
     "must raise ValueError if axes is empty or has invalid elements"
-    x = np.arange(4)[:, np.newaxis]
+    x = np.arange(4)
     y = np.ones(3)
     z = np.zeros((4, 3)) + 1.2
     ordering = "xy"

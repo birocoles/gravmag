@@ -1,10 +1,10 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftfreq, fftshift, ifftshift
-from . import utils
+from . import utils, check
 from . import constants as cts
 
 
-def DFT(data, pad_mode=None, check_input=True):
+def DFT(data, pad_mode=None, pad_size=1, check_input=True):
     """
     Compute the Discrete Fourier Transform (DFT) of a potential-field data set
     arranged as regular grid on a horizontal surface.
@@ -16,6 +16,12 @@ def DFT(data, pad_mode=None, check_input=True):
     pad_mode : None or string
         If not None, it defines the method available in the routine 'numpy.pad'
         to apply padding. Default is None.
+    pad_size : integer
+        If pad_mode is None, it is ignored.
+        If pad_mode is not None, it defines the size of padding along axes 
+        0 (rows) and 1 (columns). The shape of the padded data is 
+        (data.shape[0] * (2 * pad_size + 1), data.shape[1] * (2 * pad_size + 1)).
+        Default is 1.
     check_input : boolean
         If True, it verifies if the input is valid. Default is True.
 
@@ -26,19 +32,18 @@ def DFT(data, pad_mode=None, check_input=True):
         the shape of FT_data will be greater than that of the input 'data'.
     """
 
-    # convert data to numpy array
-    data = np.asarray(data)
-
     if check_input is True:
-        assert data.ndim == 2, "data must be a matrix"
-        assert isinstance(
-            pad_mode, (type(None), str)
-        ), "pad_mode must be None or a string (see the routine numpy.pad)"
+        check.is_array(x=data, ndim=2)
+        if isinstance(pad_mode, (type(None), str)) is not True:
+            raise ValueError(
+                "pad_mode must be None or a string (see the routine numpy.pad)"
+            )
+        check.is_integer(x=pad_size, positive=True)
 
     if pad_mode is not None:
         # define the padded data
         data_padded = np.pad(
-            data, pad_width=((data.shape[0],), (data.shape[1],)), mode=pad_mode
+            data, pad_width=((pad_size * data.shape[0],), (pad_size * data.shape[1],)), mode=pad_mode
         )
         # compute the 2D DFT of the padded data using the Fast Fourier
         # Transform algorithm implemented at scipy.fft.fft2
@@ -51,7 +56,7 @@ def DFT(data, pad_mode=None, check_input=True):
     return FT_data
 
 
-def IDFT(FT_data, unpad=False, grid=True, check_input=True):
+def IDFT(FT_data, unpad=False, pad_size=1, check_input=True):
     """
     Compute the Inverse Discrete Fourier Transform (IDFT) of a potential-field
     data set arranged as regular grid on a horizontal surface.
@@ -63,37 +68,35 @@ def IDFT(FT_data, unpad=False, grid=True, check_input=True):
         regular grid on a horizontal surface.
     unpad : boolean
         If True, remove the padding applied according to the function 'DFT'.
-    grid : boolean
-        Defines the output shape. If True, the output has the same shape as the
-        input. If False, then the output is a flattened 1D array.
+    pad_size : integer
+        If pad_mode is None, it is ignored.
+        If pad_mode is not None, it defines the size of padding along axes 
+        0 (rows) and 1 (columns). The shape of the padded data is 
+        (data.shape[0] * (2 * pad_size + 1), data.shape[1] * (2 * pad_size + 1)).
+        Default is 1.
     check_input : boolean
         If True, it verifies if the input is valid. Default is True.
 
     returns
     -------
     IFT_data : numpy array 2D
-        Matrix containing the regular grid of potential-field data obtained
-        from IDFT.
+        Matrix containing the regular grid of potential-field data obtained from IDFT.
     """
 
-    # convert data to numpy array
-    FT_data = np.asarray(FT_data)
-
     if check_input is True:
-        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
-        assert FT_data.ndim == 2, "FT_data must be a matrix"
-        assert isinstance(unpad, bool), "unpad must be True or False"
-        assert isinstance(grid, bool), "grid must be True or False"
+        check.is_array(x=FT_data, ndim=2)
+        if np.iscomplexobj(FT_data) is not True:
+            raise ValueError("FT_data must be a complex array")
+        if isinstance(unpad, bool) is not True:
+            raise ValueError("unpad must be True or False")
+        check.is_integer(x=pad_size, positive=True)
 
     # compute the 2D IDFT of FT_data using the Fast Fourier
     # Transform algorithm implemented at scipy.fft.ifft2
     IFT_data = ifft2(FT_data).real
 
     if unpad is True:
-        IFT_data = _unpad(IFT_data)
-
-    if grid is False:
-        IFT_data = IFT_data.ravel()
+        IFT_data = _unpad(IFT_data, pad_size)
 
     return IFT_data
 
@@ -133,9 +136,11 @@ def spectra(
     FT_data = np.asarray(FT_data)
 
     if check_input is True:
-        assert np.iscomplexobj(FT_data), "FT_data must be a complex array"
-        assert FT_data.ndim == 2, "FT_data must be a matrix"
-        assert isinstance(shift, bool), "shift must be True or False"
+        check.is_array(x=FT_data, ndim=2)
+        if np.iscomplexobj(FT_data) is not True:
+            raise ValueError("FT_data must be a complex array")
+        if isinstance(shift, bool) is not True:
+            raise ValueError("shift must be True or False")
         # check number of elements in types
         if len(types) > 3:
             raise ValueError("types must have at most 3 elements")
@@ -170,15 +175,17 @@ def spectra(
     return spectra_list
 
 
-def _unpad(data):
+def _unpad(data, pad_size):
     """
     Remove padded values at the edges of data.
     """
     # define number of values padded to the edges of original data
-    pad_width = (data.shape[0] // 3, data.shape[1] // 3)
+    aux = pad_size * 2 + 1 
+    pad_width = (data.shape[0] // aux, data.shape[1] // aux)
     # remove padded values ate the edges of data
     data = data[
-        pad_width[0] : 2 * pad_width[0], pad_width[1] : 2 * pad_width[1]
+        pad_size * pad_width[0] : (pad_size + 1) * pad_width[0], 
+        pad_size * pad_width[1] : (pad_size + 1) * pad_width[1]
     ]
 
     return data

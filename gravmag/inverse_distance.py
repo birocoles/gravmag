@@ -5,23 +5,26 @@ between a set of data points and a set of source points.
 
 import numpy as np
 from scipy.spatial import distance
-from . import check
+from . import check, utils
 from . import convolve as cv
 
 
 def sedm(data_points, source_points, check_input=True):
     """
     Compute the full Squared Euclidean Distance Matrix (SEDM) between the data points
-    and the source points.
+    and the source points (Dokmanic et. al, 2015).
 
     parameters
     ----------
     data_points: dictionary
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
-    source_points: dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
-        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -33,24 +36,48 @@ def sedm(data_points, source_points, check_input=True):
 
     if check_input is True:
         # check shape and ndim of points
-        check.are_coordinates(data_points)
-        check.are_coordinates(source_points)
+        D = check.are_coordinates(data_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
 
-    # compute the SEDM using numpy
+    # compute the SEDM
+
     D1 = (
         data_points["x"] * data_points["x"]
         + data_points["y"] * data_points["y"]
         + data_points["z"] * data_points["z"]
     )
     D2 = (
-        source_points["x"] * source_points["x"]
-        + source_points["y"] * source_points["y"]
-        + source_points["z"] * source_points["z"]
+        internal_sources_points["x"] * internal_sources_points["x"]
+        + internal_sources_points["y"] * internal_sources_points["y"]
+        + internal_sources_points["z"] * internal_sources_points["z"]
     )
     D3 = 2 * (
-        np.outer(data_points["x"], source_points["x"])
-        + np.outer(data_points["y"], source_points["y"])
-        + np.outer(data_points["z"], source_points["z"])
+        np.outer(data_points["x"], internal_sources_points["x"])
+        + np.outer(data_points["y"], internal_sources_points["y"])
+        + np.outer(data_points["z"], internal_sources_points["z"])
     )
 
     # use broadcasting rules to add D1, D2 and D3
@@ -59,22 +86,23 @@ def sedm(data_points, source_points, check_input=True):
     return D
 
 
-def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
+def sedm_BTTB(data_grid, delta_z, grid_orientation, check_input=True):
     """
     Compute the first column of the Squared Euclidean Distance Matrix (SEDM) between
     a horizontal regular grid of Nx x Ny data points and a grid of source points having the
-    same shape, but dislocated by a constant and positive vertical distance.
+    same shape, but dislocated by a constant and positive vertical distance (Dokmanic et. al, 2015).
+    This function optimizes `sedm` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
-        source grids of points.
-    ordering : string
+        the top of the prisms.
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -90,9 +118,9 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
 
     if check_input is True:
         # check shape and ndim of points
-        check.is_regular_grid_xy(grid=data_grid)
+        check.is_grid_xy(grid=data_grid)
         check.is_scalar(x=delta_z, positive=True)
-        check.is_ordering(ordering)
+        check.is_grid_orientation(grid_orientation)
 
     # number of points along x and y directions
     Nx = data_grid["x"].size
@@ -109,12 +137,12 @@ def sedm_BTTB(data_grid, delta_z, ordering, check_input=True):
     )
     SEDMz = delta_z * delta_z
 
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # compute the auxiliary vector associated with SEDM
         SEDM = np.tile(SEDMx, Ny) + np.repeat(SEDMy, Nx) + SEDMz
         # define shape
         shape = data_grid["shape"][::-1]
-    else:  # data_grid['ordering'] == 'yx'
+    else:  # data_grid['grid_orientation'] == 'yx'
         # use broadcasting rules to add DX, DY and DZ
         SEDM = np.repeat(SEDMx, Ny) + np.tile(SEDMy, Nx) + SEDMz
         # define shape
@@ -147,9 +175,12 @@ def grad(
     data_points: dictionary
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
-    source_points: dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
-        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
         points and the M sources computed according to function 'sedm'.
@@ -169,28 +200,51 @@ def grad(
     if check_input is True:
         # check shape and ndim of points
         D = check.are_coordinates(data_points)
-        P = check.are_coordinates(source_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
         # check if components are valid
         for component in components:
             if component not in ["x", "y", "z"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 2:
-            raise ValueError("SEDM must be have ndim = 2")
+        check.is_array(x=SEDM, ndim=2)
         if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
 
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM * np.sqrt(SEDM)
 
     # compute the gradient components defined in components
     Ka = dict()
+    Ka["header"] = (
+        "full matrix(ces) containing 1st-order partial derivative(s) of the inverse distance function"
+    )
     for component in components:
-        delta = data_points[component][:, np.newaxis] - source_points[component]
+        delta = data_points[component][:, np.newaxis] - internal_sources_points[component]
         Ka[component] = -delta / R3
 
     return Ka
@@ -200,7 +254,7 @@ def grad_BTTB(
     data_grid,
     delta_z,
     SEDM,
-    ordering,
+    grid_orientation,
     components=["x", "y", "z"],
     check_input=True,
 ):
@@ -209,20 +263,21 @@ def grad_BTTB(
     function between a horizontal regular grid of Nx x Ny data points and a
     grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
+    This function optimizes `grad` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
     SEDM: dictionary
         Dictionary containing the metadata associated with the full matrix
         (output of function 'inverse_distance.sedm_BTTB').
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -241,7 +296,7 @@ def grad_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_regular_grid_xy(data_grid)
+        D = check.is_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
@@ -249,7 +304,7 @@ def grad_BTTB(
                 raise ValueError("component {} invalid".format(component))
         # check the SEDM
         check.BTTB_metadata(SEDM)
-        check.is_ordering(ordering)
+        check.is_grid_orientation(grid_orientation)
 
     # compute the cube of inverse distance function from the SEDM
     R3 = SEDM["columns"] * np.sqrt(SEDM["columns"])
@@ -258,10 +313,13 @@ def grad_BTTB(
 
     # compute the gradient components defined in components
     Ka = dict()
+    Ka["header"] = (
+        "BTTB metadata associated with 1st-order partial derivative(s) of the inverse distance function"
+    )
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](
-            data_grid, delta_z, ordering
+            data_grid, delta_z, grid_orientation
         )
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
@@ -293,9 +351,12 @@ def grad_tensor(
     data_points: dictionary
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
-    source_points: dictionary
-        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
-        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
         points and the M sources computed according to function 'sedm'.
@@ -317,20 +378,40 @@ def grad_tensor(
     if check_input is True:
         # check shape and ndim of points
         D = check.are_coordinates(data_points)
-        P = check.are_coordinates(source_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
         # check if components are valid
         for component in components:
             if component not in ["xx", "xy", "xz", "yy", "yz", "zz"]:
                 raise ValueError("component {} invalid".format(component))
         # check if SEDM match data_points and source_points
-        if type(SEDM) != np.ndarray:
-            raise ValueError("SEDM must be a numpy array")
-        if SEDM.ndim != 2:
-            raise ValueError("SEDM must be have ndim = 2")
+        check.is_array(x=SEDM, ndim=2)
         if SEDM.shape != (D, P):
             raise ValueError(
                 "SEDM does not match data_points and source_points"
             )
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
 
     # compute the inverse distance function to the powers 3 and 5
     R3 = SEDM * np.sqrt(SEDM)
@@ -338,18 +419,19 @@ def grad_tensor(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
+    Kab["header"] = (
+        "full matrix(ces) containing 2nd-order partial derivative(s) of the inverse distance function"
+    )
     if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
-    else:
-        aux = 0
     for component in components:
         delta1 = (
             data_points[component[0]][:, np.newaxis]
-            - source_points[component[0]]
+            - internal_sources_points[component[0]]
         )
         delta2 = (
             data_points[component[1]][:, np.newaxis]
-            - source_points[component[1]]
+            - internal_sources_points[component[1]]
         )
         if component in ["xx", "yy", "zz"]:
             Kab[component] = ((3 * delta1 * delta2) / R5) - aux
@@ -363,7 +445,7 @@ def grad_tensor_BTTB(
     data_grid,
     delta_z,
     SEDM,
-    ordering,
+    grid_orientation,
     components=["xx", "xy", "xz", "yy", "yz", "zz"],
     check_input=True,
 ):
@@ -372,20 +454,21 @@ def grad_tensor_BTTB(
     function between a horizontal regular grid of Nx x Ny data points and a
     grid of source points having the same shape, but dislocated by a constant
     and positive vertical distance.
+    This function optimizes `grad_tensor` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
 
     parameters
     ----------
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
     SEDM: dictionary
         Dictionary containing the metadata associated with the full matrix
         (output of function 'inverse_distance.sedm_BTTB').
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -406,7 +489,7 @@ def grad_tensor_BTTB(
 
     if check_input is True:
         # check shape and ndim of points
-        D = check.is_regular_grid_xy(data_grid)
+        D = check.is_grid_xy(data_grid)
         check.is_scalar(x=delta_z, positive=True)
         # check if components are valid
         for component in components:
@@ -414,7 +497,7 @@ def grad_tensor_BTTB(
                 raise ValueError("component {} invalid".format(component))
         # check the SEDM
         check.BTTB_metadata(SEDM)
-        check.is_ordering(ordering)
+        check.is_grid_orientation(grid_orientation)
 
     # number of points along x and y directions
     Nx = data_grid["x"].size
@@ -435,10 +518,13 @@ def grad_tensor_BTTB(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
+    Kab["header"] = (
+        "BTTB metadata associated with 2nd-order partial derivative(s) of the inverse distance function"
+    )
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](
-            data_grid, delta_z, ordering
+            data_grid, delta_z, grid_orientation
         )
         # dictionary containing metadata associated with the full BTTB
         BTTB = {
@@ -455,7 +541,427 @@ def grad_tensor_BTTB(
     return Kab
 
 
-def _delta_x(data_grid, delta_z, ordering):
+def directional_1st_order(
+    data_points,
+    source_points,
+    SEDM,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of first order of the inverse distance
+    function between the data points and the source points. The direcional derivative
+    is computed along a direction defined by a given inclination and declination.
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
+    SEDM: numpy array 2d
+        Squared Euclidean Distance Matrix (SEDM) between the N data
+        points and the M sources computed according to function 'sedm'.
+    inc, dec : ints or floats
+        Scalars defining the constant inclination and declination of the
+        direction along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Kt: Dictionary
+        Dictionary containing the x, y and z components of the computed 1st-orfer directional derivative
+        along a constant direction with predefined inclination and declination.
+        The x, y and z components are stored at the keys 'tx', 'ty' and 'tz', respectively.
+        Inclination and declination values at keys 'inclination' and 'declination', respectively.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
+        # check if SEDM match data_points and source_points
+        check.is_array(x=SEDM, ndim=2)
+        if SEDM.shape != (D, P):
+            raise ValueError(
+                "SEDM does not match data_points and source_points"
+            )
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
+
+    # compute the gradient components along x, y and z directions
+    Grad = grad(
+        data_points=data_points,
+        source_points=internal_sources_points,
+        SEDM=SEDM,
+        components=["x", "y", "z"],
+        check_input=False,
+    )
+
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute the directional derivative of 1st order
+    Kt = dict()
+    Kt["header"] = (
+        "full matrix containing 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
+    )
+    Kt["tx"] = t[0] * Grad["x"]
+    Kt["ty"] = t[1] * Grad["y"]
+    Kt["tz"] = t[2] * Grad["z"]
+    Kt["inclination"] = inc
+    Kt["declination"] = dec
+
+    return Kt
+
+
+def directional_1st_order_BTTB(
+    data_grid,
+    delta_z,
+    SEDM,
+    grid_orientation,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of first order of the inverse distance
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
+    and positive vertical distance.
+    The direcional derivative is computed along a direction defined by a given inclination and declination.
+    This function optimizes `directional_1st_order` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    SEDM: dictionary
+        Dictionary containing the metadata associated with the full matrix
+        (output of function 'inverse_distance.sedm_BTTB').
+    grid_orientation : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    inc, dec : ints or floats
+        Scalars defining the constant inclination and declination of the
+        direction along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Kt: Dictionary
+        Dictionary containing the x, y and z components of the computed 1st-orfer directional derivative
+        along a constant direction with predefined inclination and declination.
+        The x, y and z components are stored at the keys 'tx', 'ty' and 'tz', respectively,
+        in the form of BTTB matrices (see input of function 'check.BTTB_metadata').
+        Inclination and declination values at keys 'inclination' and 'declination', respectively.
+        .
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.is_grid_xy(data_grid)
+        check.is_scalar(x=delta_z, positive=True)
+        # check the SEDM
+        check.BTTB_metadata(SEDM)
+        check.is_grid_orientation(grid_orientation)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the gradient components along x, y and z directions
+    Grad = grad_BTTB(
+        data_grid=data_grid,
+        delta_z=delta_z,
+        SEDM=SEDM,
+        grid_orientation=grid_orientation,
+        components=["x", "y", "z"],
+        check_input=False,
+    )
+
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute the gradient components defined in components
+    Kt = dict()
+    Kt["header"] = (
+        "BTTB metadata associated with 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
+    )
+    Kt["tx"] = Grad["x"].copy()
+    Kt["ty"] = Grad["y"].copy()
+    Kt["tz"] = Grad["z"].copy()
+    Kt["tx"]["columns"] *= t[0]
+    Kt["ty"]["columns"] *= t[1]
+    Kt["tz"]["columns"] *= t[2]
+    Kt["inclination"] = inc
+    Kt["declination"] = dec
+
+    return Kt
+
+
+def directional_2nd_order(
+    data_points,
+    source_points,
+    SEDM,
+    inc0,
+    dec0,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of second order of the inverse distance
+    function between the data points and the source points. The direcional derivative
+    is computed along a directions defined by the given inclination/declinations pairs
+    (inc0, dec0) and (inc, dec).
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
+    SEDM: numpy array 2d
+        Squared Euclidean Distance Matrix (SEDM) between the N data
+        points and the M sources computed according to function 'sedm'.
+    inc0, dec0, inc, dec : ints or floats
+        Scalars defining the constant inclinations and declinations of the
+        directions along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Ktu: Dictionary
+        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-order directional derivative
+        along a constant directions with predefined inclinations and declinations.
+        The xx, xy, xz, yy and yz components are stored at the keys 'xx', 'xy', 'xz', 'yy' and 'yz', respectively.
+        Inclinations and declinations values at keys 'inclination', 'declination0', 'inclination' and 'declination'.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
+        # check if SEDM match data_points and source_points
+        check.is_array(x=SEDM, ndim=2)
+        if SEDM.shape != (D, P):
+            raise ValueError(
+                "SEDM does not match data_points and source_points"
+            )
+        check.is_scalar(x=inc0, positive=False)
+        check.is_scalar(x=dec0, positive=False)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
+
+    # compute the tensor components along x, y and z directions
+    Tensor = grad_tensor(
+        data_points=data_points,
+        source_points=internal_sources_points,
+        SEDM=SEDM,
+        components=["xx", "xy", "xz", "yy", "yz"],
+        check_input=False,
+    )
+
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute unit vector with direction defined by 'inc0' and 'dec0'
+    u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
+
+    # compute the directional factors
+    a = utils.directional_factors(t, u, check_input=False)
+
+    # compute the directional derivative of 1st order
+    Ktu = dict()
+    Ktu["header"] = (
+        "full matrix(ces) containing 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
+    )
+    Ktu["xx"] = a['xx'] * Tensor["xx"]
+    Ktu["xy"] = a['xy'] * Tensor["xy"]
+    Ktu["xz"] = a['xz'] * Tensor["xz"]
+    Ktu["yy"] = a['yy'] * Tensor["yy"]
+    Ktu["yz"] = a['yz'] * Tensor["yz"]
+    Ktu["inclination0"] = inc0
+    Ktu["declination0"] = dec0
+    Ktu["inclination"] = inc
+    Ktu["declination"] = dec
+
+    return Ktu
+
+
+def directional_2nd_order_BTTB(
+    data_grid,
+    delta_z,
+    SEDM,
+    grid_orientation,
+    inc0,
+    dec0,
+    inc,
+    dec,
+    check_input=True,
+):
+    """
+    Compute the partial directional derivative of second order of the inverse distance
+    function between a horizontal regular grid of Nx x Ny data points and a
+    grid of source points having the same shape, but dislocated by a constant
+    and positive vertical distance.
+    The direcional derivative is computed along a directions defined by the given
+    inclination/declinations pairs (inc0, dec0) and (inc, dec).
+    This function optimizes `directional_2nd_order` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    SEDM: dictionary
+        Dictionary containing the metadata associated with the full matrix
+        (output of function 'inverse_distance.sedm_BTTB').
+    grid_orientation : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    inc0, dec0, inc, dec : ints or floats
+        Scalars defining the constant inclinations and declinations of the
+        directions along which the derivative will be computed.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    Ktu: Dictionary
+        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-orfer directional derivative
+        along the constant directions with predefined inclinations and declinations.
+        The xx, xy, xz, yy and yz components are stored at the keys 'xx', 'xy', 'xz', 'yy' and 'yz', respectively,
+        in the form of BTTB matrices (see input of function 'check.BTTB_metadata').
+        Inclination and declination values at keys 'inclination0', 'declination0', 'inclination' and 'declination'.
+        .
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.is_grid_xy(data_grid)
+        check.is_scalar(x=delta_z, positive=True)
+        # check the SEDM
+        check.BTTB_metadata(SEDM)
+        check.is_grid_orientation(grid_orientation)
+        check.is_scalar(x=inc0, positive=False)
+        check.is_scalar(x=dec0, positive=False)
+        check.is_scalar(x=inc, positive=False)
+        check.is_scalar(x=dec, positive=False)
+
+    # compute the gradient components along x, y and z directions
+    Tensor = grad_tensor_BTTB(
+        data_grid=data_grid,
+        delta_z=delta_z,
+        SEDM=SEDM,
+        grid_orientation=grid_orientation,
+        components=["xx", "xy", "xz", "yy", "yz"],
+        check_input=False,
+    )
+
+    # compute unit vector with direction defined by 'inc' and 'dec'
+    t = utils.unit_vector(inc=inc, dec=dec, check_input=False)
+
+    # compute unit vector with direction defined by 'inc0' and 'dec0'
+    u = utils.unit_vector(inc=inc0, dec=dec0, check_input=False)
+
+    # compute the directional factors
+    a = utils.directional_factors(t, u, check_input=False)
+
+    # compute the gradient components defined in components
+    Ktu = dict()
+    Ktu["header"] = (
+        "BTTB metadata associated with 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
+    )
+    Ktu["xx"] = Tensor["xx"].copy()
+    Ktu["xy"] = Tensor["xy"].copy()
+    Ktu["xz"] = Tensor["xz"].copy()
+    Ktu["yy"] = Tensor["yy"].copy()
+    Ktu["yz"] = Tensor["yz"].copy()
+    Ktu["xx"]["columns"] *= a['xx']
+    Ktu["xy"]["columns"] *= a['xy']
+    Ktu["xz"]["columns"] *= a['xz']
+    Ktu["yy"]["columns"] *= a['yy']
+    Ktu["yz"]["columns"] *= a['yz']
+    Ktu["inclination0"] = inc0
+    Ktu["declination0"] = dec0
+    Ktu["inclination"] = inc
+    Ktu["declination"] = dec
+
+    return Ktu
+
+
+def _delta_x(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component x.
 
@@ -464,11 +970,11 @@ def _delta_x(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -490,14 +996,14 @@ def _delta_x(data_grid, delta_z, ordering):
     # compute the auxiliary variable
     aux = -(data_grid["x"] - data_grid["x"][0])
 
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term -(x_i - x_j)
         delta = np.reshape(np.tile(aux, Ny), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Nx, Ny)
@@ -508,7 +1014,8 @@ def _delta_x(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_y(data_grid, delta_z, ordering):
+def _delta_y(data_grid, delta_z, grid_orientation):
+
     """
     Parameters associated with the BTTB defined by field component y.
 
@@ -517,11 +1024,11 @@ def _delta_y(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -543,14 +1050,14 @@ def _delta_y(data_grid, delta_z, ordering):
     # compute the auxiliary variable
     aux = -(data_grid["y"] - data_grid["y"][0])
 
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term -(y_i - y_j)
         delta = np.reshape(np.repeat(aux, Nx), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Nx, Ny)
@@ -561,7 +1068,7 @@ def _delta_y(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_z(data_grid, delta_z, ordering):
+def _delta_z(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component z.
 
@@ -570,11 +1077,11 @@ def _delta_z(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -597,17 +1104,17 @@ def _delta_z(data_grid, delta_z, ordering):
     symmetries = ("symm", "symm")
     # term -(z_i - z_j)
     delta = delta_z
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
 
     return symmetries, shape, delta
 
 
-def _delta_xx(data_grid, delta_z, ordering):
+def _delta_xx(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component xx.
 
@@ -616,11 +1123,11 @@ def _delta_xx(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -644,12 +1151,12 @@ def _delta_xx(data_grid, delta_z, ordering):
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term 3 * (x_i - x_j)**2
         delta = np.reshape(np.tile(aux, Ny), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # term 3 * (x_i - x_j)**2
@@ -658,7 +1165,7 @@ def _delta_xx(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_xy(data_grid, delta_z, ordering):
+def _delta_xy(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component xy.
 
@@ -667,11 +1174,11 @@ def _delta_xy(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -696,13 +1203,13 @@ def _delta_xy(data_grid, delta_z, ordering):
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("skew", "skew")
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # terms (x_i - x_j) and (y_i - y_j)
         delta_x = np.reshape(np.tile(aux_x, Ny), shape)
         delta_y = np.reshape(np.repeat(aux_y, Nx), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # terms (x_i - x_j) and (y_i - y_j)
@@ -715,7 +1222,7 @@ def _delta_xy(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_xz(data_grid, delta_z, ordering):
+def _delta_xz(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component xz.
 
@@ -724,11 +1231,11 @@ def _delta_xz(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -750,14 +1257,14 @@ def _delta_xz(data_grid, delta_z, ordering):
     # compute the auxiliary variable
     aux_x = -(data_grid["x"] - data_grid["x"][0])
 
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term (x_i - x_j)
         delta_x = np.reshape(np.tile(aux_x, Ny), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Nx, Ny)
@@ -771,7 +1278,7 @@ def _delta_xz(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_yy(data_grid, delta_z, ordering):
+def _delta_yy(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component yy.
 
@@ -780,11 +1287,11 @@ def _delta_yy(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -808,12 +1315,12 @@ def _delta_yy(data_grid, delta_z, ordering):
 
     # (symmetry_structure, symmetry_blocks)
     symmetries = ("symm", "symm")
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term 3* (y_i - y_j)**2
         delta = np.reshape(np.repeat(aux, Nx), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
         # term 3* (y_i - y_j)**2
@@ -822,7 +1329,7 @@ def _delta_yy(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_yz(data_grid, delta_z, ordering):
+def _delta_yz(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component yz.
 
@@ -831,11 +1338,11 @@ def _delta_yz(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -857,14 +1364,14 @@ def _delta_yz(data_grid, delta_z, ordering):
     # compute the auxiliary variable
     aux_y = -(data_grid["y"] - data_grid["y"][0])
 
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("skew", "symm")
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
         # term (y_i - y_j)
         delta_y = np.reshape(np.repeat(aux_y, Nx), shape)
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # (symmetry_structure, symmetry_blocks)
         symmetries = ("symm", "skew")
         # shape (Nx, Ny)
@@ -878,7 +1385,7 @@ def _delta_yz(data_grid, delta_z, ordering):
     return symmetries, shape, delta
 
 
-def _delta_zz(data_grid, delta_z, ordering):
+def _delta_zz(data_grid, delta_z, grid_orientation):
     """
     Parameters associated with the BTTB defined by field component zz.
 
@@ -887,11 +1394,11 @@ def _delta_zz(data_grid, delta_z, ordering):
     data_grid : dictionary
         Dictionary containing the x, y and z coordinates of the grid points (or nodes)
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
-        points at the key 'ordering'. See function 'data_structures.regular_grid_xy'.
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
     delta_z : float or int
         Positive scalar defining the constant vertical distance between the data and
         source grids of points.
-    ordering : string
+    grid_orientation : string
         Defines how the points are ordered after the first point (min x, min y).
         If 'xy', the points vary first along x and then along y.
         If 'yx', the points vary first along y and then along x.
@@ -914,10 +1421,10 @@ def _delta_zz(data_grid, delta_z, ordering):
     symmetries = ("symm", "symm")
     # term 3 * (z_i - z_j)**2
     delta = 3 * delta_z**2
-    if ordering == "xy":
+    if grid_orientation == "xy":
         # shape (Ny, Nx)
         shape = data_grid["shape"][::-1]
-    else:  # ordering == "yx"
+    else:  # grid_orientation == "yx"
         # shape (Nx, Ny)
         shape = data_grid["shape"]
 

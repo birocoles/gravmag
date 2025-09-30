@@ -11,7 +11,8 @@ from . import check, data_structures
 def compute(FT_data, filters, check_input=True):
     """
     Compute the convolution in Fourier domain as the Hadamard (or element-wise)
-    product of the Fourier-Transformed data and a sequence of filters.
+    product (Horn and Johnson, 1991, p. 298) of the Fourier-Transformed data
+    and a sequence of filters.
 
     parameters
     ----------
@@ -58,7 +59,8 @@ def compute(FT_data, filters, check_input=True):
 
 def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
     """
-    Generate the Circulant matrix C which embbeds a Toeplitz matrix T.
+    Generate the Circulant matrix C which embbeds a Toeplitz matrix T
+    (Chan and Jin, 2007, p. 1, 11, 12).
 
     The Toeplitz matrix T has P x P elements. The embedding circulant matrix C has 2P x 2P elements.
 
@@ -153,10 +155,140 @@ def Circulant_from_Toeplitz(Toeplitz, full=False, check_input=True):
         return C
 
 
+def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
+    """
+    Return the data structure for the transposed BTTB.
+
+    parameters
+    ----------
+    BTTB_metadata : dictionary
+        See the function 'convolve.generic_BTTB'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    BTTB_T : dictionary
+        Data structure similar to the input of 'check.BTTB_metadata', but for its transposed.
+    """
+    if check_input == True:
+        check.BTTB_metadata(BTTB=BTTB_metadata)
+
+    # the transposed of a BTTB inherits the symmetry structure between blocks,
+    # within blocks, number of blocks and also order of blocks.
+    BTTB_T_metadata = {
+        "symmetry_structure": BTTB_metadata["symmetry_structure"],
+        "symmetry_blocks": BTTB_metadata["symmetry_blocks"],
+        "nblocks": BTTB_metadata["nblocks"],
+    }
+
+    # get data and perform the required changes
+    if BTTB_metadata["symmetry_structure"] == "symm":
+        if BTTB_metadata["symmetry_blocks"] == "symm":
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["rows"] = None
+        elif BTTB_metadata["symmetry_blocks"] == "skew":
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+            BTTB_T_metadata["rows"] = None
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
+            BTTB_T_metadata["columns"] = np.hstack(
+                [
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
+
+    elif BTTB_metadata["symmetry_structure"] == "skew":
+        if BTTB_metadata["symmetry_blocks"] == "symm":
+            # get the elements forming the columns and rows
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["columns"][1:, :] *= -1
+            BTTB_T_metadata["rows"] = None
+        elif BTTB_metadata["symmetry_blocks"] == "skew":
+            # get the elements forming the columns and rows
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+            BTTB_T_metadata["columns"][1:, :] *= -1
+            BTTB_T_metadata["rows"] = None
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
+            # get the elements forming the columns and rows
+            BTTB_T_metadata["columns"] = np.hstack(
+                [
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
+            # change signal
+            BTTB_T_metadata["columns"][1:] *= -1
+            BTTB_T_metadata["rows"][1:] *= -1
+    else:  # BTTB_metadata["symmetry_structure"] == "gene"
+        if BTTB_metadata["symmetry_blocks"] == "symm":
+            # get the elements forming the columns and rows
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["rows"] = None
+            # get the number of blocks along a column/row
+            nblocks = BTTB_T_metadata["nblocks"]
+            # permute elements with respect to the main diagonal
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
+            )
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
+        elif BTTB_metadata["symmetry_blocks"] == "skew":
+            # get the columns
+            BTTB_T_metadata["columns"] = np.copy(BTTB_metadata["columns"])
+            BTTB_T_metadata["rows"] = None
+            # get the number of blocks along a column/row
+            nblocks = BTTB_T_metadata["nblocks"]
+            # permute the elements with respect to the main diagonal
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
+            )
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
+            # change signal
+            BTTB_T_metadata["columns"][:, 1:] *= -1
+        else:  # BTTB_metadata["symmetry_blocks"] == "gene"
+            # get the elements forming the columns and rows
+            BTTB_T_metadata["columns"] = np.hstack(
+                [
+                    BTTB_metadata["columns"][:, 0][:, np.newaxis],
+                    BTTB_metadata["rows"],
+                ]
+            )
+            BTTB_T_metadata["rows"] = BTTB_metadata["columns"][:, 1:]
+            # get the number of blocks along a column/row
+            nblocks = BTTB_T_metadata["nblocks"]
+            # permute the elements with respect to the main diagonal
+            permutation_indices = [i for i in range(2 * nblocks - 1)]
+            (permutation_indices[1:nblocks], permutation_indices[nblocks:]) = (
+                permutation_indices[nblocks:],
+                permutation_indices[1:nblocks],
+            )
+            BTTB_T_metadata["columns"] = BTTB_T_metadata["columns"][
+                permutation_indices
+            ]
+            BTTB_T_metadata["rows"] = BTTB_T_metadata["rows"][
+                permutation_indices
+            ]
+
+    return BTTB_T_metadata
+
+
+
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
-    Generate the full BTTB matrix T from the dictionary containing its metadata
-    (For details, see the function 'check.BTTB_metadata').
+    Generate the full BTTB matrix T (Chan and Jin, 2007, p. 67)
+    from the dictionary containing its metadata (For details, see the function 'check.BTTB_metadata').
 
     The matrix T has nblocks x nblocks blocks, each one with npoints_per_block x npoints_per_block elements.
 
@@ -399,7 +531,8 @@ def BTTB_from_metadata(BTTB_metadata, check_input=True):
 def embedding_BCCB(BTTB_metadata, full=False, check_input=True):
     """
     Generate the first column or the full Block Circulant formed by Circulant Blocks (BCCB)
-    matrix that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB).
+    matrix (Davis, 1979, p. 184) that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB)
+    matrix (Chan and Jin, 2007, p. 67, 76; Takahashi et al., 2020, 2022).
 
     See details in the function 'data_structures.BTTB_metadata'.
 
@@ -504,7 +637,7 @@ def eigenvalues_BCCB(BTTB_metadata, ordering="row", check_input=True):
     """
     Compute the eigenvalues of a Block Circulant formed by Circulant Blocks (BCCB) matrix C
     that embeds a given Block Toeplitz formed by Toeplitz Blocks (BTTB) matrix. The eigenvalues
-    are rearranged along the rows or columns of a matrix L.
+    are rearranged along the rows or columns of a matrix L (Takahashi et al., 2020, 2022).
 
     parameters
     ----------
@@ -560,7 +693,8 @@ def eigenvalues_BCCB(BTTB_metadata, ordering="row", check_input=True):
 
 def product_BCCB_vector(eigenvalues, ordering, v, check_input=True):
     """
-    Compute the product of a BCCB matrix and a vector v by using the eigenvalues of the BCCB.
+    Compute the product of a BCCB matrix and a vector v by using the eigenvalues of the BCCB
+    (Takahashi et al., 2020, 2022).
 
     parameters
     ----------

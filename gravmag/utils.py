@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit
-from . import check
+from . import check, data_structures
 
 
 @njit
@@ -47,7 +47,7 @@ def safe_atan2(y, x):
                     result[i, j] = np.pi / 2
                 elif y[i, j] < 0.0:
                     result[i, j] = -np.pi / 2
-                else:
+                else: # y[i, j] == 0.0
                     result[i, j] = 0.0
     return result
 
@@ -205,6 +205,43 @@ def direction(vector, check_input=True):
     return intensity, inclination, declination
 
 
+def directional_factors(t, u, check_input=True):
+    """
+    Given two 3x1 unit vectors t and u, compute factors:
+    axx = tx * ux - tz * uz
+    axy = tx * uy + ty * ux
+    axz = tx * uz + tz * ux
+    ayy = ty * uy - tz * uz
+    ayz = ty * uz + tz * uy
+
+    parameters
+    ----------
+    t, u : numpy arrays 1d
+        Unit 3x1 vectors.
+
+    returns
+    -------
+    a : dictionary
+        Dictionary containing the factors.
+    """
+    if check_input is True:
+        check.is_array(x=t, ndim=1, shape=(3,))
+        check.is_array(x=u, ndim=1, shape=(3,))
+        if np.abs(np.sum(t*t) - 1) > 1e-10:
+            raise ValueError("t must be a unit vector")
+        if np.abs(np.sum(u*u) - 1) > 1e-10:
+            raise ValueError("u must be a unit vector")
+
+    a = dict()
+    a['xx'] = t[0] * u[0] - t[2] * u[2]
+    a['xy'] = t[0] * u[1] + t[1] * u[0]
+    a['xz'] = t[0] * u[2] + t[2] * u[0]
+    a['yy'] = t[1] * u[1] - t[2] * u[2]
+    a['yz'] = t[1] * u[2] + t[2] * u[1]
+
+    return a
+
+
 def rotation_matrix(I, D, dI, dD):
     """
     Compute the rotation matrix transforming the unit vector
@@ -322,7 +359,7 @@ def prisms_volume(prisms):
     return volume
 
 
-def block_data(x, y, area, shape):
+def block_data(x, y, area, shape, check_input=True):
     """
     Split a dataset into a grid of Nx X Ny blocks within a predefined area.
 
@@ -335,36 +372,23 @@ def block_data(x, y, area, shape):
         boundaries along the x and y directions, respectively.
     shape : tuple of ints
         Positive integers defining the number of blocks along the x and y directions, respectively.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
     blocks_indices : list of lists
         Lists containing the indices of the data at each block.
     """
-    if (type(x) != np.ndarray) or (type(y) != np.ndarray):
-        raise ValueError("x and y must be numpy arrays")
-    if (x.ndim != 1) or (y.ndim != 1):
-        raise ValueError("x and y must have ndim = 1")
-    if x.size != y.size:
-        raise ValueError("x and y must have the same size")
-    if type(area) != list:
-        raise ValueError("area must be a list")
-    if len(area) != 4:
-        raise ValueError("area must have four elements")
-    if area[1] <= area[0]:
-        raise ValueError("area[1] must be greater than area[0]")
-    if area[3] <= area[2]:
-        raise ValueError("area[3] must be greater than area[2]")
-    if isinstance(shape, tuple) == False:
-        raise ValueError("shape must be a tuple")
-    if len(shape) != 2:
-        raise ValueError("shape must have 2 elements")
-    if (isinstance(shape[0], int) == False) or (shape[0] <= 0):
-        raise ValueError("shape[0] must be a positive integer")
-    if (isinstance(shape[1], int) == False) or (shape[1] <= 0):
-        raise ValueError("shape[1] must be a positive integer")
+    if check_input is True:
+        check.is_array(x=x, ndim=1)
+        check.is_array(x=y, ndim=1)
+        if x.size != y.size:
+            raise ValueError("x and y must have the same size")
+        check.is_area(area=area)
+        check.is_shape(shape=shape)
 
-    # compute spacing along x and y
+    # compute lenght of blocks along x and y
     dx = (area[1] - area[0]) / shape[0]
     dy = (area[3] - area[2]) / shape[1]
 
@@ -386,7 +410,9 @@ def block_data(x, y, area, shape):
     return blocks_indices
 
 
-def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
+def reduce_data(
+    data, blocks_indices, function="mean", remove_nan=False, check_input=True
+):
     """
     Apply func to the values at each element in blocks.
 
@@ -398,34 +424,41 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
         Lists containing the indices of the data at each block.
     function : string
         Function to be applied to compute the reduced data at the
-        center of each block. The possibilities are "mean" or "median".
+        center of each block. The possibilities are "mean", "median", "min" or "max".
     remove_nan : boolean
         If True, keep the elements containing nan values and return a 2d array of reduced data.
         Otherwise, remove elements containing nan values and return an 1d array of reduced data.
         Default is False.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
 
     returns
     -------
     reduced_data : numpy array 1d or 2d
         Matrix containing the reduced data at each block.
     """
-    if type(data) != np.ndarray:
-        raise ValueError("data must be numpy arrays")
-    if data.ndim != 1:
-        raise ValueError("data must have ndim = 1")
-    if type(blocks_indices) != list:
-        raise ValueError("blocks_indices must be a list")
-    if type(function) != str:
-        raise ValueError("function must be string")
-    if function not in ["mean", "median"]:
-        raise ValueError("invalid function {}".format(function))
-    if remove_nan not in [True, False]:
-        raise ValueError("{} does not have a valid format".format(remove_nan))
+
+    if check_input is True:
+        check.is_array(x=data, ndim=1)
+        if type(blocks_indices) != list:
+            raise ValueError("blocks_indices must be a list")
+        if type(function) != str:
+            raise ValueError("function must be string")
+        if function not in ["mean", "median", "min", "max"]:
+            raise ValueError("invalid function {}".format(function))
+        if remove_nan not in [True, False]:
+            raise ValueError(
+                "{} does not have a valid format".format(remove_nan)
+            )
 
     if function == "mean":
         func = np.mean
-    else:  # function == "median"
+    elif function == "median":
         func = np.median
+    elif function == "min":
+        func = np.min
+    else: # function == "max"
+        func = np.max
 
     Nx = len(blocks_indices)
     Ny = len(blocks_indices[0])
@@ -438,9 +471,70 @@ def reduce_data(data, blocks_indices, function="mean", remove_nan=False):
             else:
                 reduced_data[i, j] = func(data[blocks_indices[i][j]])
 
-    if remove_nan == True:
+    if remove_nan is True:
         reduced_data = reduced_data.ravel()
         nan_elements = np.isnan(reduced_data)
         reduced_data = np.delete(reduced_data, nan_elements)
 
     return reduced_data
+
+
+def block_centers(
+    area, blocks_indices, check_input=True
+):
+    """
+    Define the center of each data block.
+
+    parameters
+    ----------
+    area : list
+        List formed by [x1, x2, y1, y2], where x2 > x1 and y2 > y1 define the
+        boundaries along the x and y directions, respectively.
+    blocks_indices : list of lists
+        Lists containing the indices of the data at each block.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    x, y : numpy arrays 1d
+        Coordinates of each block center.
+    """
+    if check_input is True:
+        check.is_area(area=area)
+        if type(blocks_indices) != list:
+            raise ValueError("blocks_indices must be a list")
+
+    # number of points along x and y directions
+    Nx = len(blocks_indices)
+    Ny = len(blocks_indices[0])
+    
+    # get the grid spacing
+    dx = (area[1] - area[0]) / (Nx - 1)
+    dy = (area[3] - area[2]) / (Ny - 1)
+
+    # centers of a full grid
+    X, Y = data_structures.grid_xy_to_full_matrices_view(
+        x = np.linspace(
+            area[0] + 0.5*dx, 
+            area[1] - 0.5*dx, 
+            Nx
+        ),
+        y = np.linspace(
+            area[2] + 0.5*dy, 
+            area[3] - 0.5*dy, 
+            Ny
+        ),
+        shape = (Nx, Ny)
+    )
+    
+    # mask defining blocks containing data
+    mask = np.empty(shape=(Nx, Ny), dtype=bool)
+    for i in range(Nx):
+        for j in range(Ny):
+            if len(blocks_indices[i][j]) == 0:
+                mask[i, j] = False
+            else:
+                mask[i, j] = True
+
+    return X[mask], Y[mask]
