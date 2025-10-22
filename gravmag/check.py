@@ -213,8 +213,12 @@ def is_integer(x, positive=True, include_zero=False):
     if isinstance(x, int) is False:
         raise ValueError("x must be an int")
     if positive == True:
-        if x < 1:
-            raise ValueError("x must be positive")
+        if include_zero == True:
+            if x < 0:
+                raise ValueError("x must be positive or zero")
+        else:
+            if x < 1:
+                raise ValueError("x must be positive")
 
 
 def is_array(x, ndim=None, shape=None):

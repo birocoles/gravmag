@@ -201,6 +201,9 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
         - z-component of induction: ``z`` (in nT)
         - y-component of induction: ``y`` (in nT)
         - x-component of induction: ``x`` (in nT)
+        - x-component of z-component induction gradient: ``xz`` (in nT/m)
+        - y-component of z-component induction gradient: ``yz`` (in nT/m)
+        - z-component of z-component induction gradient: ``zz`` (in nT/m)
      scale : boolean
         Defines if the resultant field will be multiplied by scale factors
         "constants.CM" (Magnetic constant),
@@ -227,6 +230,9 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
         "z": {"x": kernel_xz, "y": kernel_yz, "z": kernel_zz},
         "y": {"x": kernel_xy, "y": kernel_yy, "z": kernel_yz},
         "x": {"x": kernel_xx, "y": kernel_xy, "z": kernel_xz},
+        "xz": {"x": kernel_xxz, "y": kernel_xyz, "z": kernel_xzz},
+        "yz": {"x": kernel_xyz, "y": kernel_yyz, "z": kernel_yzz},
+        "zz": {"x": kernel_xzz, "y": kernel_yzz, "z": kernel_zzz},
     }
 
     # Verify the field
@@ -249,7 +255,7 @@ def mag(coordinates, prisms, mx, my, mz, field, scale=True):
     if scale is True:
         result *= cts.CM
         # Convert from T to nT
-        if field in ["x", "y", "z"]:
+        if field in ["x", "y", "z", "xz", "yz", "zz"]:
             result *= cts.T2nanoT
         # Convert from T to uT and change sign
         if field == "potential":
@@ -421,6 +427,99 @@ def kernel_zz(X, Y, Z, R):
     return result
 
 
+def kernel_xxx(X, Y, Z, R):
+    """
+    Function for computing the xxx-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = (1 / (X**2 + Z**2)) + (1 / (X**2 + Y**2))
+    result *= (Y * Z) / R 
+    return result
+
+
+def kernel_xxy(X, Y, Z, R):
+    """
+    Function for computing the xxy-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (Z * X) / (R * (X**2 + Y**2))
+    return result
+
+
+def kernel_xxz(X, Y, Z, R):
+    """
+    Function for computing the xxz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (Y * X) / (R * (X**2 + Z**2))
+    return result
+
+
+def kernel_xyy(X, Y, Z, R):
+    """
+    Function for computing the xyy-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (Y * Z) / (R * (X**2 + Y**2))
+    return result
+
+
+def kernel_yyy(X, Y, Z, R):
+    """
+    Function for computing the yyy-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = (1 / (Y**2 + Z**2)) + (1 / (Y**2 + X**2))
+    result *= (X * Z) / R 
+    return result
+
+
+def kernel_yyz(X, Y, Z, R):
+    """
+    Function for computing the yyz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (X * Y) / (R * (Z**2 + Y**2))
+    return result
+
+
+def kernel_xzz(X, Y, Z, R):
+    """
+    Function for computing the xzz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (Y * Z) / (R * (X**2 + Z**2))
+    return result
+
+
+def kernel_yzz(X, Y, Z, R):
+    """
+    Function for computing the yzz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = - (X * Z) / (R * (Y**2 + Z**2))
+    return result
+
+
+def kernel_zzz(X, Y, Z, R):
+    """
+    Function for computing the zzz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = (1 / (X**2 + Z**2)) + (1 / (Y**2 + Z**2))
+    result *= (X * Y) / R 
+    return result
+
+
+def kernel_xyz(X, Y, Z, R):
+    """
+    Function for computing the xyz-derivative of inverse distance kernel
+    for a rectangular prism
+    """
+    result = 1 / R
+    return result
+
+
 # Available kernels
 kernels = {
     "potential": kernel_potential_grav,
@@ -433,4 +532,14 @@ kernels = {
     "yy": kernel_yy,
     "yz": kernel_yz,
     "zz": kernel_zz,
+    "xxx": kernel_xxx,
+    "xxy": kernel_xxy,
+    "xxz": kernel_xxz,
+    "xyy": kernel_xyy,
+    "xyz": kernel_xyz,
+    "xzz": kernel_xzz,
+    "yyy": kernel_yyy,
+    "yyz": kernel_yyz,
+    "yzz": kernel_yzz,
+    "zzz": kernel_zzz,
 }
