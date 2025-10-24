@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from numpy.testing import assert_raises as ar
 from pytest import raises
-from .. import data_structures as ds
+from gravmag import data_structures as ds
 
 # grid_xy
 

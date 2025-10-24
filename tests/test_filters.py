@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from numpy.testing import assert_raises as ar
 from pytest import raises
-from .. import filters as ft
+from gravmag import filters as ft
 
 
 def test_direction_inc_dec_not_scalars():

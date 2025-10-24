@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 import pytest
-from .. import check
+from gravmag import check
 
 ##### rectangular prism
 

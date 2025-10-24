@@ -6,9 +6,9 @@ functions proposed by Fukushima (2020) for dealing with singularities at some co
 """
 
 import numpy as np
-from .. import check, utils, data_structures
-from .. import constants as cts
-from .. import inverse_distance as idist
+from gravmag import check, utils, data_structures
+from gravmag import constants as cts
+from gravmag import inverse_distance as idist
 
 def grav(coordinates, prisms, density, field, scale=True):
     """

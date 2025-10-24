@@ -3,7 +3,7 @@ from scipy.linalg import toeplitz, circulant, hankel
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from pytest import raises
-from .. import eqlayer
+from gravmag import eqlayer
 
 
 # #### kernel_matrix_monopoles

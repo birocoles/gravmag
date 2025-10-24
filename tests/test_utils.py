@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 import pytest
 from numba import njit
-from .. import utils
+from gravmag import utils
 
 
 # safe_atan2

@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from numpy.testing import assert_raises as ar
 from pytest import raises
-from .. import transforms as tr
+from gravmag import transforms as tr
 
 
 def test_DFT_data_not_matrix():

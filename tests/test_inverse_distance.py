@@ -3,8 +3,8 @@ from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 from pytest import raises
 from scipy.linalg import dft
-from .. import inverse_distance as idist
-from .. import convolve as conv
+from gravmag import inverse_distance as idist
+from gravmag import convolve as conv
 
 
 ##### SEDM

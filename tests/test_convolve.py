@@ -5,8 +5,8 @@ from numpy.testing import assert_raises as ar
 from numpy.linalg import multi_dot
 from scipy.linalg import toeplitz, circulant, dft
 from pytest import raises
-from .. import convolve as cv
-from .. import data_structures as ds
+from gravmag import convolve as cv
+from gravmag import data_structures as ds
 
 ##### compute
 

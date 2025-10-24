@@ -2,9 +2,8 @@ import numpy as np
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 import pytest
-from ..models import rectangular_prism_numba as rp_nb
-from ..models import rectangular_prism as rp
-from .. import constants as cts
+from gravmag import rectangular_prism as rp
+from gravmag import constants as cts
 
 
 def test_rectangular_prism_invalid_grav_field():
