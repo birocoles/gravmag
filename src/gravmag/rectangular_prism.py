@@ -10,6 +10,7 @@ from gravmag import check, utils, data_structures
 from gravmag import constants as cts
 from gravmag import inverse_distance as idist
 
+
 def grav(coordinates, prisms, density, field, scale=True):
     """
     Gravitational potential, first and second derivatives
@@ -88,9 +89,9 @@ def grav(coordinates, prisms, density, field, scale=True):
 #     All values are referred to a topocentric Cartesian system with axes
 #     x, y and z pointing to north, east and down, respectively.
 
-#     This function considers that the both data points and prisms rely on planar 
-#     grids. These grids are alignes, so that each data point is located above the 
-#     center of a single prism. 
+#     This function considers that the both data points and prisms rely on planar
+#     grids. These grids are alignes, so that each data point is located above the
+#     center of a single prism.
 
 #     Parameters
 #     ----------
@@ -288,7 +289,7 @@ def iterate_over_vertices(coordinates, prisms, sigma, kernel):
                 }
                 # Squared Euclidean Distance Matrix (SEDM)
 
-                #PAREI AQUI
+                # PAREI AQUI
 
                 R = np.sqrt(
                     idist.sedm(
@@ -433,7 +434,7 @@ def kernel_xxx(X, Y, Z, R):
     for a rectangular prism
     """
     result = (1 / (X**2 + Z**2)) + (1 / (X**2 + Y**2))
-    result *= (Y * Z) / R 
+    result *= (Y * Z) / R
     return result
 
 
@@ -442,7 +443,7 @@ def kernel_xxy(X, Y, Z, R):
     Function for computing the xxy-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (Z * X) / (R * (X**2 + Y**2))
+    result = -(Z * X) / (R * (X**2 + Y**2))
     return result
 
 
@@ -451,7 +452,7 @@ def kernel_xxz(X, Y, Z, R):
     Function for computing the xxz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (Y * X) / (R * (X**2 + Z**2))
+    result = -(Y * X) / (R * (X**2 + Z**2))
     return result
 
 
@@ -460,7 +461,7 @@ def kernel_xyy(X, Y, Z, R):
     Function for computing the xyy-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (Y * Z) / (R * (X**2 + Y**2))
+    result = -(Y * Z) / (R * (X**2 + Y**2))
     return result
 
 
@@ -470,7 +471,7 @@ def kernel_yyy(X, Y, Z, R):
     for a rectangular prism
     """
     result = (1 / (Y**2 + Z**2)) + (1 / (Y**2 + X**2))
-    result *= (X * Z) / R 
+    result *= (X * Z) / R
     return result
 
 
@@ -479,7 +480,7 @@ def kernel_yyz(X, Y, Z, R):
     Function for computing the yyz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (X * Y) / (R * (Z**2 + Y**2))
+    result = -(X * Y) / (R * (Z**2 + Y**2))
     return result
 
 
@@ -488,7 +489,7 @@ def kernel_xzz(X, Y, Z, R):
     Function for computing the xzz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (Y * Z) / (R * (X**2 + Z**2))
+    result = -(Y * Z) / (R * (X**2 + Z**2))
     return result
 
 
@@ -497,7 +498,7 @@ def kernel_yzz(X, Y, Z, R):
     Function for computing the yzz-derivative of inverse distance kernel
     for a rectangular prism
     """
-    result = - (X * Z) / (R * (Y**2 + Z**2))
+    result = -(X * Z) / (R * (Y**2 + Z**2))
     return result
 
 
@@ -507,7 +508,7 @@ def kernel_zzz(X, Y, Z, R):
     for a rectangular prism
     """
     result = (1 / (X**2 + Z**2)) + (1 / (Y**2 + Z**2))
-    result *= (X * Y) / R 
+    result *= (X * Y) / R
     return result
 
 

@@ -284,7 +284,6 @@ def BTTB_transposed_metadata(BTTB_metadata, check_input=True):
     return BTTB_T_metadata
 
 
-
 def BTTB_from_metadata(BTTB_metadata, check_input=True):
     """
     Generate the full BTTB matrix T (Chan and Jin, 2007, p. 67)

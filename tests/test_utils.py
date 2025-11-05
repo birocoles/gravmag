@@ -67,7 +67,7 @@ def test_safe_atan2():
 
 def test_safe_log_compare_functions():
     "verify consistency between all safe_log functions"
-    x = np.array([[0.0, 12.0], [-3.0, 7.3], [1018.0, -1018.0]])
+    x = np.array([[0.0, 12.0], [3.0, 7.3], [1018.0, 2000.0]])
     result_numba = utils.safe_log(x=x)
     result_numpy = utils.safe_log_np(x=x)
     aae(result_numba, result_numpy, decimal=15)

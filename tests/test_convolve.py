@@ -1404,7 +1404,7 @@ def test_eigenvalues_BCCB_compare_known_values_symm_symm():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1470,7 +1470,7 @@ def test_eigenvalues_BCCB_compare_known_values_symm_skew():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1537,7 +1537,7 @@ def test_eigenvalues_BCCB_compare_known_values_symm_gene():
         "columns": columns,
         "rows": rows,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1603,7 +1603,7 @@ def test_eigenvalues_BCCB_compare_known_values_skew_symm():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1669,7 +1669,7 @@ def test_eigenvalues_BCCB_compare_known_values_skew_skew():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1736,7 +1736,7 @@ def test_eigenvalues_BCCB_compare_known_values_skew_gene():
         "columns": columns,
         "rows": rows,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1797,7 +1797,7 @@ def test_eigenvalues_BCCB_compare_known_values_gene_symm():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1858,7 +1858,7 @@ def test_eigenvalues_BCCB_compare_known_values_gene_skew():
         "columns": columns,
         "rows": None,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1920,7 +1920,7 @@ def test_eigenvalues_BCCB_compare_known_values_gene_gene():
         "columns": columns,
         "rows": rows,
     }
-    
+
     # compute eigenvalues with ordering='row'
     L_row = cv.eigenvalues_BCCB(BTTB_metadata=BTTB, ordering="row")
     lambda_row = L_row.ravel()
@@ -1991,6 +1991,7 @@ def test_eigenvalues_BCCB_compare_eigenvalues_transposition_symm_skew():
     L_T = cv.eigenvalues_BCCB(BTTB_metadata=BTTB_T, ordering="column")
     ae(BTTB_matrix.T, BTTB_matrix_T)
     aae(np.conj(L), L_T, decimal=12)
+
 
 def test_eigenvalues_BCCB_compare_eigenvalues_transposition_symm_gene():
     "verify the relationship between eigenvalues and transposition"

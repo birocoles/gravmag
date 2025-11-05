@@ -138,7 +138,7 @@ def derivative(wavenumbers, axes, check_input=True):
     return deriv_filter
 
 
-def continuation(wavenumbers, dz, regularization=0., check_input=True):
+def continuation(wavenumbers, dz, regularization=0.0, check_input=True):
     """
     Compute the level-to-level upward/downward continuation filter
     (Gunn, 1975; Blakely, 1996, p. 317) with regularization defined
@@ -170,8 +170,8 @@ def continuation(wavenumbers, dz, regularization=0., check_input=True):
         check.is_grid_wavenumbers(wavenumbers)
         check.is_scalar(x=dz, positive=True)
         check.is_scalar(x=regularization)
-        if regularization < 0.:
-            raise ValueError('regularization must be zero or positive')
+        if regularization < 0.0:
+            raise ValueError("regularization must be zero or positive")
 
     # compute the continuation filter
     cont_filter = np.exp(dz * wavenumbers["z"])
@@ -179,12 +179,15 @@ def continuation(wavenumbers, dz, regularization=0., check_input=True):
     if regularization == 0:
         result = cont_filter
     else:
-        aux = regularization * (wavenumbers["z"]**2) * cont_filter
+        aux = regularization * (wavenumbers["z"] ** 2) * cont_filter
         result = cont_filter / (1 + aux)
 
     return result
 
+
 7
+
+
 def cuttof_frequency(wavenumbers, max_freq, check_input=True):
     """
     Compute a simple low-pass filter.

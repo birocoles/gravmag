@@ -47,7 +47,7 @@ def safe_atan2(y, x):
                     result[i, j] = np.pi / 2
                 elif y[i, j] < 0.0:
                     result[i, j] = -np.pi / 2
-                else: # y[i, j] == 0.0
+                else:  # y[i, j] == 0.0
                     result[i, j] = 0.0
     return result
 
@@ -227,17 +227,17 @@ def directional_factors(t, u, check_input=True):
     if check_input is True:
         check.is_array(x=t, ndim=1, shape=(3,))
         check.is_array(x=u, ndim=1, shape=(3,))
-        if np.abs(np.sum(t*t) - 1) > 1e-10:
+        if np.abs(np.sum(t * t) - 1) > 1e-10:
             raise ValueError("t must be a unit vector")
-        if np.abs(np.sum(u*u) - 1) > 1e-10:
+        if np.abs(np.sum(u * u) - 1) > 1e-10:
             raise ValueError("u must be a unit vector")
 
     a = dict()
-    a['xx'] = t[0] * u[0] - t[2] * u[2]
-    a['xy'] = t[0] * u[1] + t[1] * u[0]
-    a['xz'] = t[0] * u[2] + t[2] * u[0]
-    a['yy'] = t[1] * u[1] - t[2] * u[2]
-    a['yz'] = t[1] * u[2] + t[2] * u[1]
+    a["xx"] = t[0] * u[0] - t[2] * u[2]
+    a["xy"] = t[0] * u[1] + t[1] * u[0]
+    a["xz"] = t[0] * u[2] + t[2] * u[0]
+    a["yy"] = t[1] * u[1] - t[2] * u[2]
+    a["yz"] = t[1] * u[2] + t[2] * u[1]
 
     return a
 
@@ -457,7 +457,7 @@ def reduce_data(
         func = np.median
     elif function == "min":
         func = np.min
-    else: # function == "max"
+    else:  # function == "max"
         func = np.max
 
     Nx = len(blocks_indices)
@@ -479,9 +479,7 @@ def reduce_data(
     return reduced_data
 
 
-def block_centers(
-    area, blocks_indices, check_input=True
-):
+def block_centers(area, blocks_indices, check_input=True):
     """
     Define the center of each data block.
 
@@ -508,26 +506,18 @@ def block_centers(
     # number of points along x and y directions
     Nx = len(blocks_indices)
     Ny = len(blocks_indices[0])
-    
+
     # get the grid spacing
     dx = (area[1] - area[0]) / (Nx - 1)
     dy = (area[3] - area[2]) / (Ny - 1)
 
     # centers of a full grid
     X, Y = data_structures.grid_xy_to_full_matrices_view(
-        x = np.linspace(
-            area[0] + 0.5*dx, 
-            area[1] - 0.5*dx, 
-            Nx
-        ),
-        y = np.linspace(
-            area[2] + 0.5*dy, 
-            area[3] - 0.5*dy, 
-            Ny
-        ),
-        shape = (Nx, Ny)
+        x=np.linspace(area[0] + 0.5 * dx, area[1] - 0.5 * dx, Nx),
+        y=np.linspace(area[2] + 0.5 * dy, area[3] - 0.5 * dy, Ny),
+        shape=(Nx, Ny),
     )
-    
+
     # mask defining blocks containing data
     mask = np.empty(shape=(Nx, Ny), dtype=bool)
     for i in range(Nx):

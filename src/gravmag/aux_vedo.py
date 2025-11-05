@@ -7,18 +7,16 @@ import numpy as np
 import vedo
 from . import check
 
-def custom_axes(
-    area, 
-    grids=(False, False, True, True, True, False)
-    ):
-    '''
+
+def custom_axes(area, grids=(False, False, True, True, True, False)):
+    """
     Function form creating the axes in Vedo.
-    '''
+    """
     axes = vedo.Axes(
         obj=None,
-        xtitle='x',
-        ytitle='y',
-        ztitle='z',
+        xtitle="x",
+        ytitle="y",
+        ztitle="z",
         xrange=(area[0], area[1]),
         yrange=(area[2], area[3]),
         zrange=(area[4], area[5]),
@@ -27,18 +25,18 @@ def custom_axes(
         digits=None,
         limit_ratio=0.04,
         title_depth=0,
-        title_font='',
+        title_font="",
         text_scale=1.0,
         x_values_and_labels=None,
         y_values_and_labels=None,
         z_values_and_labels=None,
-        htitle='',
+        htitle="",
         htitle_size=0.03,
         htitle_font=None,
         htitle_italic=False,
         htitle_color=None,
         htitle_backface_color=None,
-        htitle_justify='bottom-left',
+        htitle_justify="bottom-left",
         htitle_rotation=90,
         htitle_offset=(0, 0.01, 0),
         xtitle_position=0.95,
@@ -50,7 +48,7 @@ def custom_axes(
         xtitle_justify=None,
         ytitle_justify=None,
         ztitle_justify=None,
-        xtitle_rotation=(180,0,180),
+        xtitle_rotation=(180, 0, 180),
         ytitle_rotation=(90, 0, 180),
         ztitle_rotation=(0, 0, 180),
         xtitle_box=False,
@@ -58,12 +56,12 @@ def custom_axes(
         xtitle_size=0.025,
         ytitle_size=0.025,
         ztitle_size=0.025,
-        xtitle_color='k',
-        ytitle_color='k',
-        ztitle_color='k',
-        xtitle_backface_color='k',
-        ytitle_backface_color='k',
-        ztitle_backface_color='k',
+        xtitle_color="k",
+        ytitle_color="k",
+        ztitle_color="k",
+        xtitle_backface_color="k",
+        ytitle_backface_color="k",
+        ztitle_backface_color="k",
         xtitle_italic=0,
         ytitle_italic=0,
         ztitle_italic=0,
@@ -102,9 +100,9 @@ def custom_axes(
         xhighlight_zero=False,
         yhighlight_zero=False,
         zhighlight_zero=False,
-        xhighlight_zero_color='red4',
-        yhighlight_zero_color='green4',
-        zhighlight_zero_color='blue4',
+        xhighlight_zero_color="red4",
+        yhighlight_zero_color="green4",
+        zhighlight_zero_color="blue4",
         show_ticks=True,
         xtick_length=0.015,
         ytick_length=0.015,
@@ -116,13 +114,13 @@ def custom_axes(
         yminor_ticks=1,
         zminor_ticks=None,
         tip_size=None,
-        label_font='',
-        xlabel_color='k',
-        ylabel_color='k',
-        zlabel_color='k',
-        xlabel_backface_color='k',
-        ylabel_backface_color='k',
-        zlabel_backface_color='k',
+        label_font="",
+        xlabel_color="k",
+        ylabel_color="k",
+        zlabel_color="k",
+        xlabel_backface_color="k",
+        ylabel_backface_color="k",
+        zlabel_backface_color="k",
         xlabel_size=0.016,
         ylabel_size=0.016,
         zlabel_size=0.016,
@@ -132,7 +130,7 @@ def custom_axes(
         xlabel_justify=None,
         ylabel_justify=None,
         zlabel_justify=None,
-        xlabel_rotation=(180,0,180),
+        xlabel_rotation=(180, 0, 180),
         ylabel_rotation=(90, 0, 180),
         zlabel_rotation=(0, 0, 180),
         xaxis_rotation=0,
@@ -154,13 +152,15 @@ def custom_axes(
         y_inverted=False,
         z_inverted=False,
         use_global=False,
-        tol=0.001
+        tol=0.001,
     )
     return axes
 
 
-def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None, vmax=None):
-    '''
+def gravmag2vedo_prisms(
+    gravmag_prisms, scalar_props=None, cmap="jet", vmin=None, vmax=None
+):
+    """
     Receive a gravmag model and return a Vedo model.
 
     parameters
@@ -184,7 +184,7 @@ def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None
     -------
     vedo_prisms : vedo.mesh.Mesh
         Vedo object containing a collection of rectangular prisms.
-    '''
+    """
     P = check.are_rectangular_prisms(prisms=gravmag_prisms)
     if scalar_props is not None:
         check.is_array(x=scalar_props, ndim=1, shape=(P,))
@@ -192,28 +192,24 @@ def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None
         check.is_scalar(x=vmax, positive=False)
         if vmin >= vmax:
             raise ValueError("vmin must be smaller than vmax")
-    
+
     # iterate iver prisms to create vedo.Box objects
     vedo_prisms = []
-    for (x1, x2, y1, y2, z1, z2) in zip(
-        gravmag_prisms['x1'], 
-        gravmag_prisms['x2'], 
-        gravmag_prisms['y1'], 
-        gravmag_prisms['y2'], 
-        gravmag_prisms['z1'], 
-        gravmag_prisms['z2']
+    for x1, x2, y1, y2, z1, z2 in zip(
+        gravmag_prisms["x1"],
+        gravmag_prisms["x2"],
+        gravmag_prisms["y1"],
+        gravmag_prisms["y2"],
+        gravmag_prisms["z1"],
+        gravmag_prisms["z2"],
     ):
         vedo_prisms.append(
-            vedo.Box(
-                pos=(x1, x2, y1, y2, z1, z2),
-                c='blue4',
-                alpha=1
-            )
+            vedo.Box(pos=(x1, x2, y1, y2, z1, z2), c="blue4", alpha=1)
         )
 
     # create a unified mesh
     vedo_prisms = vedo.merge(vedo_prisms).force_opaque()
-    
+
     if scalar_props is not None:
         # colorize the prisms
         # create colors for the model
@@ -221,19 +217,19 @@ def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None
         # we need to repeat the color values for each prism 6 times because they are
         # associated to the prisms faces
         vedo_prisms.cmap(
-            input_cmap=cmap, 
-            input_array=np.repeat(scalar_props, 6), 
-            on='cells', 
-            vmin=vmin, 
+            input_cmap=cmap,
+            input_array=np.repeat(scalar_props, 6),
+            on="cells",
+            vmin=vmin,
             vmax=vmax,
-            alpha=1
+            alpha=1,
         )
 
     return vedo_prisms
 
 
 def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
-    '''
+    """
     Receive a set of points (x, y, z) and return a colorized Vedo pointcloud.
 
     parameters
@@ -256,7 +252,7 @@ def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
     vedo_pointcloud or data : vedo.pointcloud.Points
         Vedo object defining a colorized pointcloud. If data is a numpy array 2d,
         returns a new Vedo pointcloud. Otherwise, returns the colorized data.
-    '''
+    """
     if isinstance(data, np.ndarray):
         check.is_array(x=data, ndim=2)
         if data.shape[1] != 3:
@@ -268,9 +264,7 @@ def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
         N = data.vertices.shape[0]
         vedo_pointcloud = data
     else:
-        raise ValueError(
-            "data must be a numpy array or vedo.pointcloud.Points"
-            )
+        raise ValueError("data must be a numpy array or vedo.pointcloud.Points")
 
     if scalar_props is not None:
         check.is_array(x=scalar_props, ndim=1, shape=(N,))
@@ -281,38 +275,33 @@ def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
 
     # generate a Vedo pointcloud if data is a numpy array 2d
     if isinstance(data, np.ndarray):
-        vedo_pointcloud = vedo.Points(
-            inputobj=data, 
-            r=4, 
-            c='blue4', 
-            alpha=1
-            )
+        vedo_pointcloud = vedo.Points(inputobj=data, r=4, c="blue4", alpha=1)
     if isinstance(data, vedo.pointcloud.Points):
         vedo_pointcloud = data
 
     # colorize the poincloud
     if scalar_props is not None:
         vedo_pointcloud.cmap(
-                input_cmap=cmap, 
-                input_array=scalar_props,
-                vmin=vmin, 
-                vmax=vmax,
-                alpha=1
-            )
-    
+            input_cmap=cmap,
+            input_array=scalar_props,
+            vmin=vmin,
+            vmax=vmax,
+            alpha=1,
+        )
+
     return vedo_pointcloud
 
 
 def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
-    '''
-    Receive a numpy array 2d, a vedo.pointcloud.Points or a Vedo surface and 
+    """
+    Receive a numpy array 2d, a vedo.pointcloud.Points or a Vedo surface and
     return a colorized Vedo surface.
 
     parameters
     ----------
     data : numpy array 2d, vedo.pointcloud.Points or vedo.mesh.Mesh
         N x 3 matrix containing the coorinates x, y and z at the first, second and third columns,
-        respectively, or a Vedo object vedo.pointcloud.Points of a Vedo object vedo.mesh.Mesh 
+        respectively, or a Vedo object vedo.pointcloud.Points of a Vedo object vedo.mesh.Mesh
         defining a surface.
     scalar_props : None or numpy array 1d
         If not None, it must be a numpy array 1d containing the scalar physical
@@ -329,7 +318,7 @@ def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
     vedo_surface : vedo.mesh.Mesh
         Vedo object defining a surface. If data is a numpy array 2d or a Vedo pointcloud,
         returns a new Vedo surface. Otherwise, returns the colorized data.
-    '''
+    """
     if isinstance(data, np.ndarray):
         check.is_array(x=data, ndim=2)
         if data.shape[1] != 3:
@@ -342,7 +331,7 @@ def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
     else:
         raise ValueError(
             "data must be a numpy array, vedo.pointcloud.Points or Vedo surface vedo.mesh.Mesh"
-            )
+        )
 
     if scalar_props is not None:
         check.is_array(x=scalar_props, ndim=1, shape=(N,))
@@ -356,35 +345,35 @@ def surface(data, scalar_props=None, cmap=None, vmin=None, vmax=None):
         # colorize the original data
         if isinstance(data, vedo.mesh.Mesh):
             data.cmap(
-                input_cmap=cmap, 
+                input_cmap=cmap,
                 input_array=scalar_props,
-                vmin=vmin, 
+                vmin=vmin,
                 vmax=vmax,
-                alpha=1
+                alpha=1,
             )
             print("The original data were colorized")
             return data
         # generate a surface using 2D Delaunay triangulation
-        # if data is a Vedo pointcloud or numpy array 
+        # if data is a Vedo pointcloud or numpy array
         else:
             if isinstance(data, vedo.pointcloud.Points):
                 vedo_surface = data.generate_delaunay2d()
-            else: # data is an np.ndarray
+            else:  # data is an np.ndarray
                 vedo_surface = vedo.Points(data).generate_delaunay2d()
             vedo_surface.cmap(
-                input_cmap=cmap, 
+                input_cmap=cmap,
                 input_array=scalar_props,
-                vmin=vmin, 
+                vmin=vmin,
                 vmax=vmax,
-                alpha=1
+                alpha=1,
             )
             print("A colorized Vedo surface was created")
             return vedo_surface
 
 
 def quad_mesh2prisms(quad_meshes, dy):
-    '''
-    Receive a list of vedo.mesh.Mesh objects defining quad meshses and 
+    """
+    Receive a list of vedo.mesh.Mesh objects defining quad meshses and
     return a model of prisms for gravmag.
 
     parameters
@@ -401,7 +390,7 @@ def quad_mesh2prisms(quad_meshes, dy):
         The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
         prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
         All keys must be numpy arrays 1d having the same number of elements.
-    '''
+    """
 
     check.is_scalar(x=dy, positive=True)
 
@@ -412,25 +401,25 @@ def quad_mesh2prisms(quad_meshes, dy):
     y2 = []
     z1 = []
     z2 = []
-    
+
     # iterate over the quad meshes to take the coordinates and create prisms
-    dy_half = 0.5*dy
+    dy_half = 0.5 * dy
     for quad_mesh in quad_meshes:
         for quad in quad_mesh.vertices[quad_mesh.cells]:
-            x1.append(quad[0,0])
-            x2.append(quad[1,0])
-            y1.append(quad[0,1]-dy_half)
-            y2.append(quad[0,1]+dy_half)
-            z1.append(quad[0,2])
-            z2.append(quad[3,2])
+            x1.append(quad[0, 0])
+            x2.append(quad[1, 0])
+            y1.append(quad[0, 1] - dy_half)
+            y2.append(quad[0, 1] + dy_half)
+            z1.append(quad[0, 2])
+            z2.append(quad[3, 2])
 
     # create a model for gravmag
     model = {
-        'x1' : np.array(x1),
-        'x2' : np.array(x2),
-        'y1' : np.array(y1),
-        'y2' : np.array(y2),
-        'z1' : np.array(z1),
-        'z2' : np.array(z2)
+        "x1": np.array(x1),
+        "x2": np.array(x2),
+        "y1": np.array(y1),
+        "y2": np.array(y2),
+        "z1": np.array(z1),
+        "z2": np.array(z2),
     }
     return model

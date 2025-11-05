@@ -177,7 +177,7 @@ def is_grid_wavenumbers(wavenumbers):
         )
 
 
-def is_scalar(x, positive=False):
+def is_scalar(x, positive=False, include_zero=False):
     """
     Check if x is a float or int.
 
@@ -187,15 +187,22 @@ def is_scalar(x, positive=False):
         Python object to be verified.
     positive : boolean
         If True, impose that x must be positive. Default is False.
+    include_zero : boolean
+        If True, impose that x must be positive or zero.
+        Default is False.
     """
     if isinstance(x, (float, int)) is False:
         raise ValueError("x must be in float or int")
     if positive == True:
-        if x <= 0:
-            raise ValueError("x must be positive")
+        if include_zero == True:
+            if x < 0:
+                raise ValueError("x must be positive or zero")
+        else:
+            if x <= 0:
+                raise ValueError("x must be positive")
 
 
-def is_integer(x, positive=True, include_zero=False):
+def is_integer(x, positive=False, include_zero=False):
     """
     Check if x is an int.
 
@@ -205,7 +212,7 @@ def is_integer(x, positive=True, include_zero=False):
         Python object to be verified.
     positive : boolean
         If True, impose that x must be positive.
-        Default is True.
+        Default is False.
     include_zero : boolean
         If True, impose that x must be positive or zero.
         Default is False.

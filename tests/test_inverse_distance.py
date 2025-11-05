@@ -92,9 +92,10 @@ def test_sedm_compared_constant_and_variable_sources_z():
     }
 
     SEDM_1 = idist.sedm(P, S)
-    SEDM_2 = idist.sedm(P, 10.)
+    SEDM_2 = idist.sedm(P, 10.0)
 
     aae(SEDM_1, SEDM_2, decimal=12)
+
 
 ##### SEDM BTTB
 
@@ -119,7 +120,9 @@ def test_sedm_BTTB_grid_orientation_xy_compare_sedm():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="xy"
+    )
     SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
@@ -144,12 +147,15 @@ def test_sedm_BTTB_grid_orientation_yx_compare_sedm():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="yx"
+    )
     SEDM_BTTB_full = conv.BTTB_from_metadata(BTTB_metadata=SEDM_BTTB)
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
 #### grad
+
 
 def test_grad_constant_versus_dictionary_sources():
     "verify is both results are the same"
@@ -307,6 +313,7 @@ def test_grad_known_points():
 
 ##### grad BTTB
 
+
 def test_grad_BTTB_known_points_grid_orientation_xy():
     "verify results obtained for specific points"
 
@@ -443,7 +450,9 @@ def test_grad_BTTB_compare_grad_grid_orientation_xy():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="xy"
+    )
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -495,7 +504,9 @@ def test_grad_BTTB_compare_grad_grid_orientation_yx():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="yx"
+    )
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -547,7 +558,9 @@ def test_grad_x_BTTB_eigenvalues_orientation_xy():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="xy"
+    )
     # compute grad's
     GRAD = idist.grad(
         data_points=data_points,
@@ -565,14 +578,16 @@ def test_grad_x_BTTB_eigenvalues_orientation_xy():
     # compute eigenvalues with ordering='row'
     L_row = conv.eigenvalues_BCCB(BTTB_metadata=GRAD_BTTB, ordering="row")
     # compute the GRAD from eigenvalues
-    Q = GRAD_BTTB["nblocks"]  # number of blocks along rows/columns of BTTB matrix
+    Q = GRAD_BTTB[
+        "nblocks"
+    ]  # number of blocks along rows/columns of BTTB matrix
     P = 3  # number of rows/columns in each block of BTTB matrix
     # define unitaty DFT matrices
     F2Q = dft(n=2 * Q, scale="sqrtn")
     F2P = dft(n=2 * P, scale="sqrtn")
 
     aae(
-        GRAD, 
+        GRAD,
         conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB),
         decimal=8,
     )
@@ -600,9 +615,13 @@ def test_grad_tensor_constant_versus_dictionary_sources():
     S_2 = 10
 
     R2_1 = idist.sedm(P, S_1)
-    TENSOR_1 = idist.grad_tensor(P, S_1, R2_1, ["xx", "xy", "xz", "yy", "yz", "zz"])
+    TENSOR_1 = idist.grad_tensor(
+        P, S_1, R2_1, ["xx", "xy", "xz", "yy", "yz", "zz"]
+    )
     R2_2 = idist.sedm(P, S_2)
-    TENSOR_2 = idist.grad_tensor(P, S_2, R2_2, ["xx", "xy", "xz", "yy", "yz", "zz"])
+    TENSOR_2 = idist.grad_tensor(
+        P, S_2, R2_2, ["xx", "xy", "xz", "yy", "yz", "zz"]
+    )
 
     ae(TENSOR_1["xx"], TENSOR_2["xx"])
     ae(TENSOR_1["xy"], TENSOR_2["xy"])
@@ -976,7 +995,9 @@ def test_grad_tensor_BTTB_compare_grad_grid_orientation_xy():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="xy")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="xy"
+    )
     # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
@@ -1049,7 +1070,9 @@ def test_grad_tensor_BTTB_compare_grad_grid_orientation_yx():
     }
     # compute the SEDM's
     SEDM = idist.sedm(data_points=data_points, source_points=source_points)
-    SEDM_BTTB = idist.sedm_BTTB(data_grid=grid, delta_z=Dz, grid_orientation="yx")
+    SEDM_BTTB = idist.sedm_BTTB(
+        data_grid=grid, delta_z=Dz, grid_orientation="yx"
+    )
     # compute gradients
     GRAD = idist.grad_tensor(
         data_points=data_points,
@@ -1100,6 +1123,7 @@ def test_grad_tensor_BTTB_compare_grad_grid_orientation_yx():
         conv.BTTB_from_metadata(BTTB_metadata=GRAD_BTTB["zz"]),
         decimal=12,
     )
+
 
 #### directional_1st_order
 

@@ -53,6 +53,7 @@ def test_grid_xy_output():
 
 # grid_xy_to_full_flatten
 
+
 def test_grid_xy_to_full_flatten_known_values():
     "compare results with reference values obtained for specific input"
     # reference grid
@@ -106,8 +107,12 @@ def test_grid_xy_full_matrix_to_flatten():
     grid_xy = np.array([[10, 40], [20, 50], [30, 60]])
     grid_yx = np.array([[10, 20], [30, 40], [50, 60]])
     reference = np.array([10, 20, 30, 40, 50, 60])
-    computed_xy = ds.grid_xy_full_matrix_to_flatten(grid=grid_xy, grid_orientation="xy")
-    computed_yx = ds.grid_xy_full_matrix_to_flatten(grid=grid_yx, grid_orientation="yx")
+    computed_xy = ds.grid_xy_full_matrix_to_flatten(
+        grid=grid_xy, grid_orientation="xy"
+    )
+    computed_yx = ds.grid_xy_full_matrix_to_flatten(
+        grid=grid_yx, grid_orientation="yx"
+    )
     ae(computed_xy, reference)
     ae(computed_yx, reference)
 

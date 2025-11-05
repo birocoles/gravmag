@@ -1,164 +1,138 @@
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
+import pandas as pd
 import geopandas as gpd
-import rasterio
 from shapely.geometry import Point
-import warnings
+from warnings import warn
 
 
-class SpatialData:
+class Spatial2D:
     """
-    Lightweight container for spatial data (scattered or gridded).
+    Represents 2D spatial coordinates (x, y) that can be scattered or gridded.
+    Gridded data store only 1D coordinate vectors internally (no redundancy).
     """
 
-    def __init__(self, x, y, values, grid=False, metadata=None):
-        self.x = np.asarray(x)
-        self.y = np.asarray(y)
-        self.values = np.asarray(values)
-        self.grid = grid
-        self.metadata = metadata or {}
+    def __init__(self, x, y, is_gridded=False, azimuth=0.0):
+        self.x = np.asarray(x, dtype=float)
+        self.y = np.asarray(y, dtype=float)
+        self.is_gridded = bool(is_gridded)
+        self.azimuth = float(azimuth)
 
-        # Basic validation
-        if not grid and len(self.x) != len(self.y):
-            raise ValueError("x and y must have same length for scattered data.")
-        if grid and self.values.ndim != 2:
-            raise ValueError("For gridded data, values must be 2D.")
+        # Expect 1D coordinate vectors
+        if self.x.ndim != 1 or self.y.ndim != 1:
+            raise ValueError("x and y must be 1D coordinate vectors.")
 
-    def __repr__(self):
-        t = "Gridded" if self.grid else "Scattered"
-        return f"<SpatialData ({t}) with {self.values.size} values>"
-
-    def to_geodataframe(self, crs="EPSG:4326"):
-        if self.grid:
-            raise TypeError("GeoDataFrame conversion valid only for scattered data.")
-        geometry = [Point(xy) for xy in zip(self.x, self.y)]
-        return gpd.GeoDataFrame({"value": self.values}, geometry=geometry, crs=crs)
-
-    # ---- I/O shortcuts ----
-    def to_file(self, path, **kwargs):
-        if self.grid:
-            return save_grid(self, path, **kwargs)
-        else:
-            return save_scattered(self, path, **kwargs)
+        # Ensure matching shapes for scattered data
+        if self.is_gridded is False:
+            if self.x.shape != self.y.shape:
+                raise ValueError("Scattered coordinates require x and y with identical shapes.")
 
     @classmethod
-    def from_file(cls, path, **kwargs):
-        ext = path.lower().split(".")[-1]
-        if ext in {"csv", "parquet", "gpkg", "geojson"}:
-            return load_scattered(path, **kwargs)
-        elif ext in {"tif", "tiff"}:
-            return load_grid(path, **kwargs)
+    def from_area(cls, area, shape, azimuth):
+        """
+        Create a gridded Spatial2D from area (bounding box) and shape.
+
+        Parameters
+        ----------
+        area : tuple of 4 scalars
+            [xmin, xmax, ymin, ymax]
+        shape : tuple of 2 ints
+            (nx, ny) = number of points along x and y
+        azimuth : float
+            Clockwise angle (in degrees) from geographic north to grid x direction
+        """
+        
+        area = tuple(area)
+        shape = tuple(shape)
+        azimuth = float(azimuth)
+
+        if len(area) != 4:
+            raise ValueError("area must have four elements (xmin, xmax, ymin, ymax).")
+        if len(shape) != 2:
+            raise ValueError("shape must have two elements (nx, ny).")
+
+        xmin, xmax, ymin, ymax = map(float, area)
+        nx, ny = map(int, shape)
+        cos = np.cos(np.deg2rad(azimuth))
+        sin = np.sin(np.deg2rad(azimuth))
+
+        # 1D coordinate vectors
+        _x = np.linspace(xmin, xmax, nx)
+        _y = np.linspace(ymin, ymax, ny)
+        x = cos * _x - sin * _y
+        y = sin * _x + cos * _y
+
+        is_gridded = True
+        return cls(x, y, is_gridded, azimuth)
+    
+    @property
+    def shape(self):
+        return (len(self.x), len(self.y)) if self.is_gridded else self.x.shape
+
+    @property
+    def size(self):
+        return np.prod(self.shape)
+
+    @property
+    def area(self):
+        return [self.x.min(), self.x.max(), self.y.min(), self.y.max()]
+    
+
+    def full_grid_xy_coordinates(self):
+        """Return (X, Y) as 2D arrays views."""
+        if self.is_gridded:
+            X = np.broadcast_to(self.x[:, None], (len(self.x), len(self.y)))
+            Y = np.broadcast_to(self.y[None, :], (len(self.x), len(self.y)))
+            return X, Y
         else:
-            raise ValueError(f"Unsupported file extension: {ext}")
+            raise ValueError("Cannot return full grid coordinates from scattered data.")
+    
+    def stack(self):
+        """Return (N, 2) coordinate array."""
+        if self.is_gridded:
+            raise ValueError("Cannot stack gridded coordinates.")
+        else:
+            # The stacked coordinates are copies of the original x and y
+            return np.column_stack((self.x, self.y))
+    
+    def __repr__(self):
+        t = "gridded" if self.is_gridded else "scattered"
+        return f"<Spatial2D: {t}, shape={self.shape}, size={self.size}, azimuth={self.azimuth:.2f}>"
 
 
-def save_scattered(data: SpatialData, path, driver=None, crs="EPSG:4326"):
+class Spatial3D(Spatial2D):
     """
-    Save scattered data to CSV, GeoPackage, or GeoParquet.
+    Extends Spatial2D by adding a vertical coordinate z (scalar or array).
+    In gridded mode, z can be scalar or 2D array of shape (ny, nx).
     """
-    gdf = data.to_geodataframe(crs=crs)
-    ext = path.lower().split(".")[-1]
 
-    if ext == "csv":
-        gdf.drop(columns="geometry").to_csv(path, index=False)
-    elif ext == "parquet":
-        gdf.to_parquet(path, index=False)
-    elif ext == "gpkg":
-        gdf.to_file(path, driver="GPKG")
-    elif ext == "geojson":
-        gdf.to_file(path, driver="GeoJSON")
-    else:
-        raise ValueError(f"Unsupported scattered output format: {ext}")
-    return path
-
-
-def load_scattered(path, crs=None):
-    """
-    Load scattered data from CSV, Parquet, GeoPackage, or GeoJSON.
-    """
-    ext = path.lower().split(".")[-1]
-    if ext == "csv":
-        df = gpd.read_file(path) if "geometry" in open(path).read() else None
-        import pandas as pd
-        df = pd.read_csv(path)
-        x, y, values = df.iloc[:, 0], df.iloc[:, 1], df.iloc[:, 2]
-    elif ext == "parquet":
-        df = gpd.read_parquet(path)
-        x, y, values = df.geometry.x, df.geometry.y, df["value"]
-    elif ext in {"gpkg", "geojson"}:
-        gdf = gpd.read_file(path)
-        x, y, values = gdf.geometry.x, gdf.geometry.y, gdf["value"]
-    else:
-        raise ValueError(f"Unsupported scattered input format: {ext}")
-
-    return SpatialData(x, y, values, grid=False, metadata={"source": path})
-
-
-def save_grid(data: SpatialData, path, crs="EPSG:4326", transform=None, dtype=None):
-    """
-    Save gridded data as GeoTIFF.
-    """
-    try:
-        import rasterio
-        from rasterio.transform import from_origin
-    except ImportError:
-        raise ImportError("rasterio is required to save gridded data.")
-
-    nx, ny = len(data.x), len(data.y)
-    dx = (data.x[-1] - data.x[0]) / (nx - 1)
-    dy = (data.y[-1] - data.y[0]) / (ny - 1)
-    transform = transform or from_origin(data.x[0], data.y[-1], dx, dy)
-
-    with rasterio.open(
-        path,
-        "w",
-        driver="GTiff",
-        height=data.values.shape[0],
-        width=data.values.shape[1],
-        count=1,
-        dtype=dtype or data.values.dtype,
-        crs=crs,
-        transform=transform,
-    ) as dst:
-        dst.write(data.values, 1)
-    return path
-
-
-def load_grid(path):
-    """
-    Load gridded data (GeoTIFF).
-    """
-    try:
-        import rasterio
-    except ImportError:
-        raise ImportError("rasterio is required to read gridded data.")
-
-    with rasterio.open(path) as src:
-        values = src.read(1)
-        transform = src.transform
-        width, height = src.width, src.height
-        x = np.arange(width) * transform.a + transform.c
-        y = np.arange(height) * transform.e + transform.f
-        crs = src.crs
-
-    return SpatialData(x, y, values, grid=True, metadata={"crs": crs, "source": path})
-
-
-def save_numpy(data: SpatialData, path):
-    np.savez_compressed(
-        path,
-        x=data.x,
-        y=data.y,
-        values=data.values,
-        grid=data.grid,
-        metadata=data.metadata,
-    )
-    return path
-
-
-def load_numpy(path):
-    d = np.load(path, allow_pickle=True)
-    return SpatialData(
-        d["x"], d["y"], d["values"],
-        grid=bool(d["grid"]),
-        metadata=dict(d["metadata"].item())
-    )
+    def __init__(self, x, y, z=0.0, is_gridded=None, azimuth=0.0):
+        super().__init__(x, y, is_gridded, azimuth)
+        
+        if isinstance(z, (float, int)):
+            self.z = float(z)
+        else:
+            self.z = np.asarray(z, dtype=float)
+            if self.is_gridded:
+                nx, ny = len(self.x), len(self.y)
+                if self.z.shape != (nx, ny):
+                    raise ValueError(f"For gridded mode, z must have shape {(nx, ny)}.")
+            else:
+                if self.z.shape != self.x.shape:
+                    raise ValueError("For scattered mode, z must have same shape as x and y.")
+    
+    def stack(self):
+        """Return (N, 3) coordinate array."""
+        if self.is_gridded:
+            raise ValueError("Cannot stack gridded coordinates.")
+        else:
+            if self.z.ndim == 0: # z is scalar
+                # create a view of z
+                z_array = np.broadcast_to(self.z, self.x.shape)
+            else: # z is array
+                z_array = self.z
+            return np.column_stack((self.x, self.y, z_array))
+    
+    def __repr__(self):
+        t = "gridded" if self.is_gridded else "scattered"
+        return f"<Spatial3D: {t}, shape={self.shape}, size={self.size}, azimuth={self.azimuth:.2f}>"

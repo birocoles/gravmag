@@ -89,7 +89,9 @@ def grid_xy_to_full_flatten(grid, grid_orientation, check_input=True):
     return full_grid
 
 
-def grid_xy_full_flatten_to_matrix(data, grid_orientation, shape, check_input=True):
+def grid_xy_full_flatten_to_matrix(
+    data, grid_orientation, shape, check_input=True
+):
     """
     Let a 'data' vector be computed at a grid of points with a given 'grid_orientation' and 'shape'.
     The present function reshape the 'data' into a matrix having the given 'shape', according to the
@@ -199,8 +201,8 @@ def grid_xy_to_full_matrices_view(x, y, shape, check_input=True):
 def grid_xy_spacing(area, shape, check_input=True):
     """
     Compute the grid spacing along the x and y directions.
-    The grid spacing between N data points is defined by the ratio of 
-    'total extension' and 'N - 1', where 'N - 1' is the number of 
+    The grid spacing between N data points is defined by the ratio of
+    'total extension' and 'N - 1', where 'N - 1' is the number of
     intervals between the N data points.
 
     parameters
@@ -240,8 +242,8 @@ def grid_wavenumbers(grid, pad_size=None, check_input=True):
         at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
         points at the key 'grid_orientation'. Output of the function 'data_structures.grid_xy'.
     pad_size : integer or None
-        If not None, it defines the size of padding along axes 
-        0 (rows) and 1 (columns). The shape of the padded data is 
+        If not None, it defines the size of padding along axes
+        0 (rows) and 1 (columns). The shape of the padded data is
         (data.shape[0] * (2 * pad_size + 1), data.shape[1] * (2 * pad_size + 1)).
         Default is 1.
     check_input : boolean

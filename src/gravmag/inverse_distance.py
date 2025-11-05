@@ -20,10 +20,10 @@ def sedm(data_points, source_points, check_input=True):
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
-        If constant, it defines a constant vertical coordinate for the sources, which 
+        If constant, it defines a constant vertical coordinate for the sources, which
         will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
-        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        If not constant, it must be a dicionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
         same number of elements.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
@@ -40,14 +40,16 @@ def sedm(data_points, source_points, check_input=True):
         try:
             check.is_scalar(x=source_points, positive=False)
             P = D
-            if source_points <= np.max(data_points['z']):
-                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            if source_points <= np.max(data_points["z"]):
+                raise ValueError(
+                    "if source_points is constant, it must be greater than all data_points['z']"
+                )
             # define an internal sources points as a shallow copy
             # of the dicionary containing data points
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+            internal_sources_points["z"] = np.broadcast_to(source_points, (P,))
         except:
             P = check.are_coordinates(source_points)
             internal_sources_points = source_points
@@ -58,7 +60,9 @@ def sedm(data_points, source_points, check_input=True):
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+            internal_sources_points["z"] = np.broadcast_to(
+                source_points, (data_points["x"].size,)
+            )
         else:
             internal_sources_points = source_points
 
@@ -176,10 +180,10 @@ def grad(
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
-        If constant, it defines a constant vertical coordinate for the sources, which 
+        If constant, it defines a constant vertical coordinate for the sources, which
         will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
-        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        If not constant, it must be a dicionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
         same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
@@ -203,14 +207,16 @@ def grad(
         try:
             check.is_scalar(x=source_points, positive=False)
             P = D
-            if source_points <= np.max(data_points['z']):
-                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            if source_points <= np.max(data_points["z"]):
+                raise ValueError(
+                    "if source_points is constant, it must be greater than all data_points['z']"
+                )
             # define an internal sources points as a shallow copy
             # of the dicionary containing data points
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+            internal_sources_points["z"] = np.broadcast_to(source_points, (P,))
         except:
             P = check.are_coordinates(source_points)
             internal_sources_points = source_points
@@ -231,7 +237,9 @@ def grad(
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+            internal_sources_points["z"] = np.broadcast_to(
+                source_points, (data_points["x"].size,)
+            )
         else:
             internal_sources_points = source_points
 
@@ -240,11 +248,14 @@ def grad(
 
     # compute the gradient components defined in components
     Ka = dict()
-    Ka["header"] = (
-        "full matrix(ces) containing 1st-order partial derivative(s) of the inverse distance function"
-    )
+    Ka[
+        "header"
+    ] = "full matrix(ces) containing 1st-order partial derivative(s) of the inverse distance function"
     for component in components:
-        delta = data_points[component][:, np.newaxis] - internal_sources_points[component]
+        delta = (
+            data_points[component][:, np.newaxis]
+            - internal_sources_points[component]
+        )
         Ka[component] = -delta / R3
 
     return Ka
@@ -313,9 +324,9 @@ def grad_BTTB(
 
     # compute the gradient components defined in components
     Ka = dict()
-    Ka["header"] = (
-        "BTTB metadata associated with 1st-order partial derivative(s) of the inverse distance function"
-    )
+    Ka[
+        "header"
+    ] = "BTTB metadata associated with 1st-order partial derivative(s) of the inverse distance function"
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](
@@ -352,10 +363,10 @@ def grad_tensor(
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
-        If constant, it defines a constant vertical coordinate for the sources, which 
+        If constant, it defines a constant vertical coordinate for the sources, which
         will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
-        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        If not constant, it must be a dicionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
         same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
@@ -381,14 +392,16 @@ def grad_tensor(
         try:
             check.is_scalar(x=source_points, positive=False)
             P = D
-            if source_points <= np.max(data_points['z']):
-                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            if source_points <= np.max(data_points["z"]):
+                raise ValueError(
+                    "if source_points is constant, it must be greater than all data_points['z']"
+                )
             # define an internal sources points as a shallow copy
             # of the dicionary containing data points
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+            internal_sources_points["z"] = np.broadcast_to(source_points, (P,))
         except:
             P = check.are_coordinates(source_points)
             internal_sources_points = source_points
@@ -409,7 +422,9 @@ def grad_tensor(
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+            internal_sources_points["z"] = np.broadcast_to(
+                source_points, (data_points["x"].size,)
+            )
         else:
             internal_sources_points = source_points
 
@@ -419,9 +434,9 @@ def grad_tensor(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
-    Kab["header"] = (
-        "full matrix(ces) containing 2nd-order partial derivative(s) of the inverse distance function"
-    )
+    Kab[
+        "header"
+    ] = "full matrix(ces) containing 2nd-order partial derivative(s) of the inverse distance function"
     if ("xx" in components) or ("yy" in components) or ("zz" in components):
         aux = 1 / R3  # compute this term only if it is necessary
     for component in components:
@@ -518,9 +533,9 @@ def grad_tensor_BTTB(
 
     # compute the gradient tensor components defined in components
     Kab = dict()
-    Kab["header"] = (
-        "BTTB metadata associated with 2nd-order partial derivative(s) of the inverse distance function"
-    )
+    Kab[
+        "header"
+    ] = "BTTB metadata associated with 2nd-order partial derivative(s) of the inverse distance function"
     for component in components:
         # get the parameters of the BTTB matrix
         symmetries, shape, delta = delta_func[component](
@@ -560,10 +575,10 @@ def directional_1st_order(
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
-        If constant, it defines a constant vertical coordinate for the sources, which 
+        If constant, it defines a constant vertical coordinate for the sources, which
         will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
-        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        If not constant, it must be a dicionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
         same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
@@ -589,14 +604,16 @@ def directional_1st_order(
         try:
             check.is_scalar(x=source_points, positive=False)
             P = D
-            if source_points <= np.max(data_points['z']):
-                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            if source_points <= np.max(data_points["z"]):
+                raise ValueError(
+                    "if source_points is constant, it must be greater than all data_points['z']"
+                )
             # define an internal sources points as a shallow copy
             # of the dicionary containing data points
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+            internal_sources_points["z"] = np.broadcast_to(source_points, (P,))
         except:
             P = check.are_coordinates(source_points)
             internal_sources_points = source_points
@@ -615,7 +632,9 @@ def directional_1st_order(
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+            internal_sources_points["z"] = np.broadcast_to(
+                source_points, (data_points["x"].size,)
+            )
         else:
             internal_sources_points = source_points
 
@@ -633,9 +652,9 @@ def directional_1st_order(
 
     # compute the directional derivative of 1st order
     Kt = dict()
-    Kt["header"] = (
-        "full matrix containing 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
-    )
+    Kt[
+        "header"
+    ] = "full matrix containing 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
     Kt["tx"] = t[0] * Grad["x"]
     Kt["ty"] = t[1] * Grad["y"]
     Kt["tz"] = t[2] * Grad["z"]
@@ -720,9 +739,9 @@ def directional_1st_order_BTTB(
 
     # compute the gradient components defined in components
     Kt = dict()
-    Kt["header"] = (
-        "BTTB metadata associated with 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
-    )
+    Kt[
+        "header"
+    ] = "BTTB metadata associated with 1st-order directional derivatives of the inverse distance function along a direction with given inclination and declination"
     Kt["tx"] = Grad["x"].copy()
     Kt["ty"] = Grad["y"].copy()
     Kt["tz"] = Grad["z"].copy()
@@ -757,10 +776,10 @@ def directional_2nd_order(
         Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
-        If constant, it defines a constant vertical coordinate for the sources, which 
+        If constant, it defines a constant vertical coordinate for the sources, which
         will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
-        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        If not constant, it must be a dicionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
         same number of elements.
     SEDM: numpy array 2d
         Squared Euclidean Distance Matrix (SEDM) between the N data
@@ -786,14 +805,16 @@ def directional_2nd_order(
         try:
             check.is_scalar(x=source_points, positive=False)
             P = D
-            if source_points <= np.max(data_points['z']):
-                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            if source_points <= np.max(data_points["z"]):
+                raise ValueError(
+                    "if source_points is constant, it must be greater than all data_points['z']"
+                )
             # define an internal sources points as a shallow copy
             # of the dicionary containing data points
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+            internal_sources_points["z"] = np.broadcast_to(source_points, (P,))
         except:
             P = check.are_coordinates(source_points)
             internal_sources_points = source_points
@@ -814,7 +835,9 @@ def directional_2nd_order(
             internal_sources_points = data_points.copy()
             # replace the coorinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
-            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+            internal_sources_points["z"] = np.broadcast_to(
+                source_points, (data_points["x"].size,)
+            )
         else:
             internal_sources_points = source_points
 
@@ -838,14 +861,14 @@ def directional_2nd_order(
 
     # compute the directional derivative of 1st order
     Ktu = dict()
-    Ktu["header"] = (
-        "full matrix(ces) containing 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
-    )
-    Ktu["xx"] = a['xx'] * Tensor["xx"]
-    Ktu["xy"] = a['xy'] * Tensor["xy"]
-    Ktu["xz"] = a['xz'] * Tensor["xz"]
-    Ktu["yy"] = a['yy'] * Tensor["yy"]
-    Ktu["yz"] = a['yz'] * Tensor["yz"]
+    Ktu[
+        "header"
+    ] = "full matrix(ces) containing 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
+    Ktu["xx"] = a["xx"] * Tensor["xx"]
+    Ktu["xy"] = a["xy"] * Tensor["xy"]
+    Ktu["xz"] = a["xz"] * Tensor["xz"]
+    Ktu["yy"] = a["yy"] * Tensor["yy"]
+    Ktu["yz"] = a["yz"] * Tensor["yz"]
     Ktu["inclination0"] = inc0
     Ktu["declination0"] = dec0
     Ktu["inclination"] = inc
@@ -940,19 +963,19 @@ def directional_2nd_order_BTTB(
 
     # compute the gradient components defined in components
     Ktu = dict()
-    Ktu["header"] = (
-        "BTTB metadata associated with 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
-    )
+    Ktu[
+        "header"
+    ] = "BTTB metadata associated with 2nd-order directional derivatives of the inverse distance function along a directions with given inclinations and declinations"
     Ktu["xx"] = Tensor["xx"].copy()
     Ktu["xy"] = Tensor["xy"].copy()
     Ktu["xz"] = Tensor["xz"].copy()
     Ktu["yy"] = Tensor["yy"].copy()
     Ktu["yz"] = Tensor["yz"].copy()
-    Ktu["xx"]["columns"] *= a['xx']
-    Ktu["xy"]["columns"] *= a['xy']
-    Ktu["xz"]["columns"] *= a['xz']
-    Ktu["yy"]["columns"] *= a['yy']
-    Ktu["yz"]["columns"] *= a['yz']
+    Ktu["xx"]["columns"] *= a["xx"]
+    Ktu["xy"]["columns"] *= a["xy"]
+    Ktu["xz"]["columns"] *= a["xz"]
+    Ktu["yy"]["columns"] *= a["yy"]
+    Ktu["yz"]["columns"] *= a["yz"]
     Ktu["inclination0"] = inc0
     Ktu["declination0"] = dec0
     Ktu["inclination"] = inc
@@ -1015,7 +1038,6 @@ def _delta_x(data_grid, delta_z, grid_orientation):
 
 
 def _delta_y(data_grid, delta_z, grid_orientation):
-
     """
     Parameters associated with the BTTB defined by field component y.
 
