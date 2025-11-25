@@ -899,7 +899,7 @@ def directional_2nd_order_BTTB(
     returns
     -------
     Ktu: Dictionary
-        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-orfer directional derivative
+        Dictionary containing the xx, xy, xz, yy and yz components of the computed 2nd-order directional derivative
         along the constant directions with predefined inclinations and declinations.
         The xx, xy, xz, yy and yz components are stored at the keys 'xx', 'xy', 'xz', 'yy' and 'yz', respectively,
         in the form of BTTB matrices (see input of function 'check.BTTB_metadata').
