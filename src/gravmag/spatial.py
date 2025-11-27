@@ -78,7 +78,7 @@ class Spatial2D:
         return [self.x.min(), self.x.max(), self.y.min(), self.y.max()]
     
 
-    def full_grid_xy_coordinates(self):
+    def grid_view(self):
         """Return (X, Y) as 2D arrays views."""
         if self.is_gridded:
             X = np.broadcast_to(self.x[:, None], (len(self.x), len(self.y)))
