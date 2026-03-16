@@ -159,6 +159,151 @@ def sedm_BTTB(data_grid, delta_z, grid_orientation, check_input=True):
     return BTTB
 
 
+def potential(
+    data_points,
+    source_points,
+    SEDM,
+    check_input=True,
+):
+    """
+    Compute the inverse distance function between the data points and the source points.
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which 
+        will have the horizontla coordinates of the data points.
+        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
+        same number of elements.
+    SEDM: numpy array 2d
+        Squared Euclidean Distance Matrix (SEDM) between the N data
+        points and the M sources computed according to function 'sedm'.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    K: Dictionary of numpy array 2d
+        Dictionary containing the N x M matrix of inverse distance values.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
+        # check if SEDM match data_points and source_points
+        check.is_array(x=SEDM, ndim=2)
+        if SEDM.shape != (D, P):
+            raise ValueError(
+                "SEDM does not match data_points and source_points"
+            )
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dicionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coorinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
+
+    # compute the inverse distance function from the SEDM
+    K = dict()
+    K["header"] = (
+        "full matrix containing the inverse distance function values"
+    )
+    K["potential"] = 1 / np.sqrt(SEDM)
+
+    return K
+
+
+def potential_BTTB(
+    data_grid,
+    delta_z,
+    SEDM,
+    grid_orientation,
+    check_input=True,
+):
+    """
+    Compute the inverse distance function between a horizontal regular grid of Nx x Ny 
+    data points and a grid of source points having the same shape, but dislocated by a 
+    constant and positive vertical distance.
+    This function optimizes `grad` to deal with BTTB matrices (Chan and Jin, 2007, p. 67).
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    SEDM: dictionary
+        Dictionary containing the metadata associated with the full matrix
+        (output of function 'inverse_distance.sedm_BTTB').
+    grid_orientation : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    K: Dictionary of dictionaries
+       Dictionary of dictionaries containing the metadata associated with the full matrix
+       (see input of function 'check.BTTB_metadata').
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.is_grid_xy(data_grid)
+        check.is_scalar(x=delta_z, positive=True)
+        # check the SEDM
+        check.BTTB_metadata(SEDM)
+        check.is_grid_orientation(grid_orientation)
+
+    # compute the inverse distance function
+    K = dict()
+    K["header"] = (
+        "BTTB metadata associated with the inverse distance function"
+    )
+    # get the parameters of the BTTB matrix
+    symmetries, shape, delta = _delta_potential(
+        data_grid, delta_z, grid_orientation
+    )
+    # dictionary containing metadata associated with the full BTTB
+    BTTB = {
+        "symmetry_structure": symmetries[0],
+        "symmetry_blocks": symmetries[1],
+        "nblocks": shape[0],
+        "columns": delta / np.sqrt(SEDM["columns"]),
+        "rows": None,
+    }
+    K["potential"] = BTTB
+
+    return K
+
+
 def grad(
     data_points,
     source_points,
@@ -959,6 +1104,52 @@ def directional_2nd_order_BTTB(
     Ktu["declination"] = dec
 
     return Ktu
+
+
+def _delta_potential(data_grid, delta_z, grid_orientation):
+    """
+    Parameters associated with the BTTB defined associated with the inverse distance.
+
+    parameters
+    ----------
+    data_grid : dictionary
+        Dictionary containing the x, y and z coordinates of the grid points (or nodes)
+        at the keys 'x', 'y' and 'z', respectively, and the scheme for indexing the
+        points at the key 'grid_orientation'. See function 'data_structures.regular_grid_xy'.
+    delta_z : float or int
+        Positive scalar defining the constant vertical distance between the data and
+        source grids of points.
+    grid_orientation : string
+        Defines how the points are ordered after the first point (min x, min y).
+        If 'xy', the points vary first along x and then along y.
+        If 'yx', the points vary first along y and then along x.
+
+    returns
+    -------
+    symmetries : tuple
+        Strings defining the symmetries of the correponding BTTB (symmetry_structure, symmetry_blocks)
+    shape : tuple
+        Tuple defining the number of blocks and number of points per blocks
+    delta : scalar
+        Term equal to 1 (to keep consistency along the code).
+    """
+
+    # number of points along x and y directions
+    Nx = data_grid["x"].size
+    Ny = data_grid["y"].size
+
+    # (symmetry_structure, symmetry_blocks)
+    symmetries = ("symm", "symm")
+    # term 1
+    delta = 1.
+    if grid_orientation == "xy":
+        # shape (Ny, Nx)
+        shape = data_grid["shape"][::-1]
+    else:  # grid_orientation == "yx"
+        # shape (Nx, Ny)
+        shape = data_grid["shape"]
+
+    return symmetries, shape, delta
 
 
 def _delta_x(data_grid, delta_z, grid_orientation):
