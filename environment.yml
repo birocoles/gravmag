@@ -1,0 +1,16 @@
+name: gravmag-env
+channels:
+    - conda-forge
+dependencies:
+    - numpy
+    - scipy
+    - numba
+    - matplotlib
+    - vedo
+    - black
+    - pytest
+    - black
+    - jupyterlab
+    - pytest
+    - pytest-cov
+    - pip

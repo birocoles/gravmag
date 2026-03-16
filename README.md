@@ -25,11 +25,21 @@ All references cited in the code and examples are shown in the file `references.
 
 #### Installing, testing, uninstalling, ...
 
-The recomendation here is using the `Makefile` to install, test and also uninstall the `gravmag`.
-[`Ubuntu`](https://ubuntu.com/) users may execute the steps below:
-1. Create a copy of the present repository at your computer. 
-2. Open the terminal in the root directory `gravmag` at your computer and execute the command `make install`.
-3. Also at the root directory `gravmag`, execute `make test` in terminal to test the code. The command 
-`make report` creates the file `index.html` at `gravmag/gravmag/tests/htmlcov`. Open this file in your preferred 
-browser to see a report of the tests.
-4. To uninstall **`gravmag`**, execute the command `make uninstall` in the root directory `gravmag`.
+Everything here is tested in Ubuntu operating system!
+
+I recommend installing `gravmag` as follows:
+
+1. [Create a copy of the present repository at your computer via `git`]
+	`git clone https://github.com/birocoles/gravmag.git`
+
+Then, in the root directory `gravmag`, execute the following command lines:
+
+2. [Create a conda environment] 
+	`conda env create -f environment.yml`
+3. [Activate de conda environment]
+	`conda activate gravmag-env`
+4. [Install `gravmag`] 
+	`make install`
+5. [Test the code]
+	`make test`
+
