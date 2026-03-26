@@ -193,7 +193,7 @@ def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None
         if vmin >= vmax:
             raise ValueError("vmin must be smaller than vmax")
     
-    # iterate iver prisms to create vedo.Box objects
+    # iterate over prisms to create vedo.Box objects
     vedo_prisms = []
     for (x1, x2, y1, y2, z1, z2) in zip(
         gravmag_prisms['x1'], 
@@ -230,6 +230,74 @@ def gravmag2vedo_prisms(gravmag_prisms, scalar_props=None, cmap='jet', vmin=None
         )
 
     return vedo_prisms
+
+
+def gravmag2vedo_lines(gravmag_lines, scalar_props=None, cmap='jet', vmin=None, vmax=None):
+    '''
+    Receive a gravmag model and return a Vedo model.
+
+    parameters
+    ----------
+    gravmag_lines : dictionary
+        Dictionary containing the x, y, z1 (top) and z2 (bottom) coordinates of each line in lines.
+        Each key is a numpy array 1d having the same number of elements.
+    scalar_props : None or numpy array 1d
+        If not None, it must be a numpy array 1d containing the scalar physical
+        property of each prism forming the gravmag_model.
+    cmap : Matplotib colormap
+        A Matplotlib colormap (https://matplotlib.org/stable/users/explain/colors/colormaps.html).
+        This parameter is ignored if scalar_props=None.
+    vmin, vmax : scalars
+        Lower and upper limits for the color scale.
+        This is ignored if scalar_props=None.
+
+    returns
+    -------
+    vedo_prisms : vedo.mesh.Mesh
+        Vedo object containing a collection of rectangular prisms.
+    '''
+    P = check.are_vertical_lines(lines=gravmag_lines)
+    if scalar_props is not None:
+        check.is_array(x=scalar_props, ndim=1, shape=(P,))
+        check.is_scalar(x=vmin, positive=False)
+        check.is_scalar(x=vmax, positive=False)
+        if vmin >= vmax:
+            raise ValueError("vmin must be smaller than vmax")
+
+    # iterate over lines to create vedo.Line objects
+    vedo_lines = []
+    for (x, y, z1, z2) in zip(
+            gravmag_lines['x'],
+            gravmag_lines['y'],
+            gravmag_lines['z1'],
+            gravmag_lines['z2']
+    ):
+        vedo_lines.append(
+            vedo.Line(
+                p0=[x, y, z1],
+                p1=[x, y, z1],
+                c='blue4',
+                alpha=1
+            )
+        )
+
+    # create a unified mesh
+    vedo_lines = vedo.merge(vedo_lines).force_opaque()
+
+    if scalar_props is not None:
+        # colorize the lines
+        # create colors for the model
+        # the color values must be defined for the faces of each line
+        vedo_lines.cmap(
+            input_cmap=cmap,
+            input_array=scalar_props,
+            on='cells',
+            vmin=vmin,
+            vmax=vmax,
+            alpha=1
+        )
+
+    return vedo_lines
 
 
 def points(data, scalar_props=None, cmap=None, vmin=None, vmax=None):

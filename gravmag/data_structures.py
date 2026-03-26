@@ -83,7 +83,7 @@ def grid_xy_to_full_flatten(grid, grid_orientation, check_input=True):
     full_grid = {
         "x": np.ravel(x),
         "y": np.ravel(y),
-        "z": np.zeros(N, dtype=float) + grid["z"],
+        "z": np.broadcast_to(grid["z"], (N, )),
     }
 
     return full_grid

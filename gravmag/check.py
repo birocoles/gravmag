@@ -50,6 +50,46 @@ def are_rectangular_prisms(prisms):
     return P
 
 
+def are_vertical_lines(lines):
+    """
+    Check if lines is a dictionary containing the x, y, z1 (top) and z2 (bottom) coordinates of each line in lines.
+    All keys must be numpy arrays 1d having the same number of elements.
+
+    parameters
+    ----------
+    lines : generic object
+        Python object to be verified.
+
+    returns
+    -------
+    P : int
+        Total number of lines.
+    """
+    if type(lines) != dict:
+        raise ValueError("lines must be a dictionary")
+    if list(lines.keys()) != ["x", "y", "z1", "z2"]:
+        raise ValueError(
+            "prisms must have the following 4 keys: 'x', 'y', 'z1', 'z2'"
+        )
+    for key in lines.keys():
+        if type(lines[key]) != np.ndarray:
+            raise ValueError("all keys in lines must be numpy arrays")
+    for key in lines.keys():
+        if lines[key].ndim != 1:
+            raise ValueError("all keys in lines must be numpy arrays 1d")
+    P = lines["x"].size
+    for key in lines.keys():
+        if lines[key].size != P:
+            raise ValueError(
+                "all keys in lines must have the same number of elements"
+            )
+    # check the z lower and upper limits
+    if np.any(lines["z2"] <= lines["z1"]):
+        raise ValueError("all 'z2' values must be greater than 'z1' values.")
+
+    return P
+
+
 def are_coordinates(coordinates):
     """
     Check if coordinates is a dictionary containing the x, y and z

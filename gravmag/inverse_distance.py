@@ -1,5 +1,5 @@
 """
-Algoritmhs for computing the derivatives of the inverse distance function
+Algorithms for computing the derivatives of the inverse distance function
 between a set of data points and a set of source points.
 """
 
@@ -21,8 +21,8 @@ def sedm(data_points, source_points, check_input=True):
         respectively. Each key is a numpy array 1d having the same number of elements.
     source_points: constant or dictionary
         If constant, it defines a constant vertical coordinate for the sources, which 
-        will have the horizontla coordinates of the data points.
-        If not constant, it must be a dicionary containing the x, y and z coordinates at 
+        will have the horizontal coordinates of the data points.
+        If not constant, it must be a dictionary containing the x, y and z coordinates at
         the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the 
         same number of elements.
     check_input : boolean
@@ -43,9 +43,9 @@ def sedm(data_points, source_points, check_input=True):
             if source_points <= np.max(data_points['z']):
                 raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
             # define an internal sources points as a shallow copy
-            # of the dicionary containing data points
+            # of the dictionary containing data points
             internal_sources_points = data_points.copy()
-            # replace the coorinate 'z' in the internal sources points
+            # replace the coordinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
             internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
         except:
@@ -54,9 +54,9 @@ def sedm(data_points, source_points, check_input=True):
     else:
         if type(source_points) != dict:
             # define an internal sources points as a shallow copy
-            # of the dicionary containing data points
+            # of the dictionary containing data points
             internal_sources_points = data_points.copy()
-            # replace the coorinate 'z' in the internal sources points
+            # replace the coordinate 'z' in the internal sources points
             # by an array with constant values defined by 'source_points'
             internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
         else:
@@ -157,6 +157,90 @@ def sedm_BTTB(data_grid, delta_z, grid_orientation, check_input=True):
     }
 
     return BTTB
+
+
+def sedm_delta_z(data_points, source_points, delta_z, check_input=True):
+    """
+    Compute the difference between full Squared Euclidean Distance Matrices (SEDMs)
+    obtained by dislocating the source points along the vertical direction.
+
+    parameters
+    ----------
+    data_points: dictionary
+        Dictionary containing the x, y and z coordinates at the keys 'x', 'y' and 'z',
+        respectively. Each key is a numpy array 1d having the same number of elements.
+    source_points: constant or dictionary
+        If constant, it defines a constant vertical coordinate for the sources, which
+        will have the horizontal coordinates of the data points.
+        If not constant, it must be a dictionary containing the x, y and z coordinates at
+        the keys 'x', 'y' and 'z', respectively. Each key is a numpy array 1d having the
+        same number of elements.
+    delta_z : constant or numpy array 1d
+        Positive scalar defining the constant vertical distance between the original and
+        vertically dislocated source points. If constant,it defines a constant vertical dislocation.
+        Otherwise, it must be a numpy array 1d defining the vertical dislocation of each source.
+    check_input : boolean
+        If True, verify if the input is valid. Default is True.
+
+    returns
+    -------
+    SEDM: numpy array 2d
+        N x M SEDM between data points and source points.
+    """
+
+    if check_input is True:
+        # check shape and ndim of points
+        D = check.are_coordinates(data_points)
+        try:
+            check.is_scalar(x=source_points, positive=False)
+            P = D
+            if source_points <= np.max(data_points['z']):
+                raise ValueError("if source_points is constant, it must be greater than all data_points['z']")
+            # define an internal sources points as a shallow copy
+            # of the dictionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coordinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (P, ))
+        except:
+            P = check.are_coordinates(source_points)
+            internal_sources_points = source_points
+        # check delta_z
+        try:
+            check.is_scalar(x=delta_z)
+            internal_delta_z = np.broadcast_to(delta_z, (P, ))
+        except:
+            check.is_array(x=delta_z, ndim=1, shape=(P,))
+            internal_delta_z = delta_z
+    else:
+        if type(source_points) != dict:
+            # define an internal sources points as a shallow copy
+            # of the dictionary containing data points
+            internal_sources_points = data_points.copy()
+            # replace the coordinate 'z' in the internal sources points
+            # by an array with constant values defined by 'source_points'
+            internal_sources_points['z'] = np.broadcast_to(source_points, (data_points['x'].size, ))
+        else:
+            internal_sources_points = source_points
+        if type(delta_z) in [int, float]:
+            internal_delta_z = np.broadcast_to(delta_z, (source_points['x'].size, ))
+        else:
+            internal_delta_z = delta_z
+
+    # compute the SEDM difference
+
+    D2 = (
+        2 * (internal_sources_points["z"] * internal_delta_z)
+        + internal_delta_z * internal_delta_z
+    )
+    D3 = 2 * (
+        np.outer(data_points["z"], internal_delta_z)
+    )
+
+    # use broadcasting rules to add D2 and D3
+    D = D2[np.newaxis, :] - D3
+
+    return D
 
 
 def potential(
