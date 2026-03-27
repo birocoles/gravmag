@@ -18,8 +18,9 @@ def grav(coordinates, lines, density, field, scale=True):
     lines : dictionary
         Dictionary containing the x, y, z1 (top) and z2 (bottom) coordinates of each line in lines.
         Each key is a numpy array 1d having the same number of elements.
-    density : 1d-array
-        1d-array containing the density of each prism in kg / m.
+    density : scalar or 1d-array
+        Scalar defining the same density for all prisms or a 1d-array containing the density of
+        each prism in kg / m³.
     field : str
         Gravitational field to be computed.
         The available fields are:
@@ -39,14 +40,19 @@ def grav(coordinates, lines, density, field, scale=True):
     # Verify the input parameters
     D = check.are_coordinates(coordinates)  # D = total number of data points
     P = check.are_vertical_lines(lines)  # P = total number of prisms
-    check.is_array(density, ndim=1, shape=(P,))
+    try:
+        check.is_scalar(density)
+        internal_density = np.broadcast_to(density, (P,))
+    except:
+        check.is_array(density, ndim=1, shape=(P,))
+        internal_density = density
 
     # Verify the field
     if field not in kernels:
         raise ValueError("Gravitational field {} not recognized".format(field))
 
     # compute the contribution of each vertex
-    result = iterate_over_vertices(coordinates, lines, density, kernels[field])
+    result = iterate_over_vertices(coordinates, lines, internal_density, kernels[field])
 
     # multiply the computed field by the corresponding scale factors
     if scale is True:
@@ -69,15 +75,7 @@ def iterate_over_vertices(coordinates, lines, sigma, kernel):
     predicted_field = np.zeros(
         (coordinates["x"].size, lines["x"].size), dtype="float"
     )
-    # horizontal coordinates
-    X = (
-        -coordinates["x"][:, np.newaxis]
-        + lines["x"][np.newaxis, :]
-    )
-    Y = (
-        -coordinates["y"][:, np.newaxis]
-        + lines["y"][np.newaxis, :]
-    )
+
     # contribution of vertices z1
     # Squared Euclidean Distance Matrix (SEDM)
     R2 = idist.sedm(
@@ -94,7 +92,7 @@ def iterate_over_vertices(coordinates, lines, sigma, kernel):
         -coordinates["z"][:, np.newaxis]
         + lines["z1"][np.newaxis, :]
     )
-    predicted_field[:] -= kernel(X, Y, Z, np.sqrt(R2))
+    predicted_field[:] -= kernel(Z, np.sqrt(R2))
 
     # contribution of vertices z2
     R2 += idist.sedm_delta_z(
@@ -111,23 +109,20 @@ def iterate_over_vertices(coordinates, lines, sigma, kernel):
         -coordinates["z"][:, np.newaxis]
         + (lines["z2"] - lines["z1"])[np.newaxis, :]
     )
-    predicted_field[:] += kernel(X, Y, Z, np.sqrt(R2))
+    predicted_field[:] += kernel(Z, np.sqrt(R2))
 
     predicted_field = np.sum(a=predicted_field * sigma[np.newaxis, :], axis=1)
 
     return predicted_field
 
 # kernels
-def kernel_z(X, Y, Z, R):
+def kernel_z(Z, R):
     """
     Function for computing the z-derivative of inverse distance kernel
     for a vertical line
     """
-    result = -(
-        Y * utils.safe_log(X + R)
-        + X * utils.safe_log(Y + R)
-        - Z * utils.safe_atan2(Y * X, Z * R)
-    )
+    result = utils.safe_log_np(Z + R)
+
     return result
 
 # Available kernels
