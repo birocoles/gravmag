@@ -43,7 +43,7 @@ def test_DFT_return_shape():
     ae(FT_data.shape, correct_shape)
 
 
-def test_IDFT_FT_data_not_complex_matrix():
+def test_IDFT_FT_data_not_matrix():
     "must raise ValueError if data not a matrix"
     # Ft_data as a float
     with raises(ValueError):
@@ -54,9 +54,6 @@ def test_IDFT_FT_data_not_complex_matrix():
     # FT_data as a string
     with raises(ValueError):
         tr.IDFT("not-a-matrix")
-    # FT_data as a real matrix
-    with raises(ValueError):
-        tr.IDFT(np.ones((3, 3)))
 
 
 def test_IDFT_unpad_not_boolean():

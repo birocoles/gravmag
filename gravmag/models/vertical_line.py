@@ -28,7 +28,7 @@ def grav(coordinates, lines, density, field, scale=True):
      scale : boolean
         Defines if the resultant field will be multiplied by scale factors
         "constants.GRAVITATIONAL_CONST" (Gravitational constant) and
-        "constants.SI2MGAL" (constant tranforming from m / s² to mGal).
+        "constants.SI2MGAL" (constant transforming from m / s² to mGal).
 
     Returns
     -------
@@ -55,7 +55,7 @@ def grav(coordinates, lines, density, field, scale=True):
     result = iterate_over_vertices(coordinates, lines, internal_density, kernels[field])
 
     # multiply the computed field by the corresponding scale factors
-    if scale is True:
+    if scale:
         result *= cts.GRAVITATIONAL_CONST
         # Convert from m/s^2 to mGal
         if field in ["x", "y", "z"]:
@@ -88,10 +88,7 @@ def iterate_over_vertices(coordinates, lines, sigma, kernel):
         check_input=False,
     )
     # vertical coordinate
-    Z = (
-        -coordinates["z"][:, np.newaxis]
-        + lines["z1"][np.newaxis, :]
-    )
+    Z = np.asarray((-coordinates["z"][:, np.newaxis] + lines["z1"][np.newaxis, :]), dtype=float)
     predicted_field[:] -= kernel(Z, np.sqrt(R2))
 
     # contribution of vertices z2
@@ -121,7 +118,8 @@ def kernel_z(Z, R):
     Function for computing the z-derivative of inverse distance kernel
     for a vertical line
     """
-    result = utils.safe_log_np(Z + R)
+    # result = utils.safe_log_np(Z + R)
+    result = np.log(Z + R)
 
     return result
 

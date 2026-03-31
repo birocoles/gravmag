@@ -85,8 +85,6 @@ def IDFT(FT_data, unpad=False, pad_size=1, check_input=True):
 
     if check_input is True:
         check.is_array(x=FT_data, ndim=2)
-        # if np.iscomplexobj(FT_data) is not True:
-        #     raise ValueError("FT_data must be a complex array")
         if isinstance(unpad, bool) is not True:
             raise ValueError("unpad must be True or False")
         check.is_integer(x=pad_size, positive=True)

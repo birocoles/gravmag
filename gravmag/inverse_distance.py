@@ -83,7 +83,7 @@ def sedm(data_points, source_points, check_input=True):
     # use broadcasting rules to add D1, D2 and D3
     D = D1[:, np.newaxis] + D2[np.newaxis, :] - D3
 
-    return D
+    return np.asarray(D, dtype=float)
 
 
 def sedm_BTTB(data_grid, delta_z, grid_orientation, check_input=True):
@@ -240,7 +240,7 @@ def sedm_delta_z(data_points, source_points, delta_z, check_input=True):
     # use broadcasting rules to add D2 and D3
     D = D2[np.newaxis, :] - D3
 
-    return D
+    return np.asarray(D, dtype=float)
 
 
 def potential(
