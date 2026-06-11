@@ -149,6 +149,76 @@ def test_sedm_BTTB_grid_orientation_yx_compare_sedm():
     aae(SEDM, SEDM_BTTB_full, decimal=10)
 
 
+#### SEDM delta z
+
+def test_sedm_delta_z_constant_dislocation():
+    "verify is both results are the same"
+
+    # data points
+    P = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([0, 0, -10, 0, 0, 0]),
+    }
+
+    # source points
+    S = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([12, 8, 7, 13, 10, 23]),
+    }
+
+    # vertical dislocation
+    delta_z = 10
+
+    # dislocated source points
+    S_dislocated = {
+        "x": S["x"],
+        "y": S["y"],
+        "z": S["z"] + delta_z,
+    }
+
+    SEDM_ref = idist.sedm(P, S_dislocated)
+    SEDM_original_sources = idist.sedm(P, S)
+    SEDM_dz = idist.sedm_delta_z(P, S, delta_z)
+
+    aae(SEDM_ref, SEDM_original_sources + SEDM_dz, decimal=12)
+
+
+def test_sedm_delta_z_variable_dislocation():
+    "verify is both results are the same"
+
+    # data points
+    P = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([0, 0, -10, 0, 0, 0]),
+    }
+
+    # source points
+    S = {
+        "x": np.array([-10, -10, 0, 10, 0, 0]),
+        "y": np.array([0, -10, 0, 0, 10, 0]),
+        "z": np.array([12, 8, 7, 13, 10, 23]),
+    }
+
+    # vertical dislocation
+    delta_z = np.array([2, -3, 4, 5.3, -9, 16.7])
+
+    # dislocated source points
+    S_dislocated = {
+        "x": S["x"],
+        "y": S["y"],
+        "z": S["z"] + delta_z,
+    }
+
+    SEDM_ref = idist.sedm(P, S_dislocated)
+    SEDM_original_sources = idist.sedm(P, S)
+    SEDM_dz = idist.sedm_delta_z(P, S, delta_z)
+
+    aae(SEDM_ref, SEDM_original_sources + SEDM_dz, decimal=12)
+
+
 #### grad
 
 def test_grad_constant_versus_dictionary_sources():

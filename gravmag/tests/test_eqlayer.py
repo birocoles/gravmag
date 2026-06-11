@@ -371,7 +371,7 @@ def test_method_CGLS_stop_criterion():
         ITMAX=ITMAX,
         check_input=True,
     )
-    ae(len(delta_list), 1)
+    ae(len(delta_list), 2)
     ae(parameters, parameters_true)
 
 

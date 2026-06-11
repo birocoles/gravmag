@@ -330,7 +330,6 @@ def method_CGLS(
             check.is_array(x=p0, ndim=1, shape=(nparams,))
 
     # get number of data for each dataset and initialize residuals list
-    ndatasets = len(data_vectors)
     ndata_per_dataset = []
     residuals = []
     nus = []

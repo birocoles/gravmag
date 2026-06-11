@@ -28,8 +28,9 @@ def grav(coordinates, prisms, density, field, scale=True):
         The corners south (x1), north (x2), west (y1), east (y2), top (z1) and bottom (z2) of each
         prism are arranged in the keys 'x1', 'x2', 'y1', 'y2', 'z1' and 'z2', respectively.
         Each key is a numpy array 1d having the same number of elements.
-    density : 1d-array
-        1d-array containing the density of each prism in kg / m³.
+    density : scalar or 1d-array
+        Scalar defining the same density for all prisms or a 1d-array containing the density of
+        each prism in kg / m³.
     field : str
         Gravitational field to be computed.
         The available fields are:
@@ -59,14 +60,19 @@ def grav(coordinates, prisms, density, field, scale=True):
     # Verify the input parameters
     D = check.are_coordinates(coordinates)  # D = total number of data points
     P = check.are_rectangular_prisms(prisms)  # P = total number of prisms
-    check.is_array(density, ndim=1, shape=(P,))
+    try:
+        check.is_scalar(density)
+        internal_density = np.broadcast_to(density, (P, ))
+    except:
+        check.is_array(density, ndim=1, shape=(P,))
+        internal_density = density
 
     # Verify the field
     if field not in kernels:
         raise ValueError("Gravitational field {} not recognized".format(field))
 
     # compute the contribution of each vertex
-    result = iterate_over_vertices(coordinates, prisms, density, kernels[field])
+    result = iterate_over_vertices(coordinates, prisms, internal_density, kernels[field])
 
     # multiply the computed field by the corresponding scale factors
     if scale is True:

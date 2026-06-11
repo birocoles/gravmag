@@ -83,7 +83,7 @@ def grid_xy_to_full_flatten(grid, grid_orientation, check_input=True):
     full_grid = {
         "x": np.ravel(x),
         "y": np.ravel(y),
-        "z": np.zeros(N, dtype=float) + grid["z"],
+        "z": np.broadcast_to(grid["z"], (N, )),
     }
 
     return full_grid
@@ -120,7 +120,7 @@ def grid_xy_full_flatten_to_matrix(data, grid_orientation, shape, check_input=Tr
         check.is_grid_orientation(grid_orientation)
         check.is_shape(shape)
         if shape[0] * shape[1] != data.size:
-            raise Valuerror("shape mismatch data")
+            raise ValueError("shape mismatch data")
 
     if grid_orientation == "xy":
         return np.reshape(data, shape[::-1]).T

@@ -119,6 +119,90 @@ def test_invalid_rectangular_prism():
         check.are_rectangular_prisms(model)
 
 
+##### vertical lines
+
+
+def test_vertical_lines_n_lines():
+    "Check if return the correct number of lines"
+    model = {
+        "x": np.array([-100, -100, -100]),
+        "y": np.array([100, 100, 100]),
+        "z1": np.array([100, 100, 100]),
+        "z2": np.array([200, 200, 200]),
+    }
+    P = check.are_vertical_lines(model)
+    assert P == 3
+
+
+def test_invalid_vertical_line_boundaries():
+    "Check if passing invalid vertical coordinates raises an error"
+    # wrong z coordinates
+    model = {
+        "x": np.array([100, -100, -100]),
+        "y": np.array([100, 100, 100]),
+        "z1": np.array([100, 100, 300]),
+        "z2": np.array([200, 200, 200]),
+    }
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+
+
+def test_invalid_vertical_line():
+    "Check if passing an invalid vertical line raises an error"
+    # array
+    model = np.array([100, -100, -100, 100, 100, 200])
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # array with shape (2,4)
+    model = np.empty((2, 4))
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # array with shape (1,4)
+    model = np.empty((1, 5))
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # tuple
+    model = (1, 5)
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # list
+    model = [1, 2, 3.0]
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # float
+    model = 10.2
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # dict with correct keys in wrong order
+    model = {
+        "y": np.array([-100, -100, -100]),
+        "x": np.array([-100, -100, -100]),
+        "z1": np.array([100, 100, 100]),
+        "z2": np.array([200, 200, 200]),
+    }
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # dict with one extra key
+    model = {
+        "x": np.array([-100, -100, -100]),
+        "y": np.array([100, 100, 100]),
+        "z1": np.array([100, 100, 100]),
+        "z2": np.array([200, 200, 200]),
+        "qw": np.array([200, 200, 200]),
+    }
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+    # dict with one wrong key
+    model = {
+        "X": np.array([100, 100, 100]),
+        "y": np.array([-100, -100, -100]),
+        "z1": np.array([100, 100, 100]),
+        "z2": np.array([200, 200, 200]),
+    }
+    with pytest.raises(ValueError):
+        check.are_vertical_lines(model)
+
+
 ##### coordinates
 
 
