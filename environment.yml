@@ -1,14 +1,18 @@
+# Create the conda environment
 name: gravmag-env
 channels:
     - conda-forge
 dependencies:
     - numpy
     - scipy
+    - xarray
+    - pandas
+    - geopandas
+    - shapely
     - matplotlib
     - vedo
     - jupyterlab
     - black
     - pytest
     - pytest-cov
-    - pip
-    - xarray
+    - pip>=25.3
