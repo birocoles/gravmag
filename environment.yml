@@ -12,7 +12,8 @@ dependencies:
     - matplotlib
     - vedo
     - jupyterlab
+    - streamlit
     - black
     - pytest
     - pytest-cov
-    - pip>=25.3
+    - pip

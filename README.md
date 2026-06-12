@@ -8,14 +8,7 @@ data in Geophysics.
 
 #### General description
 
-The idea is to use mostly standard Python libraries like [`numpy`](https://numpy.org/) and [`scipy`](https://scipy.org/) 
-for building everything, or at least most of it. 
-We don't focus too much on plotting, but if we need to, we usually rely on the standard 
-[`matplolib`](https://matplotlib.org/) library.
-
-Sticking to these standard libraries makes things easier when it comes to installing and updating the code.
-
-We might use **`gravmag`** for teaching classes, courses, and doing research. 
+**`gravmag`** can be used for teaching classes, courses, and doing research. 
 The aim is to create a foundation that can be possibly adapted to handle big data and super tricky problems.
 
 By 'reinventing the wheel,' we're basically learning how to create new stuff from scratch.
