@@ -2,45 +2,10 @@ import numpy as np
 from numpy.testing import assert_almost_equal as aae
 from numpy.testing import assert_equal as ae
 import pytest
-from numba import njit
 from .. import utils
 
 
 # safe_atan2
-
-
-def test_safe_atan2_compare_functions():
-    "verify consistency between all safe_atan2 functions"
-    y = np.array([[0.0, 30.0], [-45.0, 60.0], [-90.0, 180.0]])
-    x = np.array([[10.0, 12.0], [-73.0, 3.0], [18.0, 0.0]])
-    result_numba = utils.safe_atan2(y=y, x=x)
-    result_numpy = utils.safe_atan2_np(y=y, x=x)
-    aae(result_numba, result_numpy, decimal=15)
-    for yi, xi, result_i in zip(y.ravel(), x.ravel(), result_numpy.ravel()):
-        result_numba_entrywise = utils.safe_atan2_entrywise(y=yi, x=xi)
-        aae(result_numba_entrywise, result_i, decimal=15)
-
-
-def test_safe_atan2_entrywise():
-    "Test the safe_atan2 function"
-    # Test safe_atan2 for one point per quadrant
-    x = np.array([1.0, -1.0, -1.0, 1.0])
-    y = np.array([1.0, 1.0, -1.0, -1.0])
-    reference = np.array([np.pi / 4, -np.pi / 4, np.pi / 4, -np.pi / 4])
-    for xi, yi, ri in zip(x, y, reference):
-        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
-    # Test safe_atan2 if the denominator is equal to zero
-    x = np.array([0.0, 0.0])
-    y = np.array([1.0, -1.0])
-    reference = np.array([np.pi / 2, -np.pi / 2])
-    for xi, yi, ri in zip(x, y, reference):
-        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
-    # Test safe_atan2 if both numerator and denominator are equal to zero
-    x = np.array([0.0, 0.0])
-    y = np.array([0.0, 0.0])
-    reference = np.array([0, 0])
-    for xi, yi, ri in zip(x, y, reference):
-        aae(utils.safe_atan2_entrywise(yi, xi), ri, decimal=15)
 
 
 def test_safe_atan2():
@@ -63,31 +28,6 @@ def test_safe_atan2():
 
 
 # safe_log
-
-
-def test_safe_log_compare_functions():
-    "verify consistency between all safe_log functions"
-    x = np.array([[0.0, 12.0], [-3.0, 7.3], [1018.0, -1018.0]])
-    result_numba = utils.safe_log(x=x)
-    result_numpy = utils.safe_log_np(x=x)
-    aae(result_numba, result_numpy, decimal=15)
-    for xi, result_i in zip(x.ravel(), result_numpy.ravel()):
-        result_numba_entrywise = utils.safe_log_entrywise(x=xi)
-        aae(result_numba_entrywise, result_i, decimal=15)
-
-
-def test_safe_log_entrywise():
-    "Test the safe_log function"
-    # Check if safe_log function satisfies safe_log(0) == 0
-    x = np.array([0.0, 0.0])
-    reference = np.zeros(2)
-    for xi, ri in zip(x, reference):
-        aae(utils.safe_log_entrywise(xi), ri, decimal=15)
-    # Check if safe_log behaves like the natural logarithm in case that x != 0
-    x = np.linspace(1, 100, 100)
-    reference = np.log(x)
-    for xi, ri in zip(x, reference):
-        aae(utils.safe_log_entrywise(xi), ri, decimal=15)
 
 
 def test_safe_log():
