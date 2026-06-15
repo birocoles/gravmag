@@ -17,3 +17,5 @@ dependencies:
     - pytest
     - pytest-cov
     - pip
+    - pip:
+        - noise
