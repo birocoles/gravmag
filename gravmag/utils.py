@@ -332,7 +332,7 @@ def block_data(x, y, area, shape, check_input=True):
 
 
 def reduce_data(
-    data, blocks_indices, function="mean", remove_nan=False, check_input=True
+    data, blocks_indices, function="mean", remove_nan=False, min_ndata=3, check_input=True
 ):
     """
     Apply func to the values at each element in blocks.
@@ -345,11 +345,13 @@ def reduce_data(
         Lists containing the indices of the data at each block.
     function : string
         Function to be applied to compute the reduced data at the
-        center of each block. The possibilities are "mean", "median", "min" or "max".
+        center of each block. The possibilities are "mean", "median", "min", "max", "size" or "std".
     remove_nan : boolean
         If True, keep the elements containing nan values and return a 2d array of reduced data.
         Otherwise, remove elements containing nan values and return an 1d array of reduced data.
         Default is False.
+    min_ndata : int
+        Positive integer defining the minimum number of data in valid blocks.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -365,12 +367,15 @@ def reduce_data(
             raise ValueError("blocks_indices must be a list")
         if type(function) != str:
             raise ValueError("function must be string")
-        if function not in ["mean", "median", "min", "max"]:
+        if function not in ["mean", "median", "min", "max", "size", "std"]:
             raise ValueError("invalid function {}".format(function))
         if remove_nan not in [True, False]:
             raise ValueError(
                 "{} does not have a valid format".format(remove_nan)
             )
+        check.is_integer(x=min_ndata, positive=True)
+        if min_ndata < 3:
+            raise ValueError("min_data must be greater than 3")
 
     if function == "mean":
         func = np.mean
@@ -378,8 +383,12 @@ def reduce_data(
         func = np.median
     elif function == "min":
         func = np.min
-    else: # function == "max"
+    elif function == "max":
         func = np.max
+    elif function == "size":
+        func = np.size
+    else: # function == "std"
+        func = np.std
 
     Nx = len(blocks_indices)
     Ny = len(blocks_indices[0])
@@ -387,7 +396,7 @@ def reduce_data(
     reduced_data = np.empty(shape=(Nx, Ny), dtype=float)
     for i in range(Nx):
         for j in range(Ny):
-            if len(blocks_indices[i][j]) == 0:
+            if len(blocks_indices[i][j]) < min_ndata:
                 reduced_data[i, j] = np.nan
             else:
                 reduced_data[i, j] = func(data[blocks_indices[i][j]])
@@ -401,7 +410,7 @@ def reduce_data(
 
 
 def block_centers(
-    area, blocks_indices, check_input=True
+    area, blocks_indices, min_ndata=3, check_input=True
 ):
     """
     Define the center of each data block.
@@ -413,6 +422,8 @@ def block_centers(
         boundaries along the x and y directions, respectively.
     blocks_indices : list of lists
         Lists containing the indices of the data at each block.
+    min_ndata : int
+        Positive integer defining the minimum number of data in valid blocks.
     check_input : boolean
         If True, verify if the input is valid. Default is True.
 
@@ -425,6 +436,9 @@ def block_centers(
         check.is_area(area=area)
         if type(blocks_indices) != list:
             raise ValueError("blocks_indices must be a list")
+        check.is_integer(x=min_ndata, positive=True)
+        if min_ndata < 3:
+            raise ValueError("min_data must be greater than 3")
 
     # number of points along x and y directions
     Nx = len(blocks_indices)
@@ -453,7 +467,7 @@ def block_centers(
     mask = np.empty(shape=(Nx, Ny), dtype=bool)
     for i in range(Nx):
         for j in range(Ny):
-            if len(blocks_indices[i][j]) == 0:
+            if len(blocks_indices[i][j]) < min_ndata:
                 mask[i, j] = False
             else:
                 mask[i, j] = True
